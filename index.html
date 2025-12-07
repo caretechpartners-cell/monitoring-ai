@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>やさしいモニタリングAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .limit {
+      text-align: center;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+    .guide {
+      background: #fff4f6;
+      border: 2px dashed #f3a6b1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .self-input-guide {
+      text-align: center;
+      font-size: 16px;
+      color: #666;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 20px;
+      margin-top: 25px;
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #cfdfe8;
+    }
+
+    textarea::placeholder {
+      color: #999;
+      font-size: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 25px;
+      cursor: pointer;
+    }
+    .sample-btn { background: #f3a6b1; color: white; }
+    .generate-btn { background: #2a6f97; color: white; }
+
+    .download-btn {
+      background: #4caf50;
+      color: white;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .result-box {
+      margin-top: 30px;
+      font-size: 18px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+
+    .copy-guide {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      display: none;
+    }
+
+    /* ✅ 左下固定リンク（必ず表示される） */
+    .footer-links {
+      position: fixed;
+      left: 15px;
+      bottom: 10px;
+      font-size: 12px;
+      color: #999;
+      z-index: 9999;
+    }
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin-right: 8px;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>やさしいモニタリングAI</h1>
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+  <div class="limit" id="limitText"></div>
+
+  <div class="guide">
+    ✅ ①「サンプル利用者を入力」<br>
+    ✅ ② 必要に応じて修正<br>
+    ✅ ③「AIでモニタリング文章生成」を押すだけ！
+  </div>
+
+  <button class="btn sample-btn" onclick="insertSample()">サンプル利用者を入力</button>
+
+  <div class="self-input-guide">
+    ↓ ご自身でもご入力いただけます ↓
+  </div>
+
+  <label>■ 生活状況</label>
+  <textarea id="life" placeholder="例：自宅にて妻と二人暮らし。日中はテレビ視聴が中心。"></textarea>
+
+  <label>■ 身体状況</label>
+  <textarea id="body" placeholder="例：歩行は屋内自立、屋外は手すり使用。転倒歴なし。"></textarea>
+
+  <label>■ 服薬状況</label>
+  <textarea id="medicine" placeholder="例：降圧薬を朝1回内服。飲み忘れなし。"></textarea>
+
+  <label>■ サービス利用</label>
+  <textarea id="service" placeholder="例：週2回デイサービス利用。入浴・機能訓練実施。"></textarea>
+
+  <label>■ 自由記載</label>
+  <textarea id="free" placeholder="例：表情は穏やかで会話も成立。特段の不安訴えなし。"></textarea>
+
+  <button class="btn generate-btn" onclick="generate()">AIでモニタリング文章生成</button>
+
+  <div class="copy-guide" id="copyGuide">
+    このままコピーしてご使用ください。
+  </div>
+
+  <div id="result" class="result-box"></div>
+
+  <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
+    📄 Word（docx）でダウンロード
+  </button>
+</div>
+
+<!-- ✅ 左下リンクはここに常時表示 -->
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
+</div>
+
+<script>
+const LIMIT = 3;
+
+function initLimit() {
+  if (!localStorage.getItem("remain")) {
+    localStorage.setItem("remain", LIMIT);
+  }
+  updateLimit();
+}
+
+function updateLimit() {
+  const remain = Number(localStorage.getItem("remain"));
+  const limitText = document.getElementById("limitText");
+
+  if (remain > 0) {
+    limitText.textContent = `🌷 無料であと「${remain}回」ご利用いただけます`;
+  } else {
+    limitText.textContent = "無料作成分は終了しました。";
+  }
+}
+
+initLimit();
+
+function insertSample() {
+  life.value = "自宅にて妻と二人暮らし。日中はテレビ視聴が中心。";
+  body.value = "歩行は屋内自立、屋外は手すり使用。転倒歴なし。";
+  medicine.value = "降圧薬を朝1回内服。飲み忘れなし。";
+  service.value = "週2回デイサービス利用。入浴・機能訓練実施。";
+  free.value = "表情は穏やかで会話も成立。";
+}
+
+async function generate() {
+  let remain = Number(localStorage.getItem("remain"));
+
+  if (remain <= 0) {
+    alert("ここまでお試しいただき、ありがとうございます 😊\n\nこのあともご利用いただけますので、よろしければ続きのご案内をご覧ください。");
+
+    setTimeout(() => {
+      location.href = "lp.html";
+    }, 1200);
+    return;
+  }
+
+  const text = `
+【生活状況】${life.value}
+【身体状況】${body.value}
+【服薬状況】${medicine.value}
+【サービス利用】${service.value}
+【自由記載】${free.value}
+  `;
+
+  result.textContent = "生成中…";
+  copyGuide.style.display = "none";
+  downloadBtn.style.display = "none";
+
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  const data = await res.json();
+
+  if (data.result) {
+    result.textContent = data.result;
+    copyGuide.style.display = "block";
+    downloadBtn.style.display = "block";
+
+    remain--;
+    localStorage.setItem("remain", remain);
+    updateLimit();
+  } else {
+    result.textContent = data.error;
+  }
+}
+
+function downloadDocx() {
+  const text = result.textContent;
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+  const lines = text.split("\n").filter(line => line.trim() !== "");
+
+  const paragraphs = lines.map(line =>
+    new Paragraph({
+      children: [ new TextRun({ text: line, size: 24 }) ],
+      spacing: { after: 200 }
+    })
+  );
+
+  const doc = new Document({
+    sections: [{ children: paragraphs }],
+  });
+
+  Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "monitoring.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+</script>
+
+</body>
+</html>
