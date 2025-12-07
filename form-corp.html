@@ -100,26 +100,32 @@
     無理な営業は一切行いませんので、ご安心ください。
   </div>
 
-  <!-- ✅ Formspree 連携ここから -->
-  <form action="https://formspree.io/f/xxxxxxx" method="POST">
+  <!-- ✅ Formspree 完成設定 -->
+  <form 
+    action="https://formspree.io/f/xanrdwlw" 
+    method="POST"
+  >
 
-    <!-- ✅ 送信後 thanks.html へリダイレクト -->
-    <input type="hidden" name="_redirect" value="thanks.html">
+    <!-- ✅ 送信後 thanks.html へ遷移 -->
+    <input type="hidden" name="_next" value="thanks.html">
+
+    <!-- ✅ 迷惑メール防止 -->
+    <input type="text" name="_gotcha" style="display:none">
 
     <label>■ 事業所名（必須）</label>
-    <input type="text" name="company" required>
+    <input type="text" name="事業所名" required>
 
     <label>■ ご担当者名（必須）</label>
-    <input type="text" name="person" required>
+    <input type="text" name="ご担当者名" required>
 
     <label>■ メールアドレス（必須）</label>
-    <input type="email" name="email" required>
+    <input type="email" name="メールアドレス" required>
 
     <label>■ 電話番号（任意）</label>
-    <input type="tel" name="tel">
+    <input type="tel" name="電話番号">
 
     <label>■ ご利用予定人数</label>
-    <select name="users">
+    <select name="利用予定人数">
       <option>1名〜5名</option>
       <option>6〜10名</option>
       <option>11名以上</option>
@@ -127,7 +133,7 @@
     </select>
 
     <label>■ 導入希望時期</label>
-    <select name="start">
+    <select name="導入希望時期">
       <option>すぐに導入したい</option>
       <option>1ヶ月以内</option>
       <option>3ヶ月以内</option>
@@ -135,18 +141,17 @@
     </select>
 
     <label>■ ご質問・ご要望（任意）</label>
-    <textarea name="message" placeholder="ご不明点やご希望があればご自由にご記入ください。"></textarea>
+    <textarea name="ご質問・ご要望" placeholder="ご不明点やご希望があればご自由にご記入ください。"></textarea>
 
     <button class="btn" type="submit">
       この内容で送信する
     </button>
 
     <div class="note">
-      ※ 内容を確認の上、担当よりご連絡いたします。
+      ※ 内容を確認のうえ、担当よりご連絡いたします。
     </div>
 
   </form>
-  <!-- ✅ Formspree 連携ここまで -->
 
 </div>
 
