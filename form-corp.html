@@ -100,14 +100,12 @@
     無理な営業は一切行いませんので、ご安心ください。
   </div>
 
-  <!-- ✅ Formspree 完成設定 -->
+  <!-- ✅ Formspree 無料プラン完全対応 -->
   <form 
     action="https://formspree.io/f/xanrdwlw" 
     method="POST"
+    onsubmit="setTimeout(function(){ window.location.href='https://monitoring-ai-sepia.vercel.app/thanks.html'; }, 300);"
   >
-
-    <!-- ✅ 送信後 thanks.html へ遷移 -->
-    <input type="hidden" name="_next" value="https://monitoring-ai-sepia.vercel.app/thanks.html">
 
     <!-- ✅ 迷惑メール防止 -->
     <input type="text" name="_gotcha" style="display:none">
