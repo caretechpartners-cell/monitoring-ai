@@ -115,7 +115,6 @@
       display: none;
     }
 
-    /* ✅ 左下固定リンク（必ず表示される） */
     .footer-links {
       position: fixed;
       left: 15px;
@@ -181,7 +180,6 @@
   </button>
 </div>
 
-<!-- ✅ 左下リンクはここに常時表示 -->
 <div class="footer-links">
   <a href="privacy.html">プライバシーポリシー</a>｜
   <a href="terms.html">利用規約</a>｜
@@ -290,6 +288,21 @@ function downloadDocx() {
     URL.revokeObjectURL(url);
   });
 }
+
+/* ✅ 管理者専用：隠しリセットコマンド（Ctrl + Shift + R） */
+document.addEventListener("keydown", function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    const pass = prompt("管理者パスワードを入力してください");
+
+    if (pass === "admin123") {  // ← 必要なら変更OK
+      localStorage.setItem("remain", 3);
+      alert("✅ 無料回数を3回にリセットしました");
+      location.reload();
+    } else {
+      alert("❌ パスワードが違います");
+    }
+  }
+});
 </script>
 
 </body>
