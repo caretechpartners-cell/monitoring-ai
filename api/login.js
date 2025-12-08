@@ -1,25 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-
-/**
- * Vercel Serverless Function
- * POST /api/login
- */
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import bcrypt from "bcryptjs";
 
 export default async function handler(req, res) {
-  // ✅ CORS対策
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, message: "Method Not Allowed" });
   }
@@ -34,35 +16,49 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Supabase users テーブル検索
-    const { data, error } = await supabase
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // ✅ email でユーザー取得
+    const { data: user, error } = await supabase
       .from("users")
       .select("*")
       .eq("email", email)
       .single();
 
-    if (error || !data) {
+    if (error || !user) {
       return res.status(401).json({
         success: false,
-        message: "メールアドレスが見つかりません",
+        message: "メールアドレスまたはパスワードが違います",
       });
     }
 
-    // ✅ パスワード照合（今は平文一致）
-    if (data.password !== password) {
+    // ✅ bcrypt でハッシュ照合
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "パスワードが違います",
+        message: "メールアドレスまたはパスワードが違います",
       });
     }
 
-    // ✅ ログイン成功
+    // ✅ 最終ログイン更新
+    await supabase
+      .from("users")
+      .update({ last_login_at: new Date() })
+      .eq("id", user.id);
+
     return res.status(200).json({
       success: true,
       message: "ログイン成功",
       user: {
-        email: data.email,
-        plan: data.plan,
+        id: user.id,
+        email: user.email,
+        plan: user.plan,
+        status: user.status,
       },
     });
 
