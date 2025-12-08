@@ -1,6 +1,6 @@
 const { createClient } = require("@supabase/supabase-js");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     res.status(200).json({
       ok: true,
@@ -12,4 +12,4 @@ export default async function handler(req, res) {
       detail: err.message,
     });
   }
-}
+};
