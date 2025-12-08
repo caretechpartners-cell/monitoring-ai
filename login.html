@@ -13,7 +13,6 @@
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
     }
-
     .container {
       max-width: 500px;
       margin: 80px auto;
@@ -21,108 +20,74 @@
       border-radius: 20px;
       padding: 40px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      text-align: center;
     }
-
     h1 {
-      text-align: center;
       color: #2a6f97;
-      font-size: 28px;
-      margin-bottom: 20px;
-    }
-
-    .guide {
-      background: #fff4f6;
-      border: 2px dashed #f3a6b1;
-      border-radius: 12px;
-      padding: 18px;
       margin-bottom: 30px;
-      font-size: 16px;
-      line-height: 1.8;
-      text-align: center;
     }
-
-    label {
-      display: block;
-      font-size: 18px;
-      margin-top: 20px;
-      margin-bottom: 6px;
-    }
-
     input {
       width: 100%;
       font-size: 18px;
       padding: 12px;
+      margin-top: 15px;
       border-radius: 10px;
       border: 2px solid #cfdfe8;
     }
-
     .btn {
       width: 100%;
-      height: 65px;
-      font-size: 22px;
+      height: 60px;
+      font-size: 20px;
       border: none;
       border-radius: 16px;
-      margin-top: 35px;
+      margin-top: 30px;
       cursor: pointer;
       background: #2a6f97;
       color: white;
     }
-
-    .note {
-      margin-top: 18px;
-      text-align: center;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .footer-links {
-      position: fixed;
-      left: 15px;
-      bottom: 10px;
-      font-size: 12px;
-      color: #999;
-    }
-
-    .footer-links a {
-      color: #777;
-      text-decoration: none;
-      margin-right: 8px;
+    .error {
+      color: red;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>ログイン</h1>
+  <h1>会員ログイン</h1>
 
-  <div class="guide">
-    ご契約時にお送りしている<br>
-    <strong>メールアドレスとパスワード</strong>を入力してください。
-  </div>
+  <input type="email" id="email" placeholder="メールアドレス">
+  <input type="password" id="password" placeholder="パスワード">
 
-  <form>
-    <label>■ メールアドレス</label>
-    <input type="email" placeholder="example@example.com" required>
+  <button class="btn" onclick="login()">ログイン</button>
 
-    <label>■ パスワード</label>
-    <input type="password" placeholder="パスワードを入力" required>
-
-    <button class="btn" type="submit">
-      ログインする
-    </button>
-
-    <div class="note">
-      ※ パスワードをお忘れの方は、管理者までご連絡ください。
-    </div>
-  </form>
+  <div id="error" class="error"></div>
 </div>
 
-<!-- ✅ 左下固定リンク -->
-<div class="footer-links">
-  <a href="privacy.html">プライバシーポリシー</a>｜
-  <a href="terms.html">利用規約</a>｜
-  <a href="tokusho.html">特定商取引法表記</a>
-</div>
+<script>
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const errorDiv = document.getElementById("error");
+
+  errorDiv.textContent = "";
+
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    // ✅ ログイン成功 → app.html へ
+    location.href = "app.html";
+  } else {
+    errorDiv.textContent = data.error;
+  }
+}
+</script>
 
 </body>
 </html>
