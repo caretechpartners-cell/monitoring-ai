@@ -4,7 +4,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ✅ 無料回数管理（簡易）
+// ✅ 無料回数（IP制限）
 const freeUsageMap = {};
 const FREE_LIMIT = 3;
 
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     const systemPrompt = `
 あなたは日本の介護保険制度に精通した、実務特化型のケアマネジャー支援AIです。
-以下のルールを必ず厳守して、**実地指導・監査に耐える正式なモニタリング記録のみを出力してください。**
+以下のルールを必ず厳守して、実地指導・監査に耐える正式なモニタリング記録のみを出力してください。
 
 【絶対ルール】
 ・主観表現は禁止
@@ -60,12 +60,12 @@ export default async function handler(req, res) {
 
     const result = response.choices[0].message.content;
 
-    res.json({
+    res.status(200).json({
       result,
       remaining: FREE_LIMIT - freeUsageMap[userIP],
     });
-
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "生成エラー" });
   }
 }
