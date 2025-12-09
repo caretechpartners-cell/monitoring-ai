@@ -84,7 +84,7 @@ async function login() {
     // ✅ ログイン成功 → app.html へ
     location.href = "app.html";
   } else {
-    errorDiv.textContent = data.error;
+    errorDiv.textContent = data.message;
   }
 }
 </script>
