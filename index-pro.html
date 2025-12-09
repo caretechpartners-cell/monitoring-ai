@@ -122,11 +122,21 @@
     .footer-links a:hover {
       text-decoration: underline;
     }
+
+    /* 会員ページへ戻るボタン（色のみ追加） */
+    .back-btn {
+      background: #cccccc;
+      color: #333;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
+
+  <!-- ⭐追加：戻るボタン -->
+  <button class="btn back-btn" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
+
   <h1>やさしいモニタリングAI（会員版）</h1>
   <div class="powered">Powered by ケアテックパートナーズ</div>
 
