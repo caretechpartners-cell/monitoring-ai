@@ -2,10 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>やさしいモニタリングAI｜無制限版</title>
+  <title>やさしいモニタリングAI（会員版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
   <style>
     body {
@@ -13,110 +14,241 @@
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
     }
-
     .container {
       max-width: 900px;
-      margin: 50px auto;
-      background: white;
+      margin: 40px auto;
+      background: #ffffff;
       border-radius: 20px;
       padding: 40px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
-
     h1 {
       text-align: center;
       color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .guide {
+      background: #fff4f6;
+      border: 2px dashed #f3a6b1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    .self-input-guide {
+      text-align: center;
+      font-size: 16px;
+      color: #666;
+      margin-top: 10px;
       margin-bottom: 20px;
     }
 
+    label {
+      display: block;
+      font-size: 20px;
+      margin-top: 25px;
+      margin-bottom: 6px;
+    }
     textarea {
       width: 100%;
-      height: 200px;
+      height: 80px;
       font-size: 18px;
-      padding: 15px;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 10px;
       border: 2px solid #cfdfe8;
-      outline: none;
     }
 
-    .btn-area {
-      text-align: center;
-      margin-top: 25px;
+    textarea::placeholder {
+      color: #999;
+      font-size: 16px;
     }
 
-    button {
-      width: 260px;
-      height: 60px;
-      font-size: 20px;
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
       border: none;
       border-radius: 16px;
+      margin-top: 25px;
       cursor: pointer;
-      background: #2a6f97;
+    }
+    .sample-btn { background: #f3a6b1; color: white; }
+    .generate-btn { background: #2a6f97; color: white; }
+
+    .download-btn {
+      background: #4caf50;
       color: white;
+      margin-top: 15px;
+      display: none;
     }
 
-    .output {
+    .result-box {
       margin-top: 30px;
-      background: #f6fcff;
-      padding: 20px;
+      font-size: 18px;
+      background: #f7fbff;
       border-radius: 12px;
-      border: 1px solid #d3e7ef;
-      min-height: 150px;
+      padding: 20px;
       white-space: pre-wrap;
-      font-size: 17px;
     }
 
-    /* ページ下部に固定 */
-    .footer-links {
-      text-align: center;
-      margin-top: 60px;
-      padding: 20px 10px;
-      font-size: 14px;
+    .copy-guide {
+      margin-top: 15px;
+      font-size: 18px;
       color: #2a6f97;
+      font-weight: bold;
+      display: none;
+    }
+
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
     }
     .footer-links a {
-      color: #2a6f97;
-      margin: 0 10px;
+      color: #777;
       text-decoration: none;
+      margin: 0 6px;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>やさしいモニタリングAI（無制限版）</h1>
+  <h1>やさしいモニタリングAI（会員版）</h1>
+  <div class="powered">Powered by ケアテックパートナーズ</div>
 
-  <textarea id="inputText" placeholder="ここに文章を入力してください..."></textarea>
-
-  <div class="btn-area">
-    <button onclick="runAI()">AIで作成する</button>
+  <div class="guide">
+    ✅ ①「サンプル利用者を入力」<br>
+    ✅ ② 必要に応じて修正<br>
+    ✅ ③「AIでモニタリング文章生成」を押すだけ！
   </div>
 
-  <div id="output" class="output"></div>
+  <button class="btn sample-btn" onclick="insertSample()">サンプル利用者を入力</button>
+
+  <div class="self-input-guide">
+    ↓ ご自身でもご入力いただけます ↓
+  </div>
+
+  <label>■ 生活状況</label>
+  <textarea id="life" placeholder="例：自宅にて妻と二人暮らし。日中はテレビ視聴が中心。"></textarea>
+
+  <label>■ 身体状況</label>
+  <textarea id="body" placeholder="例：歩行は屋内自立、屋外は手すり使用。転倒歴なし。"></textarea>
+
+  <label>■ 服薬状況</label>
+  <textarea id="medicine" placeholder="例：降圧薬を朝1回内服。飲み忘れなし。"></textarea>
+
+  <label>■ サービス利用状況</label>
+  <textarea id="service" placeholder="例：週2回デイサービス利用。入浴・機能訓練実施。"></textarea>
+
+  <label>■ 本人・家族の希望</label>
+  <textarea id="hope" placeholder="例：できる範囲で家事を続けたい。週1回は外出したいなど。"></textarea>
+
+  <label>■ 自由記載</label>
+  <textarea id="free" placeholder="例：表情は穏やかで会話も成立。特段の不安訴えなし。"></textarea>
+
+  <button class="btn generate-btn" onclick="generate()">AIでモニタリング文章生成</button>
+
+  <div class="copy-guide" id="copyGuide">
+    このままコピーしてご使用ください。
+  </div>
+
+  <div id="result" class="result-box"></div>
+
+  <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
+    📄 Word（docx）でダウンロード
+  </button>
 </div>
 
 <div class="footer-links">
   <a href="privacy.html">プライバシーポリシー</a>｜
   <a href="terms.html">利用規約</a>｜
-  <a href="law.html">特定商取引法に基づく表記</a>
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
 </div>
 
 <script>
-async function runAI() {
-  const text = document.getElementById("inputText").value;
-  const output = document.getElementById("output");
 
-  output.textContent = "生成中...";
+function insertSample() {
+  life.value = "自宅にて妻と二人暮らし。日中はテレビ視聴が中心。";
+  body.value = "歩行は屋内自立、屋外は手すり使用。転倒歴なし。";
+  medicine.value = "降圧薬を朝1回内服。飲み忘れなし。";
+  service.value = "週2回デイサービス利用。入浴・機能訓練実施。";
+  hope.value = "家族と過ごす時間を維持しつつ、できる範囲で家事を継続したい。";
+  free.value = "表情は穏やかで会話も成立。";
+}
 
-  const res = await fetch("/api/ai", {
+async function generate() {
+
+  const text = `
+【生活状況】${life.value}
+【身体状況】${body.value}
+【服薬状況】${medicine.value}
+【サービス利用】${service.value}
+【本人・家族の希望】${hope.value}
+【自由記載】${free.value}
+  `;
+
+  result.textContent = "生成中…";
+  copyGuide.style.display = "none";
+  downloadBtn.style.display = "none";
+
+  const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text })
   });
 
   const data = await res.json();
-  output.textContent = data.result || "エラーが発生しました。";
+
+  if (data.result) {
+    result.textContent = data.result;
+    copyGuide.style.display = "block";
+    downloadBtn.style.display = "block";
+  } else {
+    result.textContent = data.error;
+  }
 }
+
+function downloadDocx() {
+  const text = result.textContent;
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+  const lines = text.split("\n").filter(line => line.trim() !== "");
+
+  const paragraphs = lines.map(line =>
+    new Paragraph({
+      children: [ new TextRun({ text: line, size: 24 }) ],
+      spacing: { after: 200 }
+    })
+  );
+
+  const doc = new Document({
+    sections: [{ children: paragraphs }],
+  });
+
+  Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "monitoring.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
 </script>
 
 </body>

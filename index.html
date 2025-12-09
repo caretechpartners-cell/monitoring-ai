@@ -81,7 +81,7 @@
 
     .btn {
       width: 100%;
-      height: 70px;
+           height: 70px;
       font-size: 22px;
       border: none;
       border-radius: 16px;
@@ -161,8 +161,12 @@
   <label>■ 服薬状況</label>
   <textarea id="medicine" placeholder="例：降圧薬を朝1回内服。飲み忘れなし。"></textarea>
 
-  <label>■ サービス利用</label>
+  <label>■ サービス利用状況</label>
   <textarea id="service" placeholder="例：週2回デイサービス利用。入浴・機能訓練実施。"></textarea>
+
+  <!-- ⭐ 追加部分（UI変更なし） -->
+  <label>■ 本人・家族の希望</label>
+  <textarea id="wish" placeholder="例：やりたいこと、困りごと、家族の希望など。"></textarea>
 
   <label>■ 自由記載</label>
   <textarea id="free" placeholder="例：表情は穏やかで会話も成立。特段の不安訴えなし。"></textarea>
@@ -234,6 +238,7 @@ async function generate() {
 【身体状況】${body.value}
 【服薬状況】${medicine.value}
 【サービス利用】${service.value}
+【本人・家族の希望】${wish.value}
 【自由記載】${free.value}
   `;
 
