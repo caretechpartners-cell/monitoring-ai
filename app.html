@@ -14,6 +14,24 @@
       background: #e9f6fb;
     }
 
+    /* 🔓 ログアウトボタン */
+    .logout-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2a6f97;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+    .logout-btn:hover {
+      opacity: 0.9;
+    }
+
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -134,6 +152,11 @@
 </head>
 <body>
 
+<!-- 🔓 ログアウトボタン -->
+<div class="logout-btn" onclick="logout()">
+  ログアウト
+</div>
+
 <div class="container">
 
   <h1>会員専用ページ</h1>
@@ -211,6 +234,20 @@
   </div>
 
 </div>
+
+<script>
+  // 未ログインなら login.html へ強制移動
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  if (!user) {
+    window.location.href = "login.html";
+  }
+
+  // ログアウト処理
+  function logout() {
+    sessionStorage.removeItem("user");
+    window.location.href = "login.html";
+  }
+</script>
 
 </body>
 </html>
