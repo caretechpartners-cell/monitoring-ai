@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>やさしいモニタリングAI｜無制限版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-size: 18px;
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid #cfdfe8;
+      outline: none;
+    }
+
+    .btn-area {
+      text-align: center;
+      margin-top: 25px;
+    }
+
+    button {
+      width: 260px;
+      height: 60px;
+      font-size: 20px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      background: #2a6f97;
+      color: white;
+    }
+
+    .output {
+      margin-top: 30px;
+      background: #f6fcff;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #d3e7ef;
+      min-height: 150px;
+      white-space: pre-wrap;
+      font-size: 17px;
+    }
+
+    /* ページ下部に固定 */
+    .footer-links {
+      text-align: center;
+      margin-top: 60px;
+      padding: 20px 10px;
+      font-size: 14px;
+      color: #2a6f97;
+    }
+    .footer-links a {
+      color: #2a6f97;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>やさしいモニタリングAI（無制限版）</h1>
+
+  <textarea id="inputText" placeholder="ここに文章を入力してください..."></textarea>
+
+  <div class="btn-area">
+    <button onclick="runAI()">AIで作成する</button>
+  </div>
+
+  <div id="output" class="output"></div>
+</div>
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="law.html">特定商取引法に基づく表記</a>
+</div>
+
+<script>
+async function runAI() {
+  const text = document.getElementById("inputText").value;
+  const output = document.getElementById("output");
+
+  output.textContent = "生成中...";
+
+  const res = await fetch("/api/ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  const data = await res.json();
+  output.textContent = data.result || "エラーが発生しました。";
+}
+</script>
+
+</body>
+</html>
