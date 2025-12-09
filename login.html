@@ -1,99 +1,97 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ログイン｜やさしいモニタリングAI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>会員ログイン｜やさしいAIシリーズ</title>
   <style>
     body {
-      margin: 0;
       font-family: "M PLUS Rounded 1c", sans-serif;
-      background: #e9f6fb;
+      background: #f2f8ff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
     .container {
-      max-width: 500px;
-      margin: 80px auto;
       background: #ffffff;
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 40px 35px;
+      border-radius: 18px;
+      width: 360px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
     h1 {
-      color: #2a6f97;
-      margin-bottom: 30px;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.3; /* ← 行間を詰めて見やすく */
+    }
+    h2 {
+      font-size: 15px;
+      margin-top: 6px; /* ← タイトル間の余白調整 */
+      margin-bottom: 28px;
+      font-weight: 500;
+      color: #555;
+      line-height: 1.2;
     }
     input {
       width: 100%;
-      font-size: 18px;
       padding: 12px;
-      margin-top: 15px;
+      margin-bottom: 12px;
       border-radius: 10px;
-      border: 2px solid #cfdfe8;
+      border: 1px solid #ccc;
+      font-size: 14px;
     }
-    .btn {
+    button {
       width: 100%;
-      height: 60px;
-      font-size: 20px;
+      padding: 12px;
+      background: #4a8fff;
       border: none;
-      border-radius: 16px;
-      margin-top: 30px;
-      cursor: pointer;
-      background: #2a6f97;
       color: white;
+      font-size: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3b7be0;
     }
     .error {
-      color: red;
-      margin-top: 15px;
+      color: #d9534f;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none; /* ← 初期は非表示 */
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>やさしいAIシリーズ</h1>
+    <h2>会員ログイン</h2>
 
-<div class="container">
-  <h1>やさしいAIシリーズ</h1><br><h1>会員ログイン</h1>
+    <input id="login-id" type="text" placeholder="ログインID" />
+    <input id="login-pass" type="password" placeholder="パスワード" />
+    <button onclick="login()">ログイン</button>
 
-  <input type="email" id="email" placeholder="メールアドレス">
-  <input type="password" id="password" placeholder="パスワード">
+    <div id="error-message" class="error">IDまたはパスワードが異なります</div>
+  </div>
 
-  <button class="btn" onclick="login()">ログイン</button>
+  <script>
+    function login() {
+      const id = document.getElementById("login-id").value.trim();
+      const pass = document.getElementById("login-pass").value.trim();
+      const error = document.getElementById("error-message");
 
-  <div id="error" class="error"></div>
-</div>
-
-<script>
-async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const errorDiv = document.getElementById("error");
-
-  errorDiv.textContent = "";
-
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-
-    // 🔥【追加】ログイン成功時に localStorage に保存する
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("auth_token", "ok");
-
-    // そのまま app.html へ移動
-    location.href = "app.html";
-
-  } else {
-    errorDiv.textContent = data.error;
-  }
-}
-</script>
-
+      // 仮の照合（本来はサーバー側で行う）
+      if (id === "test" && pass === "1234") {
+        localStorage.setItem("sessionUser", JSON.stringify({ id }));
+        window.location.href = "app.html";
+      } else {
+        error.style.display = "block"; // ← 赤字のエラー表示
+      }
+    }
+  </script>
 </body>
 </html>
