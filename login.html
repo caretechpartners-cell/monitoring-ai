@@ -81,10 +81,16 @@ async function login() {
   const data = await res.json();
 
   if (data.success) {
-    // ✅ ログイン成功 → app.html へ
+
+    // 🔥【追加】ログイン成功時に localStorage に保存する
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("auth_token", "ok");
+
+    // そのまま app.html へ移動
     location.href = "app.html";
+
   } else {
-    errorDiv.textContent = data.message;
+    errorDiv.textContent = data.error;
   }
 }
 </script>
