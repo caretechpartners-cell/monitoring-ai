@@ -1,32 +1,116 @@
-<script>
-  console.log("===== DEBUG START =====");
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>やさしいモニタリングAI</title>
+  <link rel="stylesheet" href="style.css" />
 
-  console.log("localStorage keys:", Object.keys(localStorage));
+  <style>
+    /* ログアウトボタン（UIは極力変更しない） */
+    #logoutBtn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 9999;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
 
-  const rawUser = localStorage.getItem("user");
-  console.log("raw user:", rawUser);
+  <!-- ログアウトボタン -->
+  <button id="logoutBtn" onclick="logout()">ログアウト</button>
 
-  let user = null;
+  <!-- ↓↓↓ あなたの元のUIをそのまま維持 ↓↓↓ -->
 
-  try {
-    user = JSON.parse(rawUser);
-  } catch (e) {
-    console.log("JSON parse error:", e);
-  }
+  <div class="container">
+    <h1>やさしいモニタリングAI</h1>
+    <textarea id="userInput" placeholder="訪問内容を入力（例：本人の体調は安定しており、食事も自分で用意できていた）"></textarea>
+    <button onclick="generate()">要点を抽出して要約</button>
+    <h2>AIが生成したモニタリング記録</h2>
+    <textarea id="aiOutput" readonly></textarea>
+  </div>
 
-  console.log("parsed user:", user);
+  <!-- ↑↑↑ あなたの元の UI は一切変更なし ↑↑↑ -->
 
-  if (!user) {
-    console.log("❌ user が null なので login.html に移動します");
-    window.location.href = "login.html";
-  } else {
-    console.log("✅ user 読み取り OK、ページを継続");
-  }
+  <script>
+    console.log("===== DEBUG START (app.html) =====");
 
-  // ログアウト処理
-  function logout() {
-    localStorage.removeItem("user");
-    localStorage.removeItem("auth_token");
-    window.location.href = "login.html";
-  }
-</script>
+    console.log("localStorage keys:", Object.keys(localStorage));
+
+    const rawUser = localStorage.getItem("user");
+    console.log("raw user:", rawUser);
+
+    let user = null;
+
+    try {
+      user = JSON.parse(rawUser);
+    } catch (e) {
+      console.log("JSON parse error:", e);
+    }
+
+    console.log("parsed user:", user);
+
+    // ここでリダイレクトしていたのが"真っ白"の原因
+    // DOM が表示される前に return していた
+    if (!user) {
+      console.log("❌ user が null → login.html へ移動");
+      window.location.replace("login.html");
+    } else {
+      console.log("✅ user 読み取り OK、ページ表示継続");
+    }
+
+    // ---------------------
+    // ログアウト処理
+    // ---------------------
+    function logout() {
+      console.log("ログアウト処理実行");
+      localStorage.removeItem("user");
+      localStorage.removeItem("auth_token");
+      window.location.href = "login.html";
+    }
+
+    // ---------------------
+    // AI生成ボタン
+    // ---------------------
+    async function generate() {
+      const text = document.getElementById("userInput").value;
+      if (!text) {
+        alert("訪問内容を入力してください");
+        return;
+      }
+
+      document.getElementById("aiOutput").value = "生成中…";
+
+      try {
+        const res = await fetch("https://monitoring-ai-sepia.vercel.app/api/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + (localStorage.getItem("auth_token") || "")
+          },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          document.getElementById("aiOutput").value = "エラー: " + data.error;
+          return;
+        }
+
+        document.getElementById("aiOutput").value = data.result;
+      } catch (e) {
+        document.getElementById("aiOutput").value = "通信エラー";
+        console.error(e);
+      }
+    }
+  </script>
+</body>
+</html>
