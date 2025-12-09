@@ -24,7 +24,11 @@
     }
     h1 {
       color: #2a6f97;
-      margin-bottom: 30px;
+      margin: 0;
+      line-height: 1.2; /* ← 行間を詰める */
+    }
+    .title-set {
+      margin-bottom: 30px; /* 全体の下余白だけ調整 */
     }
     input {
       width: 100%;
@@ -48,13 +52,17 @@
     .error {
       color: red;
       margin-top: 15px;
+      min-height: 1em;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>やさしいAIシリーズ</h1><br><h1>会員ログイン</h1>
+  <div class="title-set">
+    <h1>やさしいAIシリーズ</h1>
+    <h1>会員ログイン</h1>
+  </div>
 
   <input type="email" id="email" placeholder="メールアドレス">
   <input type="password" id="password" placeholder="パスワード">
@@ -81,16 +89,12 @@ async function login() {
   const data = await res.json();
 
   if (data.success) {
-
-    // 🔥【追加】ログイン成功時に localStorage に保存する
     localStorage.setItem("user", JSON.stringify(data.user));
     localStorage.setItem("auth_token", "ok");
-
-    // そのまま app.html へ移動
     location.href = "app.html";
-
   } else {
-    errorDiv.textContent = data.error;
+    // 常に同じ文言を赤字で表示
+    errorDiv.textContent = "IDまたはパスワードが異なります";
   }
 }
 </script>
