@@ -123,19 +123,29 @@
       text-decoration: underline;
     }
 
-    /* 会員ページへ戻るボタン（色のみ追加） */
-    .back-btn {
+    /* ⭐右上固定配置の戻るボタン */
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
       background: #cccccc;
       color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
   </style>
 </head>
 <body>
 
-<div class="container">
+<!-- ⭐右上固定ボタン -->
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
 
-  <!-- ⭐追加：戻るボタン -->
-  <button class="btn back-btn" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
+<div class="container">
 
   <h1>やさしいモニタリングAI（会員版）</h1>
   <div class="powered">Powered by ケアテックパートナーズ</div>
