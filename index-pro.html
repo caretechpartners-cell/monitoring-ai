@@ -5,6 +5,16 @@
   <title>やさしいモニタリングAI（会員版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- ⭐ 追加：app.html からの遷移チェック -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get("from");
+
+    if (from !== "app") {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
