@@ -5,22 +5,6 @@
   <title>やさしいモニタリングAI（会員版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const supabaseUrl = "https://vqxcerfqxdsbxqavwpgv.supabase.co";
-    const supabaseKey = "<sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV>"; 
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-    // ⭐ ここでログインチェック
-    document.addEventListener("DOMContentLoaded", async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        // ❌ 未ログイン → login.html へ強制遷移
-        window.location.href = "login.html";
-      }
-    });
-  </script>
-
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
@@ -158,6 +142,7 @@
 </head>
 <body>
 
+<!-- ⭐右上固定ボタン -->
 <button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
 
 <div class="container">
@@ -178,22 +163,22 @@
   </div>
 
   <label>■ 生活状況</label>
-  <textarea id="life"></textarea>
+  <textarea id="life" placeholder="例：自宅にて妻と二人暮らし。日中はテレビ視聴が中心。"></textarea>
 
   <label>■ 身体状況</label>
-  <textarea id="body"></textarea>
+  <textarea id="body" placeholder="例：歩行は屋内自立、屋外は手すり使用。転倒歴なし。"></textarea>
 
   <label>■ 服薬状況</label>
-  <textarea id="medicine"></textarea>
+  <textarea id="medicine" placeholder="例：降圧薬を朝1回内服。飲み忘れなし。"></textarea>
 
   <label>■ サービス利用状況</label>
-  <textarea id="service"></textarea>
+  <textarea id="service" placeholder="例：週2回デイサービス利用。入浴・機能訓練実施。"></textarea>
 
   <label>■ 本人・家族の希望</label>
-  <textarea id="hope"></textarea>
+  <textarea id="hope" placeholder="例：できる範囲で家事を続けたい。家族としては、安全に過ごしながら外出機会も維持したいと希望されている。"></textarea>
 
   <label>■ 自由記載</label>
-  <textarea id="free"></textarea>
+  <textarea id="free" placeholder="例：表情は穏やかで会話も成立。特段の不安訴えなし。"></textarea>
 
   <button class="btn generate-btn" onclick="generate()">AIでモニタリング文章生成</button>
 
