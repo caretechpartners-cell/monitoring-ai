@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作成ユーザー一覧</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      max-width: 900px;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 14px;
+    }
+    th {
+      background: #e6f0ff;
+    }
+    .hidden { display: none; }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 10px;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 管理者ログイン -->
+  <div id="login-card" class="card">
+    <h2>管理者ログイン</h2>
+    <input type="password" id="adminPassword" placeholder="パスワード">
+    <button onclick="checkPassword()">ログイン</button>
+    <p id="login-error" style="color:red"></p>
+  </div>
+
+  <!-- 一覧ページ -->
+  <div id="user-list" class="card hidden">
+    <h2>作成ユーザー一覧</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>名前</th>
+          <th>プラン</th>
+          <th>人数上限</th>
+          <th>作成日</th>
+          <th>最終ログイン</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // admin.html と同じパスワード（簡易版）
+    const correctPassword = "admin123";
+
+    function checkPassword() {
+      const input = document.getElementById("adminPassword").value;
+
+      if (input === correctPassword) {
+        document.getElementById("login-card").classList.add("hidden");
+        document.getElementById("user-list").classList.remove("hidden");
+        loadUsers();
+      } else {
+        document.getElementById("login-error").innerText = "パスワードが違います。";
+      }
+    }
+
+    // Supabase Users 取得
+    async function loadUsers() {
+      const res = await fetch("/api/list-users");
+      const json = await res.json();
+
+      const tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
+
+      json.users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.email}</td>
+          <td>${u.user_name || ""}</td>
+          <td>${u.plan}</td>
+          <td>${u.corp_user_limit}</td>
+          <td>${u.created_at?.slice(0,10)}</td>
+          <td>${u.last_login_at ? u.last_login_at.slice(0,10) : "-"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+
+</body>
+</html>

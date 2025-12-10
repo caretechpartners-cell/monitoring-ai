@@ -1,126 +1,110 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin User Create</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f6fa;
-            padding: 30px;
-        }
-        .container {
-            width: 420px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            margin-bottom: 20px;
-            font-size: 20px;
-            text-align: center;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 12px;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 12px;
-            font-size: 16px;
-            background: #0078ff;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        #result {
-            margin-top: 25px;
-            padding: 15px;
-            background: #eef7ff;
-            border: 1px solid #b6d9ff;
-            border-radius: 6px;
-            display: none;
-            white-space: pre-wrap;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理者ページ - 手動ユーザー発行</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      max-width: 500px;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>ユーザー新規作成（Admin）</h2>
+  <!-- ▼▼ 管理者ログイン画面 ▼▼ -->
+  <div id="login-card" class="card">
+    <h2>管理者ログイン</h2>
+    <p>パスワードを入力してください。</p>
+    <input type="password" id="adminPassword" placeholder="パスワード">
+    <button onclick="checkPassword()">ログイン</button>
+    <p id="login-error" style="color:red;"></p>
+  </div>
 
-        <label>メールアドレス</label>
-        <input id="email" type="email" placeholder="user@example.com" />
+  <!-- ▼▼ 管理画面（認証成功後に表示） ▼▼ -->
+  <div id="admin-panel" class="card hidden">
+    <h2>手動ユーザー発行</h2>
 
-        <label>名前</label>
-        <input id="user_name" type="text" placeholder="山田太郎" />
+    <label>Email</label>
+    <input type="email" id="email" placeholder="ユーザー Email">
 
-        <label>電話番号</label>
-        <input id="phone" type="text" placeholder="090-xxxx-xxxx" />
+    <label>名前</label>
+    <input type="text" id="user_name" placeholder="氏名">
 
-        <label>プラン</label>
-        <select id="plan">
-            <option value="personal">個人プラン</option>
-            <option value="corp">法人プラン</option>
-        </select>
+    <label>電話番号</label>
+    <input type="text" id="phone" placeholder="電話番号（任意）">
 
-        <label>法人ユーザー数（個人は1でOK）</label>
-        <input id="users" type="number" value="1" min="1" />
+    <label>プラン</label>
+    <select id="plan">
+      <option value="basic">Basic</option>
+      <option value="pro">Pro</option>
+    </select>
 
-        <button onclick="createUser()">ユーザーを作成</button>
+    <label>ユーザー数（法人）</label>
+    <input type="number" id="users" value="1" min="1">
 
-        <div id="result"></div>
-    </div>
+    <button onclick="createUser()">ユーザー作成</button>
 
-<script>
-async function createUser() {
-    const email = document.getElementById("email").value;
-    const user_name = document.getElementById("user_name").value;
-    const phone = document.getElementById("phone").value;
-    const plan = document.getElementById("plan").value;
-    const users = document.getElementById("users").value;
+    <!-- ▼▼ 追加：作成ユーザー一覧ページへの遷移ボタン ▼▼ -->
+    <button onclick="location.href='user-list.html'">作成ユーザー一覧を見る</button>
 
-    if (!email || !user_name) {
-        alert("メールアドレスと名前は必須です");
-        return;
+    <pre id="result"></pre>
+  </div>
+
+  <script>
+    // ▼ 管理者パスワード（簡易版）
+    const correctPassword = "admin123";
+
+    function checkPassword() {
+      const input = document.getElementById("adminPassword").value;
+      if (input === correctPassword) {
+        document.getElementById("login-card").classList.add("hidden");
+        document.getElementById("admin-panel").classList.remove("hidden");
+      } else {
+        document.getElementById("login-error").innerText = "パスワードが違います。";
+      }
     }
 
-    const payload = { email, user_name, phone, plan, users };
+    // ▼ API にリクエストしてユーザー作成
+    async function createUser() {
+      const email = document.getElementById("email").value;
+      const plan = document.getElementById("plan").value;
+      const users = document.getElementById("users").value;
+      const user_name = document.getElementById("user_name").value;
+      const phone = document.getElementById("phone").value;
 
-    const res = await fetch("/api/create-user?v=" + Date.now(), {
+      const res = await fetch("/api/create-user.js", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
+        body: JSON.stringify({ email, plan, users, user_name, phone })
+      });
 
-    const resultBox = document.getElementById("result");
-    resultBox.style.display = "block";
-
-    const data = await res.json();
-    if (!res.ok) {
-        resultBox.textContent = "❌ エラー\n" + JSON.stringify(data, null, 2);
-    } else {
-        resultBox.textContent =
-            "✅ ユーザー作成成功\n" +
-            "メール: " + data.email + "\n" +
-            "一時パスワード: " + data.temporaryPassword + "\n" +
-            "Supabase User ID: " + data.supabaseUserId;
+      const json = await res.json();
+      document.getElementById("result").innerText = JSON.stringify(json, null, 2);
     }
-}
-</script>
+  </script>
 
 </body>
 </html>
