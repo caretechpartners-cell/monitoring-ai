@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin User Create</title>
+
+    <script>
+        // ▼▼ アクセスキー検証（追加） ▼▼
+        (function () {
+            const url = new URL(window.location.href);
+            const key = url.searchParams.get("key");
+
+            if (key !== "vjed5148") {
+                document.body.innerHTML = "";
+                alert("アクセス権限がありません（key が無効です）");
+                throw new Error("Invalid admin key");
+            }
+        })();
+        // ▲▲ ここまで追加 ▲▲
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
