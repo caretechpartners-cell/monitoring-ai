@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from "bcryptjs";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -12,38 +13,39 @@ export default async function handler(req, res) {
 
   const { email, plan, users, user_name, phone } = req.body;
 
-  // ① 一時パスワード生成
-  const password = Math.random().toString(36).slice(-10);
+  // ① ランダムパスワード作成
+  const rawPassword = Math.random().toString(36).slice(-10);
 
-  // ② Supabase Auth ユーザー作成
-  const { data: authData, error: authError } =
-    await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true
-    });
+  // ② bcrypt ハッシュ化
+  const password_hash = await bcrypt.hash(rawPassword, 10);
+
+  // ③ Supabase Authユーザー作成
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    password: rawPassword,
+  });
 
   if (authError) {
     return res.status(400).json({ error: authError.message });
   }
 
-  const userId = authData.user.id; // ← AuthのUUID
+  const userId = authData.user.id;
 
-  // ③ public.users にも登録（id に Auth の UUID を入れる）
+  // ④ public.users に保存
   const { error: insertError } = await supabase
     .from("users")
     .insert({
-      id: userId,            // ← これが無いと login.html で参照不可
-      email: email,
-      user_name: user_name || null,
-      phone: phone || null,
-      plan: plan,
+      email,
+      user_name,
+      phone,
+      plan,
       status: "active",
       corp_user_limit: users,
-      temporary_pass: password, // ← 任意（管理用）
+      password_hash,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      purchased_at: new Date().toISOString()
+      purchased_at: new Date().toISOString(),
     });
 
   if (insertError) {
@@ -53,12 +55,10 @@ export default async function handler(req, res) {
     });
   }
 
-  // ④ 返却
   return res.json({
-    success: true,
     message: "ユーザーが作成されました",
     email,
-    temporaryPassword: password,
+    temporaryPassword: rawPassword,
     supabaseUserId: userId
   });
 }
