@@ -43,6 +43,7 @@ export default async function handler(req, res) {
       status: "active",
       corp_user_limit: users,
       password_hash,  // ← 追加
+      temporaryPassword
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       purchased_at: new Date().toISOString()
