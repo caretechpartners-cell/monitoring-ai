@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>管理者ページ - 手動ユーザー発行</title>
 
+  <!-- キャッシュ防止 -->
+  <meta http-equiv="Cache-Control" content="no-store" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -65,24 +67,13 @@
   </div>
 
   <script>
-    // ▼ SHA-256 計算用関数
-    async function sha256(text) {
-      const msgUint8 = new TextEncoder().encode(text);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-    }
+    // ▼ ここでパスワードを決める（好きに変更OK）
+    const PASSWORD = "admin123";
 
-    // ▼ 正しい SHA-256（ハッシュ化）
-    const correctHash =
-      "f8a2e87983ac93e2ab180b92dbe378df8b06073e8d8e61b8f47ce9217a8a4be1";
-
-    // ▼ パスワードチェック処理
-    async function checkPassword() {
+    function checkPassword() {
       const input = document.getElementById("adminPassword").value;
-      const hash = await sha256(input);
 
-      if (hash === correctHash) {
+      if (input === PASSWORD) {
         document.getElementById("login-card").classList.add("hidden");
         document.getElementById("admin-panel").classList.remove("hidden");
       } else {
