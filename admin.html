@@ -55,77 +55,37 @@
             display: none;
             white-space: pre-wrap;
         }
-        #loginBox {
-            margin-bottom: 25px;
-            background: #fff3cd;
-            border: 1px solid #ffeeba;
-            padding: 15px;
-            border-radius: 6px;
-        }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <h2>ユーザー新規作成（Admin）</h2>
 
-        <!-- 管理者ログイン エリア -->
-        <div id="loginBox">
-            <h2>管理者ログイン</h2>
-            <label>管理者パスワード</label>
-            <input id="admin_pass" type="password" placeholder="admin123" />
-            <button onclick="adminLogin()">ログイン</button>
-            <div id="loginError" style="color:red; margin-top:10px; display:none;">
-                パスワードが違います
-            </div>
-        </div>
+        <label>メールアドレス</label>
+        <input id="email" type="email" placeholder="user@example.com" />
 
-        <!-- ログイン後に表示されるフォーム -->
-        <div id="mainForm" style="display:none;">
+        <label>名前</label>
+        <input id="user_name" type="text" placeholder="山田太郎" />
 
-            <!-- ユーザー一覧ページへ -->
-            <button onclick="location.href='user-list.html'">ユーザー一覧へ</button>
+        <label>電話番号</label>
+        <input id="phone" type="text" placeholder="090-xxxx-xxxx" />
 
-            <h2>ユーザー新規作成（Admin）</h2>
+        <label>プラン</label>
+        <select id="plan">
+            <option value="personal">個人プラン</option>
+            <option value="corp">法人プラン</option>
+        </select>
 
-            <label>メールアドレス</label>
-            <input id="email" type="email" placeholder="user@example.com" />
+        <label>法人ユーザー数（個人は1でOK）</label>
+        <input id="users" type="number" value="1" min="1" />
 
-            <label>名前</label>
-            <input id="user_name" type="text" placeholder="山田太郎" />
+        <button onclick="createUser()">ユーザーを作成</button>
 
-            <label>電話番号</label>
-            <input id="phone" type="text" placeholder="090-xxxx-xxxx" />
-
-            <label>プラン</label>
-            <select id="plan">
-                <option value="personal">個人プラン</option>
-                <option value="corp">法人プラン</option>
-            </select>
-
-            <label>法人ユーザー数（個人は1でOK）</label>
-            <input id="users" type="number" value="1" min="1" />
-
-            <button onclick="createUser()">ユーザーを作成</button>
-
-            <div id="result"></div>
-        </div>
-
+        <div id="result"></div>
     </div>
 
 <script>
-/* ------ 管理者ログイン ------ */
-function adminLogin() {
-    const pass = document.getElementById("admin_pass").value;
-
-    if (pass === "admin123") {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("mainForm").style.display = "block";
-    } else {
-        document.getElementById("loginError").style.display = "block";
-    }
-}
-
-/* ------ ユーザー作成 ------ */
 async function createUser() {
     const email = document.getElementById("email").value;
     const user_name = document.getElementById("user_name").value;
