@@ -1,42 +1,44 @@
+import { buffer } from "micro";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import crypto from "crypto";
 
+// ⭐ Next.js API Routes で raw body を扱う設定
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// ===============================
 // Stripe / Supabase / Resend 初期化
+// ===============================
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ⭐ Vercel Node.js API Route の設定
-export const config = {
-  api: {
-    bodyParser: false, // ← Stripe Webhook は生のbodyが必要
-  },
-};
-
+// ===============================
+// メインハンドラー
+// ===============================
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).send("Method not allowed");
   }
 
-  // 生body取得
-  const buffers = [];
-  for await (const chunk of req) {
-    buffers.push(chunk);
-  }
-  const rawBody = Buffer.concat(buffers).toString("utf8");
-
+  const buf = await buffer(req);
   const sig = req.headers["stripe-signature"];
 
   let event;
 
   try {
     event = stripe.webhooks.constructEvent(
-      rawBody,
+      buf,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -73,16 +75,17 @@ export default async function handler(req, res) {
       .eq("email", email)
       .single();
 
-    // 仮パスワード生成
+    // ランダムパスワード生成
     const tempPassword = crypto.randomUUID();
 
-    // Supabase Auth ユーザー作成（重複してもOK）
+    // Supabase Auth ユーザー作成（重複しても OK）
     await supabase.auth.admin.createUser({
-      email,
+      email: email,
       password: tempPassword,
       email_confirm: true,
     });
 
+    // 既存 → UPDATE / 初回 → INSERT
     if (existingUser) {
       await supabase
         .from("users")
@@ -91,43 +94,43 @@ export default async function handler(req, res) {
           purchased_at: purchasedAt.toISOString(),
           next_billing_at: nextBilling ? nextBilling.toISOString() : null,
           user_name: userName,
-          phone,
+          phone: phone,
           status: "active",
         })
         .eq("email", email);
     } else {
       await supabase.from("users").insert({
-        email,
+        email: email,
         stripe_customer_id: customerId,
         purchased_at: purchasedAt.toISOString(),
         next_billing_at: nextBilling ? nextBilling.toISOString() : null,
         user_name: userName,
-        phone,
+        phone: phone,
         status: "active",
       });
     }
 
     console.log("🟢 User added/updated after purchase:", email);
 
-    // ----------------------------
-    // メール送信
-    // ----------------------------
+    // ------------------------
+    // Resend：ログイン案内メール
+    // ------------------------
     try {
       await resend.emails.send({
         from: "やさしいモニタリングAI <no-reply@yourdomain.com>",
         to: email,
         subject: "【やさしいモニタリングAI】ご購入ありがとうございます｜ログイン情報のご案内",
         html: `
-          <p>${userName} 様</p>
-          <p>この度は「やさしいモニタリングAI（会員版）」をご購入いただきありがとうございます。</p>
-          <p>以下がログイン情報となります。</p>
-          <p><b>■ ログインURL</b><br>https://YOUR_DOMAIN/login.html</p>
-          <p><b>■ ID（メールアドレス）</b><br>${email}</p>
-          <p><b>■ 仮パスワード</b><br>${tempPassword}</p>
-          <p>※ログイン後、必ずパスワード変更をお願いいたします。</p>
+            <p>${userName} 様</p>
+            <p>この度はご購入ありがとうございます。</p>
+            <p><b>■ ログインURL</b><br>https://YOUR_DOMAIN/login.html</p>
+            <p><b>■ ID（メールアドレス）</b><br>${email}</p>
+            <p><b>■ 仮パスワード</b><br>${tempPassword}</p>
+            <p>※ログイン後はパスワード変更をお願いします。</p>
         `,
       });
-      console.log("📧 Login info email sent:", email);
+
+      console.log("📧 Login info email sent to:", email);
     } catch (error) {
       console.error("❌ Resend email error:", error);
     }
@@ -151,7 +154,7 @@ export default async function handler(req, res) {
       .eq("stripe_customer_id", customerId);
 
     if (error) {
-      console.error("❌ Error updating user cancel status:", error);
+      console.error("❌ Error updating cancel status:", error);
     } else {
       console.log("🟠 User canceled subscription:", customerId);
     }
