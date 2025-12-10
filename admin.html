@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理画面｜手動ユーザー発行</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .card { background: #fff; padding: 20px; border-radius: 10px; width: 400px; margin: 0 auto; }
+    input, select, button {
+      width: 100%; padding: 10px; margin: 10px 0;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    button { background: #0070f3; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>手動ユーザー発行</h2>
+
+    <label>メールアドレス</label>
+    <input id="email" type="email" />
+
+    <label>プラン</label>
+    <select id="plan">
+      <option value="basic">個人：1,980円</option>
+      <option value="corp5">法人：5名 7,800円</option>
+      <option value="corp_extra">法人追加：1名 1,500円</option>
+    </select>
+
+    <label>利用人数</label>
+    <input id="users" type="number" min="1" value="1" />
+
+    <button onclick="createUser()">ユーザー発行</button>
+
+    <p id="result"></p>
+  </div>
+
+  <script>
+    async function createUser() {
+      const email = document.getElementById("email").value;
+      const plan = document.getElementById("plan").value;
+      const users = document.getElementById("users").value;
+
+      const res = await fetch("/api/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, plan, users }),
+      });
+
+      const json = await res.json();
+      document.getElementById("result").innerText = JSON.stringify(json, null, 2);
+    }
+  </script>
+</body>
+</html>
