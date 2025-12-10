@@ -3,38 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>管理画面｜手動ユーザー発行</title>
+  <title>管理者用ユーザー発行ツール</title>
+
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-    .card { background: #fff; padding: 20px; border-radius: 10px; width: 400px; margin: 0 auto; }
-    input, select, button {
-      width: 100%; padding: 10px; margin: 10px 0;
-      border: 1px solid #ccc; border-radius: 5px;
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #f5f5f5;
     }
-    button { background: #0070f3; color: #fff; cursor: pointer; }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      width: 100%;
+      background: #007bff;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+    }
   </style>
+
+  <!-- ▼▼ 管理者パスワードチェック（必須） ▼▼ -->
+  <script>
+    async function verifyAdmin() {
+      const saved = localStorage.getItem("isAdmin");
+      if (saved === "true") return;
+
+      const pass = prompt("管理パスワードを入力してください：");
+      if (!pass) {
+        alert("パスワードが必要です");
+        location.href = "/";
+        return;
+      }
+
+      // ▼ あなた専用の SHA-256 ハッシュ値に置き換えてください
+      const correctHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+";
+
+      const encoded = new TextEncoder().encode(pass);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+      const hashArray = [...new Uint8Array(hashBuffer)];
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+      if (hashHex !== correctHash) {
+        alert("パスワードが違います");
+        location.href = "/";
+        return;
+      }
+
+      localStorage.setItem("isAdmin", "true");
+    }
+
+    verifyAdmin();
+  </script>
+  <!-- ▲▲ 管理者パスワードチェック（ここまで） ▲▲ -->
+
 </head>
+
 <body>
-  <div class="card">
-    <h2>手動ユーザー発行</h2>
 
-    <label>メールアドレス</label>
-    <input id="email" type="email" />
+  <h1>ユーザー手動発行ツール</h1>
 
-    <label>プラン</label>
-    <select id="plan">
-      <option value="basic">個人：1,980円</option>
-      <option value="corp5">法人：5名 7,800円</option>
-      <option value="corp_extra">法人追加：1名 1,500円</option>
-    </select>
+  <label>メールアドレス</label>
+  <input type="email" id="email">
 
-    <label>利用人数</label>
-    <input id="users" type="number" min="1" value="1" />
+  <label>プラン</label>
+  <select id="plan">
+    <option value="basic">ベーシック（個人）</option>
+    <option value="corp">法人</option>
+  </select>
 
-    <button onclick="createUser()">ユーザー発行</button>
+  <label>利用人数（法人の場合のみ）</label>
+  <input type="number" id="users" value="1" min="1">
 
-    <p id="result"></p>
-  </div>
+  <button onclick="createUser()">ユーザーを発行する</button>
+
+  <div id="result"></div>
 
   <script>
     async function createUser() {
@@ -42,15 +116,21 @@
       const plan = document.getElementById("plan").value;
       const users = document.getElementById("users").value;
 
+      if (!email) {
+        alert("メールアドレスを入力してください");
+        return;
+      }
+
       const res = await fetch("/api/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, plan, users }),
+        body: JSON.stringify({ email, plan, users })
       });
 
-      const json = await res.json();
-      document.getElementById("result").innerText = JSON.stringify(json, null, 2);
+      const data = await res.json();
+      document.getElementById("result").innerText = JSON.stringify(data, null, 2);
     }
   </script>
+
 </body>
 </html>
