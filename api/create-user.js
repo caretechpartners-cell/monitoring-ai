@@ -10,26 +10,50 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { email, plan, users } = req.body;
+  const { email, plan, users, user_name, phone } = req.body;
 
-  // Supabaseにユーザーを作成（パスワード自動生成）
+  // ① パスワード生成
   const password = Math.random().toString(36).slice(-10);
 
-  const { data, error } = await supabase.auth.admin.createUser({
+  // ② Authユーザー作成
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     email_confirm: true,
     password,
-    user_metadata: { plan, users }
   });
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
+  if (authError) {
+    return res.status(400).json({ error: authError.message });
+  }
+
+  const userId = authData.user.id;
+
+  // ③ public.users に追加
+  const { error: insertError } = await supabase
+    .from("users")
+    .insert({
+      email,
+      user_name,
+      phone,
+      plan,
+      status: "active",
+      corp_user_limit: users,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      purchased_at: new Date().toISOString()
+    });
+
+  if (insertError) {
+    return res.status(400).json({
+      error: "INSERT failed: " + insertError.message,
+      detail: insertError
+    });
   }
 
   return res.json({
     message: "ユーザーが作成されました",
     email,
     temporaryPassword: password,
-    supabaseUserId: data.user?.id
+    supabaseUserId: userId
   });
 }
