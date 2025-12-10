@@ -13,17 +13,17 @@ export default async function handler(req, res) {
 
   const { email, plan, users, user_name, phone } = req.body;
 
-  // ① 一時パスワード生成（10桁）
-  const temporaryPassword = Math.random().toString(36).slice(-10);
+  // ① ランダムパスワード作成
+  const rawPassword = Math.random().toString(36).slice(-10);
 
-  // ② bcrypt ハッシュ（ログイン用）
-  const password_hash = await bcrypt.hash(temporaryPassword, 10);
+  // ② bcrypt ハッシュ化
+  const password_hash = await bcrypt.hash(rawPassword, 10);
 
-  // ③ Auth にも作成
+  // ③ Supabase Authユーザー作成
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     email_confirm: true,
-    password: temporaryPassword,
+    password: rawPassword,
   });
 
   if (authError) {
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   const userId = authData.user.id;
 
-  // ④ public.users に保存（←ここで password_hash も保存！）
+  // ④ public.users に保存
   const { error: insertError } = await supabase
     .from("users")
     .insert({
@@ -42,11 +42,10 @@ export default async function handler(req, res) {
       plan,
       status: "active",
       corp_user_limit: users,
-      password_hash,  // ← 追加
-      temporaryPassword
+      password_hash,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      purchased_at: new Date().toISOString()
+      purchased_at: new Date().toISOString(),
     });
 
   if (insertError) {
@@ -56,11 +55,10 @@ export default async function handler(req, res) {
     });
   }
 
-  // ⑤ 画面に返す
   return res.json({
     message: "ユーザーが作成されました",
     email,
-    temporaryPassword,     // ← これが表示される
+    temporaryPassword: rawPassword,
     supabaseUserId: userId
   });
 }
