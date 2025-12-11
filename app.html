@@ -1,147 +1,248 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>会員専用ページ｜やさしいモニタリングAI</title>
+<!DOCTYPE html> 
+<html lang="ja"> 
+<head> 
+<meta charset="UTF-8"> 
+<title>会員専用ページ｜やさしいAIシリーズ</title> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet"> 
 
-  <style>
-    body {
-      margin: 0;
-      background: #e9f6fb;
-      font-family: "M PLUS Rounded 1c", sans-serif;
-    }
+<style> 
+body { margin: 0; font-family: "M PLUS Rounded 1c", sans-serif; background: #e9f6fb; } 
 
-    .header {
-      background: #2a6f97;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
+/* 🔓 ログアウトボタン（位置を変更） */ 
+.logout-btn { 
+  position: fixed; 
+  top: 70px; 
+  right: 20px; 
+  background: #2a6f97; 
+  color: white; 
+  padding: 10px 18px; 
+  border-radius: 14px; 
+  font-size: 16px; 
+  cursor: pointer; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+  z-index: 1000; 
+} 
+.logout-btn:hover { opacity: 0.9; } 
 
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 20px;
-    }
+/* ⭐ マイページボタン（位置をログアウトの上へ変更） */ 
+.mypage-btn { 
+  position: fixed; 
+  top: 20px; 
+  right: 20px; 
+  background: #2a6f97; 
+  color: white; 
+  padding: 10px 18px; 
+  border-radius: 14px; 
+  font-size: 16px; 
+  cursor: pointer; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+  z-index: 1000; 
+} 
+.mypage-btn:hover { opacity: 0.9; } 
 
-    .tool-box {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 25px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
+.container { 
+  max-width: 900px; 
+  margin: 40px auto; 
+  background: #ffffff; 
+  border-radius: 20px; 
+  padding: 40px; 
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+} 
 
-    .tool-title {
-      font-size: 26px;
-      color: #2a6f97;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
+h1 { 
+  text-align: center; 
+  color: #2a6f97; 
+  font-size: 32px; 
+  margin-bottom: 10px; 
+} 
 
-    .tool-desc {
-      font-size: 18px;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
+.powered { text-align: center; font-size: 16px; color: #777; margin-bottom: 30px; } 
 
-    .tool-status {
-      font-size: 18px;
-      color: #1b5e20;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
+.section { margin-top: 40px; } 
+.section-title { font-size: 24px; color: #2a6f97; margin-bottom: 15px; } 
 
-    .cta-btn {
-      width: 100%;
-      height: 70px;
-      background: #2a6f97;
-      color: white;
-      font-size: 22px;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-    }
+.text { font-size: 18px; line-height: 1.9; color: #444; } 
 
-    /* ★ 追加：生成の履歴ボタン */
-    .history-btn {
-      width: 100%;
-      height: 55px;
-      font-size: 18px;
-      border: none;
-      border-radius: 14px;
-      margin-top: 12px;
-      cursor: pointer;
-      background: #88b7d5;
-      color: white;
-    }
-    .history-btn:hover {
-      opacity: 0.9;
-    }
+.tool-box { 
+  background: #f7fbff; 
+  border-radius: 14px; 
+  padding: 20px; 
+  border: 1px solid #dfeef7; 
+  margin-top: 20px; 
+} 
 
-    .menu-box {
-      margin-top: 40px;
-      text-align: center;
-    }
+.tool-title { font-size: 20px; color: #2a6f97; margin-bottom: 8px; font-weight: bold; } 
+.tool-desc { font-size: 16px; color: #444; line-height: 1.8; } 
+.tool-status { margin-top: 8px; font-size: 14px; color: #666; } 
 
-    .menu-link {
-      font-size: 20px;
-      color: #2a6f97;
-      text-decoration: none;
-      font-weight: bold;
-      display: block;
-      margin-top: 18px;
-    }
-  </style>
-</head>
-<body>
+.cta-btn { 
+  width: 100%; 
+  height: 70px; 
+  font-size: 22px; 
+  border: none; 
+  border-radius: 16px; 
+  margin-top: 25px; 
+  cursor: pointer; 
+  background: #2a6f97; 
+  color: white; 
+} 
 
-  <div class="header">会員専用ページ</div>
+.disabled-btn { background: #b0c7d6; cursor: default; } 
 
-  <div class="container">
+/* ★ 追加：生成の履歴ボタン（既存に影響しない最小定義） */
+.history-btn {
+  width: 100%;
+  height: 55px;
+  font-size: 18px;
+  border: none;
+  border-radius: 14px;
+  margin-top: 12px;
+  cursor: pointer;
+  background: #88b7d5;
+  color: white;
+}
+.history-btn:hover {
+  opacity: 0.9;
+}
 
-    <div class="tool-box">
-      <div class="tool-title">✅ モニタリングAI</div>
-      <div class="tool-desc">
-        居宅介護支援のモニタリング記録を、<br />
-        実地指導・監査対応の正式文章として自動生成いたします。<br />
-        月々の記録業務の負担を大幅に軽減できるAIです。
-      </div>
-      <div class="tool-status">【現在ご利用可能】</div>
+.link-box { margin-top: 40px; text-align: center; font-size: 16px; } 
+.link-box a { color: #2a6f97; text-decoration: none; margin: 0 12px; font-weight: bold; } 
+.link-box a:hover { text-decoration: underline; } 
 
-      <button class="cta-btn" onclick="location.href='index-pro.html?from=app'">
-        モニタリングAIを使う
-      </button>
+.footer-links { text-align: center; margin-top: 40px; font-size: 14px; color: #777; } 
+.footer-links a { color: #777; text-decoration: none; margin: 0 10px; } 
+.footer-links a:hover { text-decoration: underline; } 
 
-      <!-- ★追加：生成の履歴ボタン -->
-      <button class="history-btn" onclick="goHistory()">
-        生成の履歴を見る
-      </button>
-    </div>
+</style> 
+</head> 
 
-    <div class="menu-box">
-      <a class="menu-link" href="mypage.html" onclick="setFromApp()">マイページへ</a>
-      <a class="menu-link" href="login.html">ログアウト</a>
-    </div>
+<body> 
 
-  </div>
+<!-- ⭐ マイページボタン（上） --> 
+<div class="mypage-btn" onclick="goMyPage()"> マイページ </div> 
 
-  <script>
-    // app → mypage の遷移判定
-    function setFromApp() {
-      sessionStorage.setItem("fromApp", "1");
-    }
+<!-- 🔓 ログアウトボタン（下） --> 
+<div class="logout-btn" onclick="logout()"> ログアウト </div> 
 
-    // ★追加：履歴ページ遷移
-    function goHistory() {
-      location.href = "history.html";
-    }
-  </script>
+<div class="container"> 
+<h1>会員専用ページ</h1> 
+<div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div> 
 
-</body>
+<!-- ここから下は完全に元のまま（※履歴ボタンだけ追加） --> 
+
+<div class="section"> 
+  <div class="section-title">現在ご利用いただけるAI</div> 
+
+  <div class="tool-box"> 
+    <div class="tool-title">✅ モニタリングAI</div> 
+    <div class="tool-desc"> 
+      居宅介護支援のモニタリング記録を、<br> 
+      実地指導・監査対応の正式文章として自動生成いたします。<br> 
+      月々の記録業務の負担を大幅に軽減できるAIです。 
+    </div> 
+
+    <div class="tool-status">【現在ご利用可能】</div> 
+
+    <button class="cta-btn" onclick="location.href='index-pro.html?from=app'"> 
+      モニタリングAIを使う 
+    </button> 
+
+    <!-- ★★★ 追加：生成の履歴ボタン ★★★ -->
+    <button class="history-btn" onclick="goHistory()">
+      生成の履歴を見る
+    </button>
+
+  </div> 
+</div> 
+
+<div class="section"> 
+  <div class="section-title">今後ご利用いただける予定のAI（開発中）</div> 
+
+  <div class="tool-box"> 
+    <div class="tool-title">📝 サービス担当者会議 議事録生成AI</div> 
+    <div class="tool-desc"> 
+      サービス担当者会議の発言内容を整理し、<br> 
+      そのまま提出できる正式な議事録として自動で文章化いたします。<br> 
+      「まとめ直しの手間」から解放されるAIです。 
+    </div> 
+    <div class="tool-status">【近日リリース予定】</div> 
+    <button class="cta-btn disabled-btn">準備中</button> 
+  </div> 
+
+  <div class="tool-box"> 
+    <div class="tool-title">✅ 実地指導チェックリスト生成AI</div> 
+    <div class="tool-desc"> 
+      実地指導で確認されやすい項目を、<br> 
+      事業所ごとに最適化されたチェックリストとして自動生成いたします。<br> 
+      「直前の不安」を減らすためのAIです。 
+    </div> 
+    <div class="tool-status">【開発中】</div> 
+    <button class="cta-btn disabled-btn">準備中</button> 
+  </div> 
+
+  <div class="tool-box"> 
+    <div class="tool-title">📄 ケアプラン構成支援AI</div> 
+    <div class="tool-desc"> 
+      課題分析から長期・短期目標、援助内容まで、<br> 
+      ケアプラン全体の構成を一貫して支援するAIです。<br> 
+      作成時間の短縮と、構成品質の安定化を両立いたします。 
+    </div> 
+    <div class="tool-status">【開発構想中】</div> 
+    <button class="cta-btn disabled-btn">準備中</button> 
+  </div> 
+</div> 
+
+<div class="link-box"> 
+  <a href="status.html">▶ 利用状況・契約プランを見る</a> 
+  <a href="lp.html">▶ サービス紹介ページへ</a> 
+</div> 
+
+<div class="footer-links"> 
+  <a href="privacy.html">プライバシーポリシー</a> 
+  <a href="terms.html">利用規約</a> 
+  <a href="tokusho.html">特定商取引法表記</a> 
+</div> 
+
+</div> 
+
+<script> 
+// ---------------------------- 
+// 🔐 ログインチェック 
+// ---------------------------- 
+try { 
+  const raw = localStorage.getItem("user"); 
+  if (!raw) { 
+    window.location.href = "login.html"; 
+  } else { 
+    const user = JSON.parse(raw); 
+    if (!user) window.location.href = "login.html"; 
+  } 
+} catch (e) { 
+  window.location.href = "login.html"; 
+} 
+
+// ⭐ マイページ遷移 
+function goMyPage() { 
+  sessionStorage.setItem("fromApp", "1"); 
+  location.href = "mypage.html"; 
+} 
+
+// ⭐ 追加：生成履歴ページへ 
+function goHistory() {
+  location.href = "history.html";
+}
+
+// ---------------------------- 
+// 🔓 ログアウト処理 
+// ---------------------------- 
+function logout() { 
+  localStorage.removeItem("user"); 
+  localStorage.removeItem("auth_token"); 
+  window.location.href = "login.html"; 
+} 
+</script> 
+
+</body> 
 </html>
