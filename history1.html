@@ -112,6 +112,10 @@ async function loadHistory() {
   let html = "";
 
   data.forEach(row => {
+
+    // ←←← ここだけ変更：改行を <br> に変換
+    const formattedGenerated = (row.generated_text || "").replace(/\n/g, "<br>");
+
     html += `
       <div class="history-card">
         <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
@@ -148,7 +152,7 @@ async function loadHistory() {
 
         <div class="item">
           <div class="item-label">■ 生成結果</div>
-          <div>${row.generated_text || ""}</div>
+          <div>${formattedGenerated}</div>
         </div>
       </div>
     `;
