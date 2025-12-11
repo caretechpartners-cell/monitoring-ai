@@ -14,10 +14,10 @@
       background: #e9f6fb;
     }
 
-    /* 🔓 ログアウトボタン */
+    /* 🔓 ログアウトボタン（位置を変更） */
     .logout-btn {
       position: fixed;
-      top: 20px;
+      top: 70px; /* ← マイページの下になるよう変更 */
       right: 20px;
       background: #2a6f97;
       color: white;
@@ -32,10 +32,10 @@
       opacity: 0.9;
     }
 
-    /* ⭐ 新しく追加：マイページボタンと同じUI */
+    /* ⭐ マイページボタン（位置をログアウトの上へ変更） */
     .mypage-btn {
       position: fixed;
-      top: 70px; /* logoutの下に配置 */
+      top: 20px; /* ← 上段に配置 */
       right: 20px;
       background: #2a6f97;
       color: white;
@@ -170,12 +170,12 @@
 </head>
 <body>
 
-<!-- ⭐ 新規：マイページボタン -->
+<!-- ⭐ マイページボタン（上） -->
 <div class="mypage-btn" onclick="goMyPage()">
   マイページ
 </div>
 
-<!-- 🔓 ログアウトボタン -->
+<!-- 🔓 ログアウトボタン（下） -->
 <div class="logout-btn" onclick="logout()">
   ログアウト
 </div>
@@ -185,9 +185,7 @@
   <h1>会員専用ページ</h1>
   <div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div>
 
-  <!-- 以降は全く変更なし（省略せずそのまま） -->
-  <!-- …（あなたのオリジナルコードが続く）… -->
-  
+  <!-- ここから下は完全に元のまま -->
   <div class="section">
     <div class="section-title">現在ご利用いただけるAI</div>
 
@@ -209,7 +207,6 @@
   <div class="section">
     <div class="section-title">今後ご利用いただける予定のAI（開発中）</div>
 
-    <!-- 以下全て元のまま -->
     <div class="tool-box">
       <div class="tool-title">📝 サービス担当者会議 議事録生成AI</div>
       <div class="tool-desc">
