@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>利用状況・契約プラン｜やさしいモニタリングAI</title>
+  <title>利用状況｜やさしいAIシリーズ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
@@ -12,6 +12,20 @@
       margin: 0;
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2a6f97;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
     }
 
     .container {
@@ -37,84 +51,20 @@
       margin-bottom: 30px;
     }
 
-    .section {
-      margin-top: 40px;
-    }
-
-    .section-title {
-      font-size: 24px;
-      color: #2a6f97;
-      margin-bottom: 15px;
-    }
-
     .info-box {
       background: #f7fbff;
       border-radius: 14px;
-      padding: 20px;
+      padding: 25px;
       border: 1px solid #dfeef7;
       font-size: 18px;
       line-height: 1.9;
-      color: #444;
     }
 
-    .label {
-      color: #666;
-      font-size: 14px;
-      margin-top: 12px;
-    }
-
-    .value {
+    .item-title {
       font-size: 20px;
-      font-weight: bold;
       color: #2a6f97;
-    }
-
-    .cta-btn {
-      width: 100%;
-      height: 70px;
-      font-size: 22px;
-      border: none;
-      border-radius: 16px;
-      margin-top: 35px;
-      cursor: pointer;
-      background: #2a6f97;
-      color: white;
-    }
-
-    .sub-btn {
-      width: 100%;
-      height: 60px;
-      font-size: 18px;
-      border: none;
-      border-radius: 14px;
       margin-top: 20px;
-      cursor: pointer;
-      background: #b0c7d6;
-      color: white;
-    }
-
-    .note {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 16px;
-      color: #666;
-    }
-
-    .link-box {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 16px;
-    }
-
-    .link-box a {
-      color: #2a6f97;
-      text-decoration: none;
-      margin: 0 12px;
       font-weight: bold;
-    }
-
-    .link-box a:hover {
-      text-decoration: underline;
     }
 
     .footer-links {
@@ -123,74 +73,46 @@
       font-size: 14px;
       color: #777;
     }
-
     .footer-links a {
       color: #777;
       text-decoration: none;
       margin: 0 10px;
     }
-
-    .footer-links a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
 
+<div class="back-btn" onclick="location.href='app.html'">
+  ← 戻る
+</div>
+
 <div class="container">
 
-  <h1>利用状況・契約プラン</h1>
-  <div class="powered">やさしいモニタリングAI｜ケアテックパートナーズ</div>
+  <h1>利用状況の確認</h1>
+  <div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div>
 
-  <!-- ✅ 現在の契約状況 -->
-  <div class="section">
-    <div class="section-title">現在のご契約内容</div>
+  <div class="info-box">
 
-    <div class="info-box">
-      <div class="label">ご利用プラン</div>
-      <div class="value">個人プラン（月額 1,980円・税込）</div>
+    <div class="item-title">■ プラン名</div>
+    <div id="planName">読み込み中...</div>
 
-      <div class="label">ご利用中のアカウント数</div>
-      <div class="value">1アカウント</div>
+    <div class="item-title" id="corpCountTitle" style="display:none;">■ 契約ユーザー数（法人）</div>
+    <div id="corpCount" style="display:none;">読み込み中...</div>
 
-      <div class="label">次回更新日</div>
-      <div class="value">毎月自動更新</div>
+    <div class="item-title">■ 登録名</div>
+    <div id="userName">読み込み中...</div>
 
-      <div class="label">お支払い状況</div>
-      <div class="value">正常にお支払いされています</div>
-    </div>
+    <div class="item-title">■ 登録メールアドレス</div>
+    <div id="userEmail">読み込み中...</div>
 
-    <!-- ✅ プラン切り替え導線 -->
-    <button class="cta-btn" onclick="location.href='form-corp.html'">
-      プランの切り替えはこちら
-    </button>
+    <div class="item-title">■ 最終ログイン</div>
+    <div id="lastLogin">読み込み中...</div>
 
-    <div class="note">
-      ※ 法人プランへの変更、アカウント追加、請求書対応のご相談などもこちらから承ります。
-    </div>
+    <div class="item-title">■ 登録日</div>
+    <div id="purchasedAt">読み込み中...</div>
+
   </div>
 
-  <!-- ✅ 利用状況 -->
-  <div class="section">
-    <div class="section-title">ご利用状況</div>
-
-    <div class="info-box">
-      <div class="label">今月の利用回数</div>
-      <div class="value">無制限（有料プラン）</div>
-
-      <div class="label">これまでの生成回数</div>
-      <div class="value">— 回（今後表示予定）</div>
-
-      <div class="label">最終利用日時</div>
-      <div class="value">—</div>
-    </div>
-
-    <button class="cta-btn" onclick="location.href='app.html'">
-      会員専用ページへ戻る
-    </button>
-  </div>
-
-  <!-- ✅ フッター -->
   <div class="footer-links">
     <a href="privacy.html">プライバシーポリシー</a>
     <a href="terms.html">利用規約</a>
@@ -198,6 +120,68 @@
   </div>
 
 </div>
+
+<script>
+  // ログインチェック
+  let localUser = null;
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) location.href = "login.html";
+    localUser = JSON.parse(raw);
+    if (!localUser) location.href = "login.html";
+  } catch {
+    location.href = "login.html";
+  }
+
+  // Supabase から最新データ取得
+  async function loadUserInfo() {
+    const res = await fetch("/api/get-user-info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: localUser.email })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert("ユーザー情報の取得に失敗しました");
+      return;
+    }
+
+    const user = data.user;
+
+    // プラン名
+    const planLabel = user.plan === "corp" ? "法人プラン" :
+                      user.plan === "personal" ? "個人プラン" :
+                      user.plan;
+
+    document.getElementById("planName").textContent = planLabel;
+
+    // 法人プランの場合は契約人数表示
+    if (user.plan === "corp") {
+      document.getElementById("corpCountTitle").style.display = "block";
+      document.getElementById("corpCount").style.display = "block";
+      document.getElementById("corpCount").textContent = user.corp_user_limit || "—";
+    }
+
+    // 名前
+    document.getElementById("userName").textContent = user.user_name || "未登録";
+
+    // メール
+    document.getElementById("userEmail").textContent = user.email;
+
+    // 最終ログイン
+    document.getElementById("lastLogin").textContent =
+      user.last_login_at ? new Date(user.last_login_at).toLocaleString() : "—";
+
+    // 購入日
+    document.getElementById("purchasedAt").textContent =
+      user.purchased_at ? new Date(user.purchased_at).toLocaleDateString() : "—";
+  }
+
+  loadUserInfo();
+
+</script>
 
 </body>
 </html>
