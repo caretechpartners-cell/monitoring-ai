@@ -25,10 +25,10 @@
     h1 {
       color: #2a6f97;
       margin: 0;
-      line-height: 1.2;
+      line-height: 1.2; /* ← 行間を詰める */
     }
     .title-set {
-      margin-bottom: 30px;
+      margin-bottom: 30px; /* 全体の下余白だけ調整 */
     }
     input {
       width: 100%;
@@ -64,6 +64,8 @@
     <h1>会員ログイン</h1>
   </div>
 
+  <div id="forcedMsg" class="error"></div>
+
   <input type="email" id="email" placeholder="メールアドレス">
   <input type="password" id="password" placeholder="パスワード">
 
@@ -73,6 +75,20 @@
 </div>
 
 <script>
+// ----------------------------------------------
+// ★ 強制ログアウトメッセージの読み込み
+// ----------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  const msg = localStorage.getItem("forced_logout_reason");
+  if (msg) {
+    document.getElementById("forcedMsg").textContent = msg;
+    localStorage.removeItem("forced_logout_reason");
+  }
+});
+
+// ----------------------------------------------
+// ログイン処理（既存）
+// ----------------------------------------------
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -89,11 +105,8 @@ async function login() {
   const data = await res.json();
 
   if (data.success) {
-
-    // ★★★ 修正箇所：auth_token をセッショントークンで保存
     localStorage.setItem("user", JSON.stringify(data.user));
     localStorage.setItem("auth_token", data.user.login_session_token);
-
     location.href = "app.html";
   } else {
     errorDiv.textContent = "IDまたはパスワードが異なります";
