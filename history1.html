@@ -1,182 +1,163 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<title>生成履歴｜やさしいモニタリングAI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>生成履歴｜やさしいモニタリングAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
-<style>
-  body {
-    margin: 0;
-    font-family: "M PLUS Rounded 1c", sans-serif;
-    background: #e9f6fb;
-  }
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.js"></script>
 
-  .container {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 20px;
-  }
+  <script>
+    const _supabase = supabase.createClient(
+      "https://odwcrnqhppgyltaxgxtl.supabase.co",
+      "sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV"
+    );
+  </script>
 
-  h1 {
-    text-align: center;
-    color: #2a6f97;
-    font-size: 30px;
-    margin-bottom: 30px;
-  }
-
-  .card {
-    background: white;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    margin-bottom: 25px;
-  }
-
-  .date {
-    color: #2a6f97;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 15px;
-  }
-
-  .section-title {
-    font-size: 16px;
-    font-weight: bold;
-    margin-top: 12px;
-    color: #444;
-  }
-
-  .text {
-    white-space: pre-wrap;
-    background: #f7fbfd;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid #d0e5ef;
-    margin-bottom: 10px;
-  }
-
-  .back {
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  .back button {
-    background: #2a6f97;
-    color: white;
-    padding: 15px 24px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 18px;
-  }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+    .history-card {
+      background: #f7fbff;
+      border-left: 6px solid #2a6f97;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+    .date {
+      color: #2a6f97;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+    .item-label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #cccccc;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+  </style>
 </head>
-
 <body>
 
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページ</button>
+
 <div class="container">
-  <h1>生成履歴</h1>
-
-  <div id="historyList">読み込み中...</div>
-
-  <div class="back">
-    <button onclick="location.href='app.html'">← 戻る</button>
-  </div>
+  <h1>生成履歴一覧</h1>
+  <div id="historyArea">読み込み中…</div>
 </div>
 
 <script>
-  // Supabase 初期化
-  const supabase = window.supabase.createClient(
-    "https://YOUR-PROJECT.supabase.co",
-    "public-anon-key"
-  );
+async function loadHistory() {
 
-  // ログインチェック
-  supabase.auth.getUser().then(async ({ data }) => {
-    if (!data.user) {
-      location.href = "login.html";
-      return;
-    }
+  // 🔒 ログイン確認
+  const userRaw = localStorage.getItem("user");
+  if (!userRaw) {
+    location.href = "login.html";
+    return;
+  }
+  const user = JSON.parse(userRaw);
 
-    loadHistory(data.user.id);
+  // 🔎 データ取得
+  const { data, error } = await _supabase
+    .from("ai_history")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const area = document.getElementById("historyArea");
+
+  if (error) {
+    area.innerHTML = `<p style="color:red;">読み込みエラー: ${error.message}</p>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    area.innerHTML = "まだ生成履歴がありません。";
+    return;
+  }
+
+  // 📝 表示生成
+  let html = "";
+
+  data.forEach(row => {
+    html += `
+      <div class="history-card">
+        <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
+
+        <div class="item">
+          <div class="item-label">■ 生活状況</div>
+          <div>${row.seikatsu || ""}</div>
+        </div>
+
+        <div class="item">
+          <div class="item-label">■ 身体状況</div>
+          <div>${row.shintai || ""}</div>
+        </div>
+
+        <div class="item">
+          <div class="item-label">■ 服薬状況</div>
+          <div>${row.fukuyaku || ""}</div>
+        </div>
+
+        <div class="item">
+          <div class="item-label">■ サービス利用状況</div>
+          <div>${row.service || ""}</div>
+        </div>
+
+        <div class="item">
+          <div class="item-label">■ 本人家族の希望</div>
+          <div>${row.kibou || ""}</div>
+        </div>
+
+        <div class="item">
+          <div class="item-label">■ 自由記載</div>
+          <div>${row.free_text || ""}</div>
+        </div>
+
+        <div class="item">
+          <div class="item-label">■ 生成結果</div>
+          <div>${row.generated_text || ""}</div>
+        </div>
+      </div>
+    `;
   });
 
-  // -------------------------
-  // 履歴を取得（最大20件）
-  // -------------------------
-  async function loadHistory(userId) {
-    const historyBox = document.getElementById("historyList");
-    historyBox.innerHTML = "読み込み中...";
+  area.innerHTML = html;
+}
 
-    const { data, error } = await supabase
-      .from("ai_history")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if (error) {
-      historyBox.innerHTML = "データ取得中にエラーが発生しました。";
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      historyBox.innerHTML = "まだ生成履歴はありません。";
-      return;
-    }
-
-    historyBox.innerHTML = "";
-
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <div class="date">${formatDate(item.created_at)}</div>
-
-        <div class="section-title">生活状況</div>
-        <div class="text">${escape(item.seikatsu ?? "")}</div>
-
-        <div class="section-title">身体状況</div>
-        <div class="text">${escape(item.shintai ?? "")}</div>
-
-        <div class="section-title">服薬状況</div>
-        <div class="text">${escape(item.fukuyaku ?? "")}</div>
-
-        <div class="section-title">サービス利用状況</div>
-        <div class="text">${escape(item.service ?? "")}</div>
-
-        <div class="section-title">本人家族の希望</div>
-        <div class="text">${escape(item.kibou ?? "")}</div>
-
-        <div class="section-title">自由記載</div>
-        <div class="text">${escape(item.free_text ?? "")}</div>
-
-        <div class="section-title">AI生成結果</div>
-        <div class="text">${escape(item.output_text ?? "")}</div>
-      `;
-
-      historyBox.appendChild(card);
-    });
-  }
-
-  function formatDate(dt) {
-    const d = new Date(dt);
-    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
-  }
-
-  // XSS対策
-  function escape(str) {
-    return String(str)
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;");
-  }
+loadHistory();
 </script>
 
 </body>
