@@ -32,6 +32,24 @@
       opacity: 0.9;
     }
 
+    /* ⭐ 新しく追加：マイページボタンと同じUI */
+    .mypage-btn {
+      position: fixed;
+      top: 70px; /* logoutの下に配置 */
+      right: 20px;
+      background: #2a6f97;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+    .mypage-btn:hover {
+      opacity: 0.9;
+    }
+
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -152,6 +170,11 @@
 </head>
 <body>
 
+<!-- ⭐ 新規：マイページボタン -->
+<div class="mypage-btn" onclick="goMyPage()">
+  マイページ
+</div>
+
 <!-- 🔓 ログアウトボタン -->
 <div class="logout-btn" onclick="logout()">
   ログアウト
@@ -162,7 +185,9 @@
   <h1>会員専用ページ</h1>
   <div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div>
 
-  <!-- ✅ 現在利用可能なAI -->
+  <!-- 以降は全く変更なし（省略せずそのまま） -->
+  <!-- …（あなたのオリジナルコードが続く）… -->
+  
   <div class="section">
     <div class="section-title">現在ご利用いただけるAI</div>
 
@@ -181,10 +206,10 @@
     </div>
   </div>
 
-  <!-- ✅ 今後リリース予定のAI -->
   <div class="section">
     <div class="section-title">今後ご利用いただける予定のAI（開発中）</div>
 
+    <!-- 以下全て元のまま -->
     <div class="tool-box">
       <div class="tool-title">📝 サービス担当者会議 議事録生成AI</div>
       <div class="tool-desc">
@@ -220,13 +245,11 @@
 
   </div>
 
-  <!-- ✅ 別ページへのリンク -->
   <div class="link-box">
     <a href="status.html">▶ 利用状況・契約プランを見る</a>
     <a href="lp.html">▶ サービス紹介ページへ</a>
   </div>
 
-  <!-- ✅ フッター -->
   <div class="footer-links">
     <a href="privacy.html">プライバシーポリシー</a>
     <a href="terms.html">利用規約</a>
@@ -249,6 +272,12 @@
       }
   } catch (e) {
       window.location.href = "login.html";
+  }
+
+  // ⭐ マイページ遷移
+  function goMyPage() {
+      sessionStorage.setItem("fromApp", "1");
+      location.href = "mypage.html";
   }
 
   // ----------------------------
