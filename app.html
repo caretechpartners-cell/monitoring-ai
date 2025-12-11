@@ -109,7 +109,7 @@ h1 {
 
 .link-box { margin-top: 40px; text-align: center; font-size: 16px; } 
 .link-box a { color: #2a6f97; text-decoration: none; margin: 0 12px; font-weight: bold; } 
-.link-box a:hover { text-decoration: underline; } 
+<link-box a:hover { text-decoration: underline; } 
 
 .footer-links { text-align: center; margin-top: 40px; font-size: 14px; color: #777; } 
 .footer-links a { color: #777; text-decoration: none; margin: 0 10px; } 
@@ -209,41 +209,26 @@ h1 {
 
 <script> 
 // ---------------------------- 
-// 🔐 ログインチェック（session-verify を追加）
+// 🔐 ログインチェック（DOMContentLoadedで遅延実行）
 // ---------------------------- 
-(async () => {
+document.addEventListener("DOMContentLoaded", () => {
   try {
     const raw = localStorage.getItem("user");
-    const token = localStorage.getItem("auth_token");
-
-    if (!raw || !token) {
-      return (window.location.href = "login.html");
+    if (!raw) {
+      window.location.href = "login.html";
+      return;
     }
 
     const user = JSON.parse(raw);
-    if (!user || !user.id) {
-      return (window.location.href = "login.html");
-    }
-
-    // 🔍 API へ問い合わせ（同時ログイン防止）
-    const res = await fetch("/api/session-verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, token }),
-    });
-
-    const data = await res.json();
-
-    if (!data.valid) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("auth_token");
-      return (window.location.href = "login.html");
+    if (!user) {
+      window.location.href = "login.html";
+      return;
     }
   } catch (e) {
     window.location.href = "login.html";
   }
-})();
-  
+});
+
 // ⭐ マイページ遷移 
 function goMyPage() { 
   sessionStorage.setItem("fromApp", "1"); 
