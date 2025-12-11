@@ -37,22 +37,33 @@
       font-size: 28px;
       margin-bottom: 30px;
     }
+
+    /* ---------- アコーディオン用 ---------- */
     .history-card {
       background: #f7fbff;
       border-left: 6px solid #2a6f97;
-      padding: 20px;
       border-radius: 12px;
       margin-bottom: 25px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .history-header {
+      padding: 20px;
     }
     .date {
       color: #2a6f97;
       font-weight: bold;
-      margin-bottom: 12px;
+    }
+    .history-body {
+      padding: 0 20px 20px 20px;
+      display: none; /* ← 初期状態閉じる */
     }
     .item-label {
       font-weight: bold;
       margin-top: 10px;
     }
+    /* -------------------------------------- */
+
     .back-fixed {
       position: fixed;
       top: 20px;
@@ -111,54 +122,68 @@ async function loadHistory() {
   // 📝 表示生成
   let html = "";
 
-  data.forEach(row => {
+  data.forEach((row, index) => {
 
-    // ←←← ここだけ変更：改行を <br> に変換
+    // generated_text の改行整形
     const formattedGenerated = (row.generated_text || "").replace(/\n/g, "<br>");
 
     html += `
-      <div class="history-card">
-        <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
+      <div class="history-card" onclick="toggleCard(${index})">
 
-        <div class="item">
-          <div class="item-label">■ 生活状況</div>
-          <div>${row.seikatsu || ""}</div>
+        <div class="history-header">
+          <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
         </div>
 
-        <div class="item">
-          <div class="item-label">■ 身体状況</div>
-          <div>${row.shintai || ""}</div>
+        <div class="history-body" id="body-${index}">
+          <div class="item">
+            <div class="item-label">■ 生活状況</div>
+            <div>${row.seikatsu || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 身体状況</div>
+            <div>${row.shintai || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 服薬状況</div>
+            <div>${row.fukuyaku || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ サービス利用状況</div>
+            <div>${row.service || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 本人家族の希望</div>
+            <div>${row.kibou || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 自由記載</div>
+            <div>${row.free_text || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 生成結果</div>
+            <div>${formattedGenerated}</div>
+          </div>
         </div>
 
-        <div class="item">
-          <div class="item-label">■ 服薬状況</div>
-          <div>${row.fukuyaku || ""}</div>
-        </div>
-
-        <div class="item">
-          <div class="item-label">■ サービス利用状況</div>
-          <div>${row.service || ""}</div>
-        </div>
-
-        <div class="item">
-          <div class="item-label">■ 本人家族の希望</div>
-          <div>${row.kibou || ""}</div>
-        </div>
-
-        <div class="item">
-          <div class="item-label">■ 自由記載</div>
-          <div>${row.free_text || ""}</div>
-        </div>
-
-        <div class="item">
-          <div class="item-label">■ 生成結果</div>
-          <div>${formattedGenerated}</div>
-        </div>
       </div>
     `;
   });
 
   area.innerHTML = html;
+}
+
+/* 👇 アコーディオン開閉処理（追加） */
+function toggleCard(index) {
+  const body = document.getElementById(`body-${index}`);
+  body.style.display = (body.style.display === "none" || body.style.display === "") 
+    ? "block"
+    : "none";
 }
 
 loadHistory();
