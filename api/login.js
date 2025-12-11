@@ -5,7 +5,6 @@ export default async function handler(req, res) {
 
   console.log("====== LOGIN API START ======");
 
-  // method チェック
   if (req.method !== "POST") {
     console.log("❌ Method Not Allowed:", req.method);
     return res.status(405).json({ success: false, message: "Method Not Allowed" });
@@ -33,7 +32,7 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // email でユーザー取得
+    // email で users テーブルから取得
     const { data: user, error } = await supabase
       .from("users")
       .select("*")
@@ -54,7 +53,7 @@ export default async function handler(req, res) {
     console.log("HASH (DB password_hash):", user.password_hash);
     console.log("RAW PASSWORD (input):", password);
 
-    // bcrypt で照合
+    // bcrypt 検証
     const isMatch = await bcrypt.compare(password, user.password_hash);
     console.log("COMPARE RESULT:", isMatch);
 
@@ -66,20 +65,23 @@ export default async function handler(req, res) {
       });
     }
 
-    // 最終ログイン更新
-  const nowJST = new Date(Date.now() + (9 * 60 * 60 * 1000))
-  .toISOString()
-  .replace("T", " ")
-  .replace("Z", ""); // Supabase が余計に UTC と解釈するのを防ぐ
+    // JST の現在時刻を生成
+    const nowJST = new Date(Date.now() + (9 * 60 * 60 * 1000))
+      .toISOString()
+      .replace("T", " ")
+      .replace("Z", "");
 
-  const { error: updateError } = await supabase
-  .from("users")
-  .update({ last_login_at: nowJST })
-  .eq("id", user.id);
+    // last_login_at 更新
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ last_login_at: nowJST })
+      .eq("id", user.id);
+
     console.log("UPDATE LOGIN TIME ERROR:", updateError);
 
     console.log("✅ Login success for:", user.email);
 
+    // 成功レスポンス
     return res.status(200).json({
       success: true,
       message: "ログイン成功",
