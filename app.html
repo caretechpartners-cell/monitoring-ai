@@ -235,6 +235,8 @@ h1 {
     const data = await res.json();
 
     if (!data.valid) {
+      localStorage.setItem("forced_logout_reason", "他の端末でログインされたためログアウトしました");
+
       localStorage.removeItem("user");
       localStorage.removeItem("auth_token");
       return (window.location.href = "login.html");
