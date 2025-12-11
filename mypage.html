@@ -72,7 +72,7 @@
   <h1>マイページ</h1>
 
   <button class="btn status-btn" onclick="goStatus()">利用状況の確認</button>
-  <button class="btn plan-btn" onclick="goPlan()">利用プランの変更</button>
+  <button class="btn plan-btn" onclick="goPlan()">利用プランの変更（フォーム入力へ）</button>
 </div>
 
 <script>
@@ -81,14 +81,12 @@
     location.href = "login.html";
   }
 
-  // app.html 側で sessionStorage.setItem("fromApp","1") を記述する必要あり
-
   function goStatus() {
     location.href = "status.html";
   }
 
   function goPlan() {
-    location.href = "change-plan.html";
+    location.href = "form-corp.html";
   }
 </script>
 
