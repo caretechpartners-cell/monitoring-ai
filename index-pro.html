@@ -15,6 +15,49 @@
     }
   </script>
 
+  <!-- ⭐⭐⭐ ここから session-verify（追加）⭐⭐⭐ -->
+  <script>
+  (async () => {
+    try {
+      const raw = localStorage.getItem("user");
+      const token = localStorage.getItem("auth_token");
+
+      if (!raw || !token) {
+        return (window.location.href = "login.html");
+      }
+
+      const user = JSON.parse(raw);
+      if (!user || !user.id) {
+        return (window.location.href = "login.html");
+      }
+
+      const res = await fetch("/api/session-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, token }),
+      });
+
+      const data = await res.json();
+
+      if (!data.valid) {
+        // 🔥 強制ログアウト理由を保存（login.html の赤字に表示）
+        localStorage.setItem(
+          "forced_logout_reason",
+          "他の端末でログインされたためログアウトしました"
+        );
+
+        localStorage.removeItem("user");
+        localStorage.removeItem("auth_token");
+
+        return (window.location.href = "login.html");
+      }
+    } catch (e) {
+      window.location.href = "login.html";
+    }
+  })();
+  </script>
+  <!-- ⭐⭐⭐ ここまで追加 ⭐⭐⭐ -->
+
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
@@ -219,9 +262,6 @@
 
 <script>
 
-/* ----------------------------------------------------
-   🔐 セッションチェック（追加部分）
----------------------------------------------------- */
 (async () => {
   try {
     const raw = localStorage.getItem("user");
@@ -245,8 +285,14 @@
     const data = await res.json();
 
     if (!data.valid) {
+      localStorage.setItem(
+        "forced_logout_reason",
+        "他の端末でログインされたためログアウトしました"
+      );
+
       localStorage.removeItem("user");
       localStorage.removeItem("auth_token");
+
       return (window.location.href = "login.html");
     }
   } catch (e) {
@@ -299,10 +345,6 @@ async function generate() {
   } else {
     result.textContent = data.error;
   }
-
-  // --------------------------
-  // 履歴保存（API経由）
-  // --------------------------
 
   const userRaw = localStorage.getItem("user");
   if (!userRaw) return;
