@@ -266,13 +266,13 @@ async function generate() {
     result.textContent = data.error;
   }
 
-  // ★★★★ 履歴保存（この部分だけ修正済み）★★★★
+  // ★★★★ 履歴保存処理（カラム名を正確に修正）★★★★
 
   const userRaw = localStorage.getItem("user");
   if (!userRaw) return;
   const user = JSON.parse(userRaw);
 
-  await supabase.from("ai_history").insert({
+  const inputs = {
     user_id: user.id,
     seikatsu: life.value,
     shintai: body.value,
@@ -280,10 +280,12 @@ async function generate() {
     service: service.value,
     kibou: hope.value,
     free_text: free.value,
-    generated_text: data.result
-  });
+    generated_text: data.result,
+  };
 
-  // ★最大20件維持（ここは変更なし）
+  await supabase.from("ai_history").insert(inputs);
+
+  // ★最大20件キープ
   const { data: rows } = await supabase
     .from("ai_history")
     .select("id")
