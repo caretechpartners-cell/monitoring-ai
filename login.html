@@ -90,12 +90,11 @@ async function login() {
 
   if (data.success) {
 
-    // 🔒 ここだけ変更（同時ログイン防止のため）
+    // ★★★ 修正箇所：auth_token をセッショントークンで保存
     localStorage.setItem("user", JSON.stringify(data.user));
     localStorage.setItem("auth_token", data.user.login_session_token);
 
     location.href = "app.html";
-
   } else {
     errorDiv.textContent = "IDまたはパスワードが異なります";
   }

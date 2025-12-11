@@ -209,20 +209,41 @@ h1 {
 
 <script> 
 // ---------------------------- 
-// 🔐 ログインチェック（必要部分のみ修正版） 
+// 🔐 ログインチェック（session-verify を追加）
 // ---------------------------- 
-try { 
-  const raw = localStorage.getItem("user"); 
-  if (!raw) { 
-    window.location.href = "login.html"; 
-  } else { 
-    const user = JSON.parse(raw); 
-    if (!user || !user.id) window.location.href = "login.html"; 
-  } 
-} catch (e) { 
-  window.location.href = "login.html"; 
-} 
+(async () => {
+  try {
+    const raw = localStorage.getItem("user");
+    const token = localStorage.getItem("auth_token");
 
+    if (!raw || !token) {
+      return (window.location.href = "login.html");
+    }
+
+    const user = JSON.parse(raw);
+    if (!user || !user.id) {
+      return (window.location.href = "login.html");
+    }
+
+    // 🔍 API へ問い合わせ（同時ログイン防止）
+    const res = await fetch("/api/session-verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, token }),
+    });
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("auth_token");
+      return (window.location.href = "login.html");
+    }
+  } catch (e) {
+    window.location.href = "login.html";
+  }
+})();
+  
 // ⭐ マイページ遷移 
 function goMyPage() { 
   sessionStorage.setItem("fromApp", "1"); 

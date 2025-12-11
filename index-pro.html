@@ -15,20 +15,6 @@
     }
   </script>
 
-  <!-- ⭐ 追加：セッションチェック（同時ログイン防止） -->
-  <script>
-    try {
-      const rawUser = localStorage.getItem("user");
-      const session = localStorage.getItem("auth_token");
-
-      if (!rawUser || !session) {
-        window.location.href = "login.html";
-      }
-    } catch (e) {
-      window.location.href = "login.html";
-    }
-  </script>
-
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
@@ -232,6 +218,41 @@
 </div>
 
 <script>
+
+/* ----------------------------------------------------
+   🔐 セッションチェック（追加部分）
+---------------------------------------------------- */
+(async () => {
+  try {
+    const raw = localStorage.getItem("user");
+    const token = localStorage.getItem("auth_token");
+
+    if (!raw || !token) {
+      return (window.location.href = "login.html");
+    }
+
+    const user = JSON.parse(raw);
+    if (!user || !user.id) {
+      return (window.location.href = "login.html");
+    }
+
+    const res = await fetch("/api/session-verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, token }),
+    });
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("auth_token");
+      return (window.location.href = "login.html");
+    }
+  } catch (e) {
+    window.location.href = "login.html";
+  }
+})();
 
 // --------------------------
 // サンプル入力

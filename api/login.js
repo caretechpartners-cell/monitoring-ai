@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto"; // ★ セッショントークン生成用
 
 export default async function handler(req, res) {
 
@@ -71,10 +72,17 @@ export default async function handler(req, res) {
       .replace("T", " ")
       .replace("Z", "");
 
-    // last_login_at 更新
+    // ★ セッション用トークンを生成（同時ログイン防止）
+    const sessionToken = crypto.randomUUID();
+    console.log("NEW SESSION TOKEN:", sessionToken);
+
+    // last_login_at & login_session_token 同時更新
     const { error: updateError } = await supabase
       .from("users")
-      .update({ last_login_at: nowJST })
+      .update({
+        last_login_at: nowJST,
+        login_session_token: sessionToken,  // ★ 追加
+      })
       .eq("id", user.id);
 
     console.log("UPDATE LOGIN TIME ERROR:", updateError);
@@ -90,6 +98,7 @@ export default async function handler(req, res) {
         email: user.email,
         plan: user.plan,
         status: user.status,
+        login_session_token: sessionToken, // ★ 追加
       },
     });
 
