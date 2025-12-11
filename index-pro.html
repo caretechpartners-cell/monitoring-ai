@@ -18,6 +18,15 @@
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
+  <!-- ⭐⭐⭐ Supabase を読み込み -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabase = supabase.createClient(
+      "https://odwcrnqhppgyltaxgxtl.supabase.co",
+      "sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV"
+    );
+  </script>
+
   <style>
     body {
       margin: 0;
@@ -211,6 +220,9 @@
 
 <script>
 
+// --------------------------
+// サンプル入力
+// --------------------------
 function insertSample() {
   life.value = "自宅にて妻と二人暮らし。日中はテレビ視聴が中心。";
   body.value = "歩行は屋内自立、屋外は手すり使用。転倒歴なし。";
@@ -220,6 +232,9 @@ function insertSample() {
   free.value = "表情は穏やかで会話も成立。";
 }
 
+// --------------------------
+// AI生成処理
+// --------------------------
 async function generate() {
 
   const text = `
@@ -250,8 +265,46 @@ async function generate() {
   } else {
     result.textContent = data.error;
   }
+
+  // ★★★★ ここから履歴保存処理（既存コードは一切変更していません）★★★★
+
+  const userRaw = localStorage.getItem("user");
+  if (!userRaw) return; // 念のため
+  const user = JSON.parse(userRaw);
+
+  const inputs = {
+    life: life.value,
+    body: body.value,
+    medicine: medicine.value,
+    service: service.value,
+    hope: hope.value,
+    free: free.value,
+    result_text: data.result,
+    user_id: user.id
+  };
+
+  // 保存
+  await supabase.from("ai_history").insert(inputs);
+
+  // ★最大20件を維持★
+  const { data: rows } = await supabase
+    .from("ai_history")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (rows && rows.length > 20) {
+    const deleteIds = rows.slice(20).map(r => r.id);
+    await supabase
+      .from("ai_history")
+      .delete()
+      .in("id", deleteIds);
+  }
 }
 
+// --------------------------
+// Word ダウンロード
+// --------------------------
 function downloadDocx() {
   const text = result.textContent;
   const { Document, Packer, Paragraph, TextRun } = window.docx;
