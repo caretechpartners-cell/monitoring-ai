@@ -67,11 +67,15 @@ export default async function handler(req, res) {
     }
 
     // 最終ログイン更新
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ last_login_at: new Date() })
-      .eq("id", user.id);
+  const nowJST = new Date(Date.now() + (9 * 60 * 60 * 1000))
+  .toISOString()
+  .replace("T", " ")
+  .replace("Z", ""); // Supabase が余計に UTC と解釈するのを防ぐ
 
+  const { error: updateError } = await supabase
+  .from("users")
+  .update({ last_login_at: nowJST })
+  .eq("id", user.id);
     console.log("UPDATE LOGIN TIME ERROR:", updateError);
 
     console.log("✅ Login success for:", user.email);
