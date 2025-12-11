@@ -17,6 +17,20 @@
     );
   </script>
 
+  <!-- ⭐ 追加：セッションチェック（同時ログイン防止） -->
+  <script>
+    try {
+      const rawUser = localStorage.getItem("user");
+      const session = localStorage.getItem("auth_token");
+
+      if (!rawUser || !session) {
+        window.location.href = "login.html";
+      }
+    } catch (e) {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <style>
     body {
       margin: 0;

@@ -15,6 +15,20 @@
     }
   </script>
 
+  <!-- ⭐ 追加：セッションチェック（同時ログイン防止） -->
+  <script>
+    try {
+      const rawUser = localStorage.getItem("user");
+      const session = localStorage.getItem("auth_token");
+
+      if (!rawUser || !session) {
+        window.location.href = "login.html";
+      }
+    } catch (e) {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 

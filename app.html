@@ -130,8 +130,6 @@ h1 {
 <h1>会員専用ページ</h1> 
 <div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div> 
 
-<!-- ここから下は完全に元のまま（※履歴ボタンだけ追加） --> 
-
 <div class="section"> 
   <div class="section-title">現在ご利用いただけるAI</div> 
 
@@ -149,7 +147,6 @@ h1 {
       モニタリングAIを使う 
     </button> 
 
-    <!-- ★★★ 追加：生成の履歴ボタン ★★★ -->
     <button class="history-btn" onclick="goHistory()">
       生成の履歴を見る
     </button>
@@ -159,7 +156,6 @@ h1 {
 
 <div class="section"> 
   <div class="section-title">今後ご利用いただける予定のAI（開発中）</div> 
-
   <div class="tool-box"> 
     <div class="tool-title">📝 サービス担当者会議 議事録生成AI</div> 
     <div class="tool-desc"> 
@@ -170,26 +166,13 @@ h1 {
     <div class="tool-status">【近日リリース予定】</div> 
     <button class="cta-btn disabled-btn">準備中</button> 
   </div> 
-
   <div class="tool-box"> 
-    <div class="tool-title">✅ 実地指導チェックリスト生成AI</div> 
+    <div class="tool-title">実地指導チェックリスト生成AI</div> 
     <div class="tool-desc"> 
       実地指導で確認されやすい項目を、<br> 
-      事業所ごとに最適化されたチェックリストとして自動生成いたします。<br> 
-      「直前の不安」を減らすためのAIです。 
+      事業所ごとに最適化されたチェックリストとして自動生成いたします。 
     </div> 
     <div class="tool-status">【開発中】</div> 
-    <button class="cta-btn disabled-btn">準備中</button> 
-  </div> 
-
-  <div class="tool-box"> 
-    <div class="tool-title">📄 ケアプラン構成支援AI</div> 
-    <div class="tool-desc"> 
-      課題分析から長期・短期目標、援助内容まで、<br> 
-      ケアプラン全体の構成を一貫して支援するAIです。<br> 
-      作成時間の短縮と、構成品質の安定化を両立いたします。 
-    </div> 
-    <div class="tool-status">【開発構想中】</div> 
     <button class="cta-btn disabled-btn">準備中</button> 
   </div> 
 </div> 
@@ -209,16 +192,15 @@ h1 {
 
 <script> 
 // ---------------------------- 
-// 🔐 ログインチェック 
+// 🔐 ログインチェック（同時ログイン防止版）
 // ---------------------------- 
 try { 
-  const raw = localStorage.getItem("user"); 
-  if (!raw) { 
-    window.location.href = "login.html"; 
-  } else { 
-    const user = JSON.parse(raw); 
-    if (!user) window.location.href = "login.html"; 
-  } 
+  const rawUser = localStorage.getItem("user");
+  const session = localStorage.getItem("auth_token");
+
+  if (!rawUser || !session) {
+    window.location.href = "login.html";
+  }
 } catch (e) { 
   window.location.href = "login.html"; 
 } 
@@ -236,7 +218,6 @@ function goHistory() {
 
 // ---------------------------- 
 // 🔓 ログアウト処理 
-// ---------------------------- 
 function logout() { 
   localStorage.removeItem("user"); 
   localStorage.removeItem("auth_token"); 
