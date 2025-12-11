@@ -25,10 +25,10 @@
     h1 {
       color: #2a6f97;
       margin: 0;
-      line-height: 1.2; /* ← 行間を詰める */
+      line-height: 1.2;
     }
     .title-set {
-      margin-bottom: 30px; /* 全体の下余白だけ調整 */
+      margin-bottom: 30px;
     }
     input {
       width: 100%;
@@ -64,6 +64,7 @@
     <h1>会員ログイン</h1>
   </div>
 
+  <!-- ★ 強制ログアウトメッセージ表示エリア ★ -->
   <div id="forcedMsg" class="error"></div>
 
   <input type="email" id="email" placeholder="メールアドレス">
@@ -75,20 +76,29 @@
 </div>
 
 <script>
-// ----------------------------------------------
-// ★ 強制ログアウトメッセージの読み込み
-// ----------------------------------------------
+// ---------------------------------------------------------
+// ★ 強制ログアウトメッセージの表示（決定版）
+// ---------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  const msg = localStorage.getItem("forced_logout_reason");
-  if (msg) {
-    document.getElementById("forcedMsg").textContent = msg;
-    localStorage.removeItem("forced_logout_reason");
-  }
+  setTimeout(() => {
+    const msg = localStorage.getItem("forced_logout_reason");
+
+    if (msg && msg.length > 0) {
+      const forcedDiv = document.getElementById("forcedMsg");
+      forcedDiv.textContent = msg;
+    }
+
+    // 表示後に削除（1 ステップ遅らせる）
+    setTimeout(() => {
+      localStorage.removeItem("forced_logout_reason");
+    }, 50);
+
+  }, 0);
 });
 
-// ----------------------------------------------
+// ---------------------------------------------------------
 // ログイン処理（既存）
-// ----------------------------------------------
+// ---------------------------------------------------------
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
