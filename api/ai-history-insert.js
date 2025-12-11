@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
   console.log("====== AI HISTORY INSERT API START ======");
+  console.log("METHOD:", req.method);
+  console.log("HEADERS:", req.headers);
 
   if (req.method !== "POST") {
     console.log("❌ Method Not Allowed:", req.method);
@@ -9,6 +11,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log("RAW BODY:", req.body);
+
     const {
       user_id,
       seikatsu,
@@ -20,7 +24,16 @@ export default async function handler(req, res) {
       generated_text
     } = req.body;
 
-    console.log("REQ BODY:", req.body);
+    console.log("REQ BODY (DESTRUCTURED):", {
+      user_id,
+      seikatsu,
+      shintai,
+      fukuyaku,
+      service,
+      kibou,
+      free_text,
+      generated_text
+    });
 
     if (!user_id || !generated_text) {
       console.log("❌ Missing user_id or generated_text");
@@ -31,10 +44,15 @@ export default async function handler(req, res) {
     }
 
     // Supabase クライアント
+    console.log("ENV SUPABASE_URL:", process.env.SUPABASE_URL ? "OK" : "MISSING");
+    console.log("ENV SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "MISSING");
+
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
+
+    console.log("🔍 INSERT START");
 
     // INSERT
     const { data, error } = await supabase
@@ -64,6 +82,8 @@ export default async function handler(req, res) {
         error: error.message,
       });
     }
+
+    console.log("🎉 INSERT SUCCESS:", data);
 
     return res.status(200).json({
       success: true,
