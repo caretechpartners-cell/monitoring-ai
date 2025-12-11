@@ -22,8 +22,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const supabase = supabase.createClient(
-      "https://**************.supabase.co",        // ←伏字
-      "sb_publishable_************************"    // ←伏字
+      "https://odwcrnqhppgyltaxgxtl.supabase.co",        // ←伏字
+      "sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV"    // ←伏字
     );
   </script>
 
@@ -266,27 +266,24 @@ async function generate() {
     result.textContent = data.error;
   }
 
-  // ★★★★ ここから履歴保存処理（既存コードは一切変更していません）★★★★
+  // ★★★★ 履歴保存（この部分だけ修正済み）★★★★
 
   const userRaw = localStorage.getItem("user");
-  if (!userRaw) return; // 念のため
+  if (!userRaw) return;
   const user = JSON.parse(userRaw);
 
-  const inputs = {
-    life: life.value,
-    body: body.value,
-    medicine: medicine.value,
+  await supabase.from("ai_history").insert({
+    user_id: user.id,
+    seikatsu: life.value,
+    shintai: body.value,
+    fukuyaku: medicine.value,
     service: service.value,
-    hope: hope.value,
-    free: free.value,
-    result_text: data.result,
-    user_id: user.id
-  };
+    kibou: hope.value,
+    free_text: free.value,
+    generated_text: data.result
+  });
 
-  // 保存
-  await supabase.from("ai_history").insert(inputs);
-
-  // ★最大20件を維持★
+  // ★最大20件維持（ここは変更なし）
   const { data: rows } = await supabase
     .from("ai_history")
     .select("id")
