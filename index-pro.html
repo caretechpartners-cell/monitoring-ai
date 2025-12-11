@@ -18,16 +18,14 @@
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
-  <!-- ⭐⭐⭐ Supabase を読み込み -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.js"></script>
-
-<script>
-  const _supabase = supabase.createClient(
-    "https://odwcrnqhppgyltaxgxtl.supabase.co",
-    "sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV"
-  );
-</script>
-
+  <!-- ⭐⭐⭐ Supabase（画面側では使わないが残してOK） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.js"></script>
+  <script>
+    const _supabase = supabase.createClient(
+      "https://odwcrnqhppgyltaxgxtl.supabase.co",
+      "sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV"
+    );
+  </script>
 
   <style>
     body {
@@ -163,7 +161,6 @@
 </head>
 <body>
 
-<!-- ⭐右上固定ボタン -->
 <button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
 
 <div class="container">
@@ -184,22 +181,22 @@
   </div>
 
   <label>■ 生活状況</label>
-  <textarea id="life" placeholder="例：自宅にて妻と二人暮らし。日中はテレビ視聴が中心。"></textarea>
+  <textarea id="life"></textarea>
 
   <label>■ 身体状況</label>
-  <textarea id="body" placeholder="例：歩行は屋内自立、屋外は手すり使用。転倒歴なし。"></textarea>
+  <textarea id="body"></textarea>
 
   <label>■ 服薬状況</label>
-  <textarea id="medicine" placeholder="例：降圧薬を朝1回内服。飲み忘れなし。"></textarea>
+  <textarea id="medicine"></textarea>
 
   <label>■ サービス利用状況</label>
-  <textarea id="service" placeholder="例：週2回デイサービス利用。入浴・機能訓練実施。"></textarea>
+  <textarea id="service"></textarea>
 
   <label>■ 本人・家族の希望</label>
-  <textarea id="hope" placeholder="例：できる範囲で家事を続けたい。家族としては、安全に過ごしながら外出機会も維持したいと希望されている。"></textarea>
+  <textarea id="hope"></textarea>
 
   <label>■ 自由記載</label>
-  <textarea id="free" placeholder="例：表情は穏やかで会話も成立。特段の不安訴えなし。"></textarea>
+  <textarea id="free"></textarea>
 
   <button class="btn generate-btn" onclick="generate()">AIでモニタリング文章生成</button>
 
@@ -230,7 +227,7 @@ function insertSample() {
   body.value = "歩行は屋内自立、屋外は手すり使用。転倒歴なし。";
   medicine.value = "降圧薬を朝1回内服。飲み忘れなし。";
   service.value = "週2回デイサービス利用。入浴・機能訓練実施。";
-  hope.value = "できる範囲で家事を続けたい。家族としては、安全に過ごしながら外出機会も維持したいと希望されている。";
+  hope.value = "できる範囲で家事を続けたい。家族としては、安全に過ごしながら外出機会も維持したいと希望。";
   free.value = "表情は穏やかで会話も成立。";
 }
 
@@ -268,7 +265,9 @@ async function generate() {
     result.textContent = data.error;
   }
 
-  // ★★★★ 履歴保存処理（カラム名を正確に修正）★★★★
+  // --------------------------
+  // 履歴保存（API経由）
+  // --------------------------
 
   const userRaw = localStorage.getItem("user");
   if (!userRaw) return;
@@ -285,22 +284,11 @@ async function generate() {
     generated_text: data.result,
   };
 
-  await supabase.from("ai_history").insert(inputs);
-
-  // ★最大20件キープ
-  const { data: rows } = await supabase
-    .from("ai_history")
-    .select("id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  if (rows && rows.length > 20) {
-    const deleteIds = rows.slice(20).map(r => r.id);
-    await supabase
-      .from("ai_history")
-      .delete()
-      .in("id", deleteIds);
-  }
+  await fetch("/api/ai-history-insert", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(inputs)
+  });
 }
 
 // --------------------------
