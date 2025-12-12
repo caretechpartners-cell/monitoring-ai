@@ -1,11 +1,11 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 会議録 AI の無料回数
-const freeUsageMapConf = {};
+// 無料回数（IP制限）
+const freeUsageMap = {};
 const FREE_LIMIT = 3;
 
 export default async function handler(req, res) {
@@ -14,64 +14,82 @@ export default async function handler(req, res) {
   }
 
   try {
+    // ----------------------------
+    // IP別 回数カウント
+    // ----------------------------
     const userIP =
       req.headers["x-forwarded-for"] ||
       req.socket.remoteAddress ||
       "unknown";
 
-    const count = freeUsageMapConf[userIP] || 0;
-    if (count >= FREE_LIMIT) {
+    const currentCount = freeUsageMap[userIP] || 0;
+
+    if (currentCount >= FREE_LIMIT) {
       return res.status(403).json({ error: "無料回数終了" });
     }
-    freeUsageMapConf[userIP] = count + 1;
 
-    // index-conf.html は text: memo を送っている
-    const memo = req.body.text || req.body.memo;
-    if (!memo) {
-      return res.status(400).json({ error: "メモがありません" });
+    freeUsageMap[userIP] = currentCount + 1;
+
+    // ----------------------------
+    // ユーザー入力
+    // ----------------------------
+    const memoText = req.body.text;
+
+    if (!memoText) {
+      return res.status(400).json({ error: "text がありません" });
     }
 
-    /* ---- プロンプト ---- */
+    // ----------------------------
+    // システムプロンプト
+    // ----------------------------
     const systemPrompt = `
-あなたは日本の介護保険制度に精通したケアマネ業務AIです。
-以下のメモをもとに「サービス担当者会議録」を構造化して作成してください。
+あなたは日本の介護保険制度に精通した、実務特化型のケアマネジャー支援AIです。
 
-【構成（必須）】
-【議題・検討した項目】
-（箇条書き）
+これは「サービス担当者会議録（議事録）」を作成するための補助AIです。
 
-【検討内容】
-（詳細説明）
+以下のルールを必ず厳守して、実地指導・監査に耐える正式な議事録文章のみを出力してください。
 
-【結論・今後の支援方針】
-（決定事項）
+【絶対ルール】
+・主観表現は禁止
+・断定口調、事実ベースで記載
+・5W1Hを必ず明確化
+・医療行為は記載しない
+・1段落 200〜350文字で文章を構成
 
-【残された課題】
-（未解決の課題）
+【必須構成】
+① 会議の目的と概要  
+② 利用者の状態と課題  
+③ 各サービス提供者からの報告  
+④ リスク評価  
+⑤ 支援方針（今後の方針）
 
-出力形式は必ずこの構成でお願いします。
+【入力データ】
+（以下はメモ書きです。文章を構成し直してください）
 `;
 
-    /* ---- ★ OpenAI 新正式 API ---- */
-    const completion = await client.chat.completions.create({
+    // ----------------------------
+    // OpenAI API 呼び出し
+    // ----------------------------
+    const response = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: memo },
+        { role: "user", content: memoText },
       ],
-      temperature: 0.3,
     });
 
-    const result = completion.choices[0].message.content;
+    const resultText = response.choices[0].message.content;
 
-    return res.status(200).json({
-      result,
-      remaining: FREE_LIMIT - freeUsageMapConf[userIP],
+    // ----------------------------
+    // 正常レスポンス
+    // ----------------------------
+    res.status(200).json({
+      result: resultText,
+      remaining: FREE_LIMIT - freeUsageMap[userIP],
     });
-  } catch (err) {
-    console.error("generate-conf ERROR:", err);
-    return res
-      .status(500)
-      .json({ error: "生成エラー", detail: err.message });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "生成エラー", detail: error.message });
   }
 }

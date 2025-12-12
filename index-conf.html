@@ -7,6 +7,9 @@
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
+  <!-- ❌ 削除：SheetJS（不要） -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> -->
+
   <style>
     body {
       margin: 0;
@@ -153,6 +156,7 @@
 
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">📄 Word（docx）でダウンロード</button>
 
+  <!-- Excel出力ボタン -->
   <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">📊 Excel（議事録様式）で出力</button>
 
 </div>
@@ -194,7 +198,7 @@ async function generate() {
   const res = await fetch("/api/generate-conf", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ memo: memo, ai: ai })
+    body: JSON.stringify({ text: memo })
   });
 
   const data = await res.json();
@@ -209,35 +213,33 @@ async function generate() {
   }
 }
 
-/* -------------------------------------------------------------
-   ★ 完全修正版：Excel API（ExcelJS）を呼び出すだけの軽量版
-------------------------------------------------------------- */
-async function exportXLSX() {
-
-  const memo = memoElem.value;
-  const ai = result.textContent;
-
-  const res = await fetch("/api/export-excel", {
+function exportXLSX() {
+  fetch("/api/export-excel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ memo, ai })
+    body: JSON.stringify({
+      memo: memoElem.value,
+      aiResult: result.textContent
+    })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Excel生成エラー");
+
+    return res.blob();
+  })
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "議事録.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+  })
+  .catch(err => {
+    alert("Excelの生成に失敗しました");
+    console.error(err);
   });
-
-  if (!res.ok) {
-    alert("Excel の生成に失敗しました");
-    return;
-  }
-
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "議事録.xlsx";
-  a.click();
-  URL.revokeObjectURL(url);
 }
-
-/* ------------------------------------------------------------- */
 
 function downloadDocx() {
   const text = result.textContent;
