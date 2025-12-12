@@ -8,10 +8,15 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const {
-      memo,      // メモ全文
-      aiResult   // AI生成文章（全文）
-    } = req.body;
+    const { memo, ai, aiResult } = req.body;
+
+    // aiResult が無ければ ai を使う（両方対応できる安全版）
+    const text = aiResult || ai;
+
+    if (!memo || !text) {
+      return res.status(400).json({ error: "memo または aiResult が不足" });
+    }
+
 
     /* ----------------------------
        ① テンプレート読み込み
@@ -95,17 +100,17 @@ export default async function handler(req, res) {
 
 
     /* ----------------------------
-       ④ AI 出力内容の抽出
+       ④ AI 出力内容の抽出（text に統一）
     ---------------------------- */
-    const kadai = aiResult.match(/課題[\s\S]*?(?=今後|支援方針)/);
-    const shien = aiResult.match(/(支援方針|今後)[\s\S]*/);
+    const kadai = text.match(/課題[\s\S]*?(?=今後|支援方針)/);
+    const shien = text.match(/(支援方針|今後)[\s\S]*/);
     const next = memo.match(/次回[:：]\s*([^\n]+)/);
 
     // 検討した項目
     if (kadai) set("C14", kadai[0].trim());
 
     // 検討内容（全文）
-    set("C18", aiResult);
+    set("C18", text);
 
     // 会議の結論
     if (shien) set("C22", shien[0].trim());
