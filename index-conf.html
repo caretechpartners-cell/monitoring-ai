@@ -7,6 +7,9 @@
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
+  <!-- SheetJS（xlsx ライブラリ） -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -49,7 +52,7 @@
       box-sizing: border-box;
     }
     textarea {
-      height: 360px; /* ←★拡大（依頼どおり） */
+      height: 160px;
     }
     .btn {
       width: 100%;
@@ -66,6 +69,17 @@
       color: white;
       margin-top: 15px;
       display: none;
+    }
+    .xlsx-btn {
+      background: #1f7a3a;
+      color: white;
+      margin-top: 15px;
+      display: none;
+      height: 60px;
+      font-size: 20px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
     }
     .sample-btn {
       width: 100%;
@@ -132,7 +146,7 @@
   <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
   <label>■ 会議内容メモ</label>
-  <textarea id="memoElem" placeholder="2025/12/10（水）14:00〜15:00&#10;参加者：訪問介護（鈴木）、訪問看護（田中）、福祉用具（佐藤）、ケアマネ（山本）&#10;&#10;・利用者は最近転倒が増えている。夜間のトイレ移動でふらつきあり。&#10;・訪問介護：食事量は安定しているが歩行が不安定。&#10;・訪問看護：血圧やや高めだが日常生活に支障なし。服薬管理良好。&#10;・福祉用具：歩行器の高さ調整の提案あり。&#10;&#10;【生活課題】&#10;・夜間の転倒リスク&#10;・移動動作の不安定性&#10;&#10;【支援方針】&#10;・夜間センサーライト設置&#10;・歩行器の再調整&#10;・見守り訪問の増加検討&#10;&#10;【ケアマネ所見】&#10;安全確保を最優先しつつ、本人の自立支援とのバランスを取る必要あり。"></textarea>
+  <textarea id="memoElem" placeholder="ここにメモを書いてください（自由形式）"></textarea>
 
   <button class="btn generate-btn" onclick="generate()">AIで議事録を生成する</button>
 
@@ -141,6 +155,10 @@
   <div id="result" class="result-box"></div>
 
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">📄 Word（docx）でダウンロード</button>
+
+  <!-- 追加：Excel出力ボタン -->
+  <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">📊 Excel（議事録様式）で出力</button>
+
 </div>
 
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
@@ -148,25 +166,25 @@
 <script>
 
 function fillSample() {
-  memoElem.value = `2025/12/10（水）14:00〜15:00
+  memoElem.value = `2025/12/10（水）14:00〜15:00  場所：利用者宅
+利用者：山田太郎
 参加者：訪問介護（鈴木）、訪問看護（田中）、福祉用具（佐藤）、ケアマネ（山本）
+家族：長男（仕事都合で欠席）
 
-・利用者は最近転倒が増えている。夜間のトイレ移動でふらつきあり。
-・訪問介護：食事量は安定しているが歩行が不安定。
-・訪問看護：血圧やや高めだが日常生活に支障なし。服薬管理良好。
-・福祉用具：歩行器の高さ調整の提案あり。
+・最近転倒が増えている。特に夜間トイレでふらつき。
+・訪問介護：歩行が不安定。
+・訪問看護：血圧やや高め、服薬状況は良好。
+・福祉用具：歩行器の再調整が必要。
 
-【生活課題】
+【課題】
 ・夜間の転倒リスク
-・移動動作の不安定性
+・見守り不足
 
 【支援方針】
-・夜間センサーライト設置
-・歩行器の再調整
-・見守り訪問の増加検討
+・夜間センサーライトを追加
+・訪問回数の増加検討
 
-【ケアマネ所見】
-安全確保を最優先しつつ、本人の自立支援のバランスを取る体制づくりが必要。`;
+次回：2026/02/01 予定`;
 }
 
 async function generate() {
@@ -175,6 +193,7 @@ async function generate() {
   result.textContent = "生成中…";
   copyGuide.style.display = "none";
   downloadBtn.style.display = "none";
+  xlsxBtn.style.display = "none";
 
   const res = await fetch("/api/generate", {
     method: "POST",
@@ -188,9 +207,98 @@ async function generate() {
     result.textContent = data.result;
     copyGuide.style.display = "block";
     downloadBtn.style.display = "block";
+    xlsxBtn.style.display = "block";
   } else {
     result.textContent = data.error;
   }
+}
+
+/* Excel 生成処理 */
+function exportXLSX() {
+
+  fetch("/templates/kaigiroku.xlsx")
+    .then(r => r.arrayBuffer())
+    .then(buffer => {
+
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const memo = memoElem.value;
+      const ai = result.textContent;
+
+      /* ▼ 日付（M1） */
+      sheet["M1"] = { t:"s", v: new Date().toISOString().split("T")[0] };
+
+      /* ▼ 開催日・時間抽出（正規表現） */
+      const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
+      if (dateMatch) sheet["B5"] = { t:"s", v: dateMatch[0] };
+
+      const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
+      if (timeMatch) sheet["K5"] = { t:"s", v: timeMatch[0] };
+
+      const placeMatch = memo.match(/場所[:：]\s*(.+)/);
+      if (placeMatch) sheet["F5"] = { t:"s", v: placeMatch[1].trim() };
+
+      /* ▼ 名前抽出 */
+      const nameMatch = memo.match(/利用者[:：]\s*([^\n]+)/);
+      if (nameMatch) sheet["B3"] = { t:"s", v: nameMatch[1].trim() };
+
+      /* ▼ 家族出席 */
+      if (memo.includes("家族")) {
+        sheet["B11"] = { t:"s", v: "あり" };
+        const fam = memo.match(/家族[:：]\s*([^\n]+)/);
+        if (fam) {
+          const f = fam[1].replace("出席","").trim();
+          sheet["B12"] = { t:"s", v: f };
+        }
+      }
+
+      /* ▼ 課題抽出 → C14 */
+      const kadai = ai.match(/課題[\s\S]*?(?=今後|支援方針)/);
+      if (kadai) sheet["C14"] = { t:"s", v: kadai[0].trim() };
+
+      /* ▼ 検討内容（全文）→ C18 */
+      sheet["C18"] = { t:"s", v: ai };
+
+      /* ▼ 結論（支援方針）→ C22 */
+      const shien = ai.match(/(支援方針|今後)[\s\S]*/);
+      if (shien) sheet["C22"] = { t:"s", v: shien[0].trim() };
+
+      /* ▼ 残された課題 → C27 */
+      if (kadai) sheet["C27"] = { t:"s", v: kadai[0].trim() };
+
+      /* ▼ 次回開催日 → C31 */
+      const next = memo.match(/次回[:：]\s*([^\n]+)/);
+      if (next) sheet["C31"] = { t:"s", v: next[1].trim() };
+
+      /* 参加者情報（最大9名） */
+      const members = memo.match(/参加者[:：]\s*([^\n]+)/);
+      if (members) {
+        const list = members[1].split("、");
+        const target = [
+          ["C8","E8"],["C10","E10"],["C12","E12"],
+          ["G8","I8"],["G10","I10"],["G12","I12"],
+          ["K8","M8"],["K10","M10"],["K12","M12"]
+        ];
+
+        list.forEach((item, i) => {
+          if (i >= target.length) return;
+          const m = item.match(/(.+?)（(.+?)）/);
+          if (m) {
+            sheet[target[i][0]] = { t:"s", v: m[1] };
+            sheet[target[i][1]] = { t:"s", v: m[2] };
+          }
+        });
+      }
+
+      const out = XLSX.write(workbook, { bookType:"xlsx", type:"array" });
+      const blob = new Blob([out], { type:"application/octet-stream" });
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "議事録.xlsx";
+      a.click();
+    });
 }
 
 function downloadDocx() {
