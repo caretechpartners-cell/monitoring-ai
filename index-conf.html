@@ -49,7 +49,7 @@
       box-sizing: border-box;
     }
     textarea {
-      height: 160px;
+      height: 360px; /* ←★拡大（依頼どおり） */
     }
     .btn {
       width: 100%;
@@ -109,7 +109,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
-    /* ↓案内文のスタイル（既存のフォントと色に合わせる） */
     .memo-guide {
       margin-top: 20px;
       text-align: center;
@@ -128,14 +127,12 @@
   <h1>やさしいサービス担当者会議録AI</h1>
   <div class="powered">Powered by ケアテックパートナーズ</div>
 
-  <!-- サンプル入力ボタン（新規追加・位置変更） -->
   <button class="sample-btn" onclick="fillSample()">サンプルメモを入力する</button>
 
-  <!-- メモ案内文（追加） -->
   <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
   <label>■ 会議内容メモ</label>
-  <textarea id="memoElem" placeholder="ここにメモを書いてください（自由形式）"></textarea>
+  <textarea id="memoElem" placeholder="2025/12/10（水）14:00〜15:00&#10;参加者：訪問介護（鈴木）、訪問看護（田中）、福祉用具（佐藤）、ケアマネ（山本）&#10;&#10;・利用者は最近転倒が増えている。夜間のトイレ移動でふらつきあり。&#10;・訪問介護：食事量は安定しているが歩行が不安定。&#10;・訪問看護：血圧やや高めだが日常生活に支障なし。服薬管理良好。&#10;・福祉用具：歩行器の高さ調整の提案あり。&#10;&#10;【生活課題】&#10;・夜間の転倒リスク&#10;・移動動作の不安定性&#10;&#10;【支援方針】&#10;・夜間センサーライト設置&#10;・歩行器の再調整&#10;・見守り訪問の増加検討&#10;&#10;【ケアマネ所見】&#10;安全確保を最優先しつつ、本人の自立支援とのバランスを取る必要あり。"></textarea>
 
   <button class="btn generate-btn" onclick="generate()">AIで議事録を生成する</button>
 
