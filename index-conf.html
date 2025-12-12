@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>やさしいサービス担当者会議録AI</title>
+  <title>やさしいサービス担当者会議録AI（議事録生成）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
@@ -40,14 +40,16 @@
       margin-bottom: 6px;
       color: #2a6f97;
     }
-    textarea {
+    textarea, input {
       width: 100%;
       font-size: 18px;
       padding: 12px;
       border-radius: 10px;
       border: 2px solid #cfdfe8;
       box-sizing: border-box;
-      height: 200px;
+    }
+    textarea {
+      height: 160px;
     }
     .btn {
       width: 100%;
@@ -65,6 +67,17 @@
       margin-top: 15px;
       display: none;
     }
+    .sample-btn {
+      width: 100%;
+      height: 55px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      margin-top: 10px;
+      cursor: pointer;
+      background: #6c9ab3;
+      color: white;
+    }
     .result-box {
       margin-top: 30px;
       font-size: 18px;
@@ -80,14 +93,7 @@
       font-weight: bold;
       display: none;
     }
-    .limit-msg {
-      margin-top: 20px;
-      font-size: 16px;
-      color: red;
-      display: none;
-    }
 
-    /* 会員ページへの戻る */
     .back-fixed {
       position: fixed;
       top: 20px;
@@ -102,6 +108,16 @@
       z-index: 9999;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
+
+    /* ↓案内文のスタイル（既存のフォントと色に合わせる） */
+    .memo-guide {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 <body>
@@ -112,12 +128,16 @@
   <h1>やさしいサービス担当者会議録AI</h1>
   <div class="powered">Powered by ケアテックパートナーズ</div>
 
-  <label>■ メモ（議事録にしたい内容を自由に入力）</label>
-  <textarea id="memo" placeholder="例：2025/12/10、参加者はヘルパー鈴木さん、訪看の田中さん。利用者の最近の転倒あり…"></textarea>
+  <!-- サンプル入力ボタン（新規追加・位置変更） -->
+  <button class="sample-btn" onclick="fillSample()">サンプルメモを入力する</button>
 
-  <button class="btn generate-btn" onclick="generate()">AIで会議録を生成する</button>
+  <!-- メモ案内文（追加） -->
+  <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
-  <div id="limitMsg" class="limit-msg">無料利用は3回までです。会員登録すると無制限でご利用いただけます。</div>
+  <label>■ 会議内容メモ</label>
+  <textarea id="memoElem" placeholder="ここにメモを書いてください（自由形式）"></textarea>
+
+  <button class="btn generate-btn" onclick="generate()">AIで議事録を生成する</button>
 
   <div class="copy-guide" id="copyGuide">このままコピーして議事録に貼り付けできます。</div>
 
@@ -129,67 +149,45 @@
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
 <script>
-// -----------------------------
-// 無料3回制限（議事録AI専用）
-// -----------------------------
-function canUseFree() {
-  const count = Number(localStorage.getItem("free_conf_count") || "0");
-  return count < 3;
+
+function fillSample() {
+  memoElem.value = `2025/12/10（水）14:00〜15:00
+参加者：訪問介護（鈴木）、訪問看護（田中）、福祉用具（佐藤）、ケアマネ（山本）
+
+・利用者は最近転倒が増えている。夜間のトイレ移動でふらつきあり。
+・訪問介護：食事量は安定しているが歩行が不安定。
+・訪問看護：血圧やや高めだが日常生活に支障なし。服薬管理良好。
+・福祉用具：歩行器の高さ調整の提案あり。
+
+【生活課題】
+・夜間の転倒リスク
+・移動動作の不安定性
+
+【支援方針】
+・夜間センサーライト設置
+・歩行器の再調整
+・見守り訪問の増加検討
+
+【ケアマネ所見】
+安全確保を最優先しつつ、本人の自立支援のバランスを取る体制づくりが必要。`;
 }
 
-function addFreeCount() {
-  let count = Number(localStorage.getItem("free_conf_count") || "0");
-  localStorage.setItem("free_conf_count", String(count + 1));
-}
-
-// -----------------------------
-// AI生成
-// -----------------------------
 async function generate() {
   const memo = memoElem.value;
 
   result.textContent = "生成中…";
   copyGuide.style.display = "none";
   downloadBtn.style.display = "none";
-  limitMsg.style.display = "none";
-
-  // 無料制限チェック
-  if (!canUseFree()) {
-    limitMsg.style.display = "block";
-    result.textContent = "";
-    return;
-  }
-
-  const promptText = `
-以下のメモを読み取り、サービス担当者会議の正式な議事録の構成で出力してください。
-書式は以下に準拠：
-
-【会議日】  
-【開催場所】  
-【参加者】  
-【利用者の状況】  
-【各サービス事業者の報告】  
-【生活課題】  
-【今後の支援方針】  
-【ケアマネ所見】  
-【自由記述】
-
-文章は整形し、事務的かつ過不足のない形にしてください。
-
---- メモ ---
-${memo}
-  `;
 
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: promptText })
+    body: JSON.stringify({ text: memo })
   });
 
   const data = await res.json();
 
   if (data.result) {
-    addFreeCount();
     result.textContent = data.result;
     copyGuide.style.display = "block";
     downloadBtn.style.display = "block";
@@ -198,14 +196,12 @@ ${memo}
   }
 }
 
-// -----------------------------
-// Word ダウンロード
-// -----------------------------
 function downloadDocx() {
   const text = result.textContent;
   const { Document, Packer, Paragraph, TextRun } = window.docx;
 
   const lines = text.split("\n").filter(line => line.trim() !== "");
+
   const paragraphs = lines.map(line =>
     new Paragraph({
       children: [ new TextRun({ text: line, size: 24 }) ],
@@ -227,12 +223,6 @@ function downloadDocx() {
   });
 }
 
-// DOMキャッシュ
-const memoElem = document.getElementById("memo");
-const result = document.getElementById("result");
-const copyGuide = document.getElementById("copyGuide");
-const downloadBtn = document.getElementById("downloadBtn");
-const limitMsg = document.getElementById("limitMsg");
 </script>
 
 </body>
