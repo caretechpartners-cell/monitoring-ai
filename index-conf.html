@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>サービス担当者会議AI（議事録生成）</title>
+  <title>やさしいサービス担当者会議録AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
@@ -40,16 +40,14 @@
       margin-bottom: 6px;
       color: #2a6f97;
     }
-    textarea, input {
+    textarea {
       width: 100%;
       font-size: 18px;
       padding: 12px;
       border-radius: 10px;
       border: 2px solid #cfdfe8;
       box-sizing: border-box;
-    }
-    textarea {
-      height: 80px;
+      height: 200px;
     }
     .btn {
       width: 100%;
@@ -82,6 +80,12 @@
       font-weight: bold;
       display: none;
     }
+    .limit-msg {
+      margin-top: 20px;
+      font-size: 16px;
+      color: red;
+      display: none;
+    }
 
     /* 会員ページへの戻る */
     .back-fixed {
@@ -105,34 +109,15 @@
 <button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
 
 <div class="container">
-  <h1>サービス担当者会議AI</h1>
+  <h1>やさしいサービス担当者会議録AI</h1>
   <div class="powered">Powered by ケアテックパートナーズ</div>
 
-  <label>■ 会議日</label>
-  <input type="date" id="date" />
+  <label>■ メモ（議事録にしたい内容を自由に入力）</label>
+  <textarea id="memo" placeholder="例：2025/12/10、参加者はヘルパー鈴木さん、訪看の田中さん。利用者の最近の転倒あり…"></textarea>
 
-  <label>■ 参加者</label>
-  <textarea id="members" placeholder="所属・職種・氏名を入力"></textarea>
+  <button class="btn generate-btn" onclick="generate()">AIで会議録を生成する</button>
 
-  <label>■ 利用者の状況</label>
-  <textarea id="status"></textarea>
-
-  <label>■ 各サービス事業者の報告</label>
-  <textarea id="reports"></textarea>
-
-  <label>■ 生活課題</label>
-  <textarea id="issues"></textarea>
-
-  <label>■ 今後の支援方針</label>
-  <textarea id="policy"></textarea>
-
-  <label>■ ケアマネ所見</label>
-  <textarea id="cm"></textarea>
-
-  <label>■ 自由記述</label>
-  <textarea id="free"></textarea>
-
-  <button class="btn generate-btn" onclick="generate()">AIで議事録を生成する</button>
+  <div id="limitMsg" class="limit-msg">無料利用は3回までです。会員登録すると無制限でご利用いただけます。</div>
 
   <div class="copy-guide" id="copyGuide">このままコピーして議事録に貼り付けできます。</div>
 
@@ -144,60 +129,83 @@
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
 <script>
+// -----------------------------
+// 無料3回制限（議事録AI専用）
+// -----------------------------
+function canUseFree() {
+  const count = Number(localStorage.getItem("free_conf_count") || "0");
+  return count < 3;
+}
+
+function addFreeCount() {
+  let count = Number(localStorage.getItem("free_conf_count") || "0");
+  localStorage.setItem("free_conf_count", String(count + 1));
+}
+
+// -----------------------------
+// AI生成
+// -----------------------------
 async function generate() {
-
-  /* ----------------------------------------------------
-     🔐 無料3回制限（議事録AI専用 = free_conf_count）
-  ---------------------------------------------------- */
-  const used = Number(localStorage.getItem("free_conf_count") || 0);
-  if (used >= 3) {
-    alert("無料体験の上限（3回）に達しました。\nご利用を続けるには製品版をご契約ください。");
-    return;
-  }
-
-  const text = `
-【会議日】${date.value}
-【参加者】${members.value}
-【利用者の状況】${status.value}
-【各サービス事業者の報告】${reports.value}
-【生活課題】${issues.value}
-【今後の支援方針】${policy.value}
-【ケアマネ所見】${cm.value}
-【自由記述】${free.value}
-  `;
+  const memo = memoElem.value;
 
   result.textContent = "生成中…";
   copyGuide.style.display = "none";
   downloadBtn.style.display = "none";
+  limitMsg.style.display = "none";
+
+  // 無料制限チェック
+  if (!canUseFree()) {
+    limitMsg.style.display = "block";
+    result.textContent = "";
+    return;
+  }
+
+  const promptText = `
+以下のメモを読み取り、サービス担当者会議の正式な議事録の構成で出力してください。
+書式は以下に準拠：
+
+【会議日】  
+【開催場所】  
+【参加者】  
+【利用者の状況】  
+【各サービス事業者の報告】  
+【生活課題】  
+【今後の支援方針】  
+【ケアマネ所見】  
+【自由記述】
+
+文章は整形し、事務的かつ過不足のない形にしてください。
+
+--- メモ ---
+${memo}
+  `;
 
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
+    body: JSON.stringify({ text: promptText })
   });
 
   const data = await res.json();
 
   if (data.result) {
+    addFreeCount();
     result.textContent = data.result;
     copyGuide.style.display = "block";
     downloadBtn.style.display = "block";
-
-    // 🔢 成功時のみ free_conf_count を +1
-    const usedNow = Number(localStorage.getItem("free_conf_count") || 0);
-    localStorage.setItem("free_conf_count", usedNow + 1);
-
   } else {
     result.textContent = data.error;
   }
 }
 
+// -----------------------------
+// Word ダウンロード
+// -----------------------------
 function downloadDocx() {
   const text = result.textContent;
   const { Document, Packer, Paragraph, TextRun } = window.docx;
 
   const lines = text.split("\n").filter(line => line.trim() !== "");
-
   const paragraphs = lines.map(line =>
     new Paragraph({
       children: [ new TextRun({ text: line, size: 24 }) ],
@@ -218,6 +226,13 @@ function downloadDocx() {
     URL.revokeObjectURL(url);
   });
 }
+
+// DOMキャッシュ
+const memoElem = document.getElementById("memo");
+const result = document.getElementById("result");
+const copyGuide = document.getElementById("copyGuide");
+const downloadBtn = document.getElementById("downloadBtn");
+const limitMsg = document.getElementById("limitMsg");
 </script>
 
 </body>
