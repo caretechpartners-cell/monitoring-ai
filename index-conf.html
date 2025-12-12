@@ -213,65 +213,53 @@ async function generate() {
   }
 }
 
-/* Excel 生成処理 */
+/* -------------------------------------------------------------
+   ★ ここだけ差し替え：Excel生成（スタイル完全維持 .v 上書き版）
+------------------------------------------------------------- */
 function exportXLSX() {
 
   fetch("/templates/kaigiroku.xlsx")
     .then(r => r.arrayBuffer())
     .then(buffer => {
 
-      const workbook = XLSX.read(buffer, { type: "array" });
+      const workbook = XLSX.read(buffer, { type: "array", cellStyles: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
       const memo = memoElem.value;
       const ai = result.textContent;
 
-      /* ▼ 日付（M1） */
-      sheet["M1"] = { t:"s", v: new Date().toISOString().split("T")[0] };
+      /* ▼ 値だけ上書きする関数（style 崩さない） */
+      const set = (cell, value) => {
+        if (!sheet[cell]) sheet[cell] = {};
+        sheet[cell].v = value;
+        sheet[cell].t = "s";
+      };
 
-      /* ▼ 開催日・時間抽出（正規表現） */
+      /* ▼ 日付（M1） */
+      set("M1", new Date().toISOString().split("T")[0]);
+
+      /* ▼ 開催日・時間・場所 */
       const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
-      if (dateMatch) sheet["B5"] = { t:"s", v: dateMatch[0] };
+      if (dateMatch) set("B5", dateMatch[0]);
 
       const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
-      if (timeMatch) sheet["K5"] = { t:"s", v: timeMatch[0] };
+      if (timeMatch) set("K5", timeMatch[0]);
 
       const placeMatch = memo.match(/場所[:：]\s*(.+)/);
-      if (placeMatch) sheet["F5"] = { t:"s", v: placeMatch[1].trim() };
+      if (placeMatch) set("F5", placeMatch[1].trim());
 
-      /* ▼ 名前抽出 */
+      /* ▼ 利用者名 */
       const nameMatch = memo.match(/利用者[:：]\s*([^\n]+)/);
-      if (nameMatch) sheet["B3"] = { t:"s", v: nameMatch[1].trim() };
+      if (nameMatch) set("B3", nameMatch[1].trim());
 
-      /* ▼ 家族出席 */
+      /* ▼ 家族 */
       if (memo.includes("家族")) {
-        sheet["B11"] = { t:"s", v: "あり" };
+        set("B11", "あり");
         const fam = memo.match(/家族[:：]\s*([^\n]+)/);
-        if (fam) {
-          const f = fam[1].replace("出席","").trim();
-          sheet["B12"] = { t:"s", v: f };
-        }
+        if (fam) set("B12", fam[1].trim());
       }
 
-      /* ▼ 課題抽出 → C14 */
-      const kadai = ai.match(/課題[\s\S]*?(?=今後|支援方針)/);
-      if (kadai) sheet["C14"] = { t:"s", v: kadai[0].trim() };
-
-      /* ▼ 検討内容（全文）→ C18 */
-      sheet["C18"] = { t:"s", v: ai };
-
-      /* ▼ 結論（支援方針）→ C22 */
-      const shien = ai.match(/(支援方針|今後)[\s\S]*/);
-      if (shien) sheet["C22"] = { t:"s", v: shien[0].trim() };
-
-      /* ▼ 残された課題 → C27 */
-      if (kadai) sheet["C27"] = { t:"s", v: kadai[0].trim() };
-
-      /* ▼ 次回開催日 → C31 */
-      const next = memo.match(/次回[:：]\s*([^\n]+)/);
-      if (next) sheet["C31"] = { t:"s", v: next[1].trim() };
-
-      /* 参加者情報（最大9名） */
+      /* ▼ 参加者（9名まで） */
       const members = memo.match(/参加者[:：]\s*([^\n]+)/);
       if (members) {
         const list = members[1].split("、");
@@ -285,13 +273,37 @@ function exportXLSX() {
           if (i >= target.length) return;
           const m = item.match(/(.+?)（(.+?)）/);
           if (m) {
-            sheet[target[i][0]] = { t:"s", v: m[1] };
-            sheet[target[i][1]] = { t:"s", v: m[2] };
+            set(target[i][0], m[1]);
+            set(target[i][1], m[2]);
           }
         });
       }
 
-      const out = XLSX.write(workbook, { bookType:"xlsx", type:"array" });
+      /* ▼ 課題（C14） */
+      const kadai = ai.match(/課題[\s\S]*?(?=今後|支援方針)/);
+      if (kadai) set("C14", kadai[0].trim());
+
+      /* ▼ 検討内容（全文） */
+      set("C18", ai);
+
+      /* ▼ 会議の結論（支援方針） */
+      const shien = ai.match(/(支援方針|今後)[\s\S]*/);
+      if (shien) set("C22", shien[0].trim());
+
+      /* ▼ 残された課題 */
+      if (kadai) set("C27", kadai[0].trim());
+
+      /* ▼ 次回開催日 */
+      const next = memo.match(/次回[:：]\s*([^\n]+)/);
+      if (next) set("C31", next[1].trim());
+
+      /* ▼ 出力 */
+      const out = XLSX.write(workbook, {
+        bookType:"xlsx",
+        type:"array",
+        cellStyles:true
+      });
+
       const blob = new Blob([out], { type:"application/octet-stream" });
 
       const a = document.createElement("a");
@@ -300,6 +312,8 @@ function exportXLSX() {
       a.click();
     });
 }
+
+/* ------------------------------------------------------------- */
 
 function downloadDocx() {
   const text = result.textContent;
