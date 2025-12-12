@@ -191,7 +191,7 @@ async function generate() {
   downloadBtn.style.display = "none";
   xlsxBtn.style.display = "none";
 
-  const res = await fetch("/api/generate", {
+  const res = await fetch("/api/generate-conf", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ memo: memo, ai: ai })
