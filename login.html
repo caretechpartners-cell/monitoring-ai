@@ -122,6 +122,11 @@ async function login() {
     errorDiv.textContent = "IDまたはパスワードが異なります";
   }
 }
+
+document.getElementById("password").addEventListener("keypress", e => {
+  if (e.key === "Enter") login();
+});
+
 </script>
 
 </body>
