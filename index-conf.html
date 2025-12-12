@@ -156,6 +156,7 @@
 
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">📄 Word（docx）でダウンロード</button>
 
+  <!-- 追加：Excel出力ボタン -->
   <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">📊 Excel（議事録様式）で出力</button>
 
 </div>
@@ -212,91 +213,83 @@ async function generate() {
   }
 }
 
-/* ▼▼ フォント保持・セル結合保持の set 関数追加（ここだけ変更） ▼▼ */
-function set(sheet, cell, value) {
-  if (!sheet[cell]) sheet[cell] = { t: "s", v: "" };
-  sheet[cell].v = value;
-  return sheet[cell];
-}
-
-/* Excel 生成処理 */
+/* -------------------------------------------------------------
+   Excel生成（cellStyles を削除 → 完全動作版）
+------------------------------------------------------------- */
 function exportXLSX() {
 
   fetch("/templates/kaigiroku.xlsx")
     .then(r => r.arrayBuffer())
     .then(buffer => {
 
-      const workbook = XLSX.read(buffer, { type: "array", cellStyles: true });
+      /* ★ 修正ポイント（cellStylesを削除） */
+      const workbook = XLSX.read(buffer, { type: "array" });
+
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
       const memo = memoElem.value;
       const ai = result.textContent;
 
-      /* ▼ 今日の日付（M1） */
-      const today = new Date().toISOString().split("T")[0];
-      set(sheet, "M1", today);
+      const set = (cell, value) => {
+        if (!sheet[cell]) sheet[cell] = {};
+        sheet[cell].v = value;
+        sheet[cell].t = "s";
+      };
 
-      /* ▼ 開催日・時間 */
+      set("M1", new Date().toISOString().split("T")[0]);
+
       const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
-      if (dateMatch) set(sheet, "B5", dateMatch[0]);
+      if (dateMatch) set("B5", dateMatch[0]);
 
       const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
-      if (timeMatch) set(sheet, "K5", timeMatch[0]);
+      if (timeMatch) set("K5", timeMatch[0]);
 
       const placeMatch = memo.match(/場所[:：]\s*(.+)/);
-      if (placeMatch) set(sheet, "F5", placeMatch[1].trim());
+      if (placeMatch) set("F5", placeMatch[1].trim());
 
-      /* ▼ 利用者名 */
       const nameMatch = memo.match(/利用者[:：]\s*([^\n]+)/);
-      if (nameMatch) set(sheet, "B3", nameMatch[1].trim());
+      if (nameMatch) set("B3", nameMatch[1].trim());
 
-      /* ▼ 家族出席 */
       if (memo.includes("家族")) {
-        set(sheet, "B11", "あり");
+        set("B11", "あり");
         const fam = memo.match(/家族[:：]\s*([^\n]+)/);
-        if (fam) set(sheet, "B12", fam[1].trim());
+        if (fam) set("B12", fam[1].trim());
       }
 
-      /* ▼ 課題抽出 → C14 */
-      const kadai = ai.match(/課題[\s\S]*?(?=今後|支援方針)/);
-      if (kadai) set(sheet, "C14", kadai[0].trim());
-
-      /* ▼ 検討内容（全文）→ C18 */
-      set(sheet, "C18", ai);
-
-      /* ▼ 会議の結論（支援方針）→ C22 */
-      const shien = ai.match(/(支援方針|今後)[\s\S]*/);
-      if (shien) set(sheet, "C22", shien[0].trim());
-
-      /* ▼ 残された課題 → C27 */
-      if (kadai) set(sheet, "C27", kadai[0].trim());
-
-      /* ▼ 次回開催年月日 → C31 */
-      const next = memo.match(/次回[:：]\s*([^\n]+)/);
-      if (next) set(sheet, "C31", next[1].trim());
-
-      /* ▼ 参加者（最大9名） */
       const members = memo.match(/参加者[:：]\s*([^\n]+)/);
       if (members) {
         const list = members[1].split("、");
-        const targets = [
+        const target = [
           ["C8","E8"],["C10","E10"],["C12","E12"],
           ["G8","I8"],["G10","I10"],["G12","I12"],
           ["K8","M8"],["K10","M10"],["K12","M12"]
         ];
-
         list.forEach((item, i) => {
-          if (i >= targets.length) return;
+          if (i >= target.length) return;
           const m = item.match(/(.+?)（(.+?)）/);
           if (m) {
-            set(sheet, targets[i][0], m[1]);
-            set(sheet, targets[i][1], m[2]);
+            set(target[i][0], m[1]);
+            set(target[i][1], m[2]);
           }
         });
       }
 
-      /* ▼ 出力 */
-      const out = XLSX.write(workbook, { bookType:"xlsx", type:"array", cellStyles:true });
+      const kadai = ai.match(/課題[\s\S]*?(?=今後|支援方針)/);
+      if (kadai) set("C14", kadai[0].trim());
+
+      set("C18", ai);
+
+      const shien = ai.match(/(支援方針|今後)[\s\S]*/);
+      if (shien) set("C22", shien[0].trim());
+
+      if (kadai) set("C27", kadai[0].trim());
+
+      const next = memo.match(/次回[:：]\s*([^\n]+)/);
+      if (next) set("C31", next[1].trim());
+
+      /* ★ 修正ポイント（cellStyles を削除して書き出し） */
+      const out = XLSX.write(workbook, { bookType:"xlsx", type:"array" });
+
       const blob = new Blob([out], { type:"application/octet-stream" });
 
       const a = document.createElement("a");
@@ -305,6 +298,8 @@ function exportXLSX() {
       a.click();
     });
 }
+
+/* ------------------------------------------------------------- */
 
 function downloadDocx() {
   const text = result.textContent;
