@@ -231,7 +231,6 @@ function exportXLSX() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "議事録.xlsx";
     a.click();
     URL.revokeObjectURL(url);
   })

@@ -7,19 +7,26 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const {
-      memo,
-      aiResult,
-      userName = "利用者",
-      meetingDate = new Date().toISOString().split("T")[0]
-    } = req.body;
+    const { memo, aiResult } = req.body;
 
     if (!memo || !aiResult) {
       return res.status(400).json({ error: "memo または aiResult が不足" });
     }
 
     /* ----------------------------
-       ① テンプレート読み込み
+       ① 利用者名・日付を memo から抽出
+    ---------------------------- */
+
+    const userMatch = memo.match(/利用者[:：]\s*([^\n]+)/);
+    const userName = userMatch ? userMatch[1].trim() : "利用者";
+
+    const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
+    const meetingDate = dateMatch
+      ? dateMatch[0].replace(/\//g, "-")
+      : new Date().toISOString().split("T")[0];
+
+    /* ----------------------------
+       ② テンプレート読み込み
     ---------------------------- */
     const templatePath = path.join(
       process.cwd(),
@@ -29,42 +36,29 @@ export default async function handler(req, res) {
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(templatePath);
-
     const sheet = workbook.getWorksheet(1);
 
-    /* ----------------------------------------
-       ★ 書式を壊さない値代入
-    ---------------------------------------- */
     const set = (cell, value) => {
       sheet.getCell(cell).value = value;
     };
 
     /* ----------------------------
-       ② メモから情報抽出
+       ③ 値のセット（書式完全維持）
     ---------------------------- */
 
-    // 作成年月日
     set("M1", meetingDate);
-
-    // 利用者名
     set("B3", userName);
 
-    // 開催日
-    const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
     if (dateMatch) set("B5", dateMatch[0]);
 
-    // 開催時間
     const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
     if (timeMatch) set("K5", timeMatch[0]);
 
-    // 開催場所
     const placeMatch = memo.match(/場所[:：]\s*(.+)/);
     if (placeMatch) set("F5", placeMatch[1].trim());
 
-    // 本人出席
     if (memo.includes("本人")) set("B10", "あり");
 
-    // 家族
     const familyMatch = memo.match(/家族[:：]\s*([^\n]+)/);
     if (familyMatch) {
       set("B11", "あり");
@@ -72,10 +66,10 @@ export default async function handler(req, res) {
     }
 
     /* ----------------------------
-       ③ 参加者（最大9名）
+       ④ 参加者
     ---------------------------- */
-    const membersMatch = memo.match(/参加者[:：]\s*([^\n]+)/);
 
+    const membersMatch = memo.match(/参加者[:：]\s*([^\n]+)/);
     if (membersMatch) {
       const list = membersMatch[1].split("、");
 
@@ -96,8 +90,9 @@ export default async function handler(req, res) {
     }
 
     /* ----------------------------
-       ④ AI出力内容
+       ⑤ AI結果
     ---------------------------- */
+
     const kadai = aiResult.match(/課題[\s\S]*?(?=今後|支援方針)/);
     const shien = aiResult.match(/(支援方針|今後)[\s\S]*/);
     const next = memo.match(/次回[:：]\s*([^\n]+)/);
@@ -109,7 +104,7 @@ export default async function handler(req, res) {
     if (next) set("C31", next[1].trim());
 
     /* ----------------------------
-       ⑤ 生成して返却
+       ⑥ 出力（日本語ファイル名安全）
     ---------------------------- */
 
     const fileName = `${userName}_${meetingDate}.xlsx`;
