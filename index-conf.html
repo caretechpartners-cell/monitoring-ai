@@ -7,9 +7,6 @@
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
-  <!-- SheetJS（xlsx ライブラリ） -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
   <style>
     body {
       margin: 0;
@@ -156,7 +153,6 @@
 
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">📄 Word（docx）でダウンロード</button>
 
-  <!-- 追加：Excel出力ボタン -->
   <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">📊 Excel（議事録様式）で出力</button>
 
 </div>
@@ -214,89 +210,31 @@ async function generate() {
 }
 
 /* -------------------------------------------------------------
-   Excel生成（cellStyles を削除 → 完全動作版）
+   ★ 完全修正版：Excel API（ExcelJS）を呼び出すだけの軽量版
 ------------------------------------------------------------- */
-function exportXLSX() {
+async function exportXLSX() {
 
-  fetch("/templates/kaigiroku.xlsx")
-    .then(r => r.arrayBuffer())
-    .then(buffer => {
+  const memo = memoElem.value;
+  const ai = result.textContent;
 
-      /* ★ 修正ポイント（cellStylesを削除） */
-      const workbook = XLSX.read(buffer, { type: "array" });
+  const res = await fetch("/api/export-excel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ memo, ai })
+  });
 
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  if (!res.ok) {
+    alert("Excel の生成に失敗しました");
+    return;
+  }
 
-      const memo = memoElem.value;
-      const ai = result.textContent;
-
-      const set = (cell, value) => {
-        if (!sheet[cell]) sheet[cell] = {};
-        sheet[cell].v = value;
-        sheet[cell].t = "s";
-      };
-
-      set("M1", new Date().toISOString().split("T")[0]);
-
-      const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
-      if (dateMatch) set("B5", dateMatch[0]);
-
-      const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
-      if (timeMatch) set("K5", timeMatch[0]);
-
-      const placeMatch = memo.match(/場所[:：]\s*(.+)/);
-      if (placeMatch) set("F5", placeMatch[1].trim());
-
-      const nameMatch = memo.match(/利用者[:：]\s*([^\n]+)/);
-      if (nameMatch) set("B3", nameMatch[1].trim());
-
-      if (memo.includes("家族")) {
-        set("B11", "あり");
-        const fam = memo.match(/家族[:：]\s*([^\n]+)/);
-        if (fam) set("B12", fam[1].trim());
-      }
-
-      const members = memo.match(/参加者[:：]\s*([^\n]+)/);
-      if (members) {
-        const list = members[1].split("、");
-        const target = [
-          ["C8","E8"],["C10","E10"],["C12","E12"],
-          ["G8","I8"],["G10","I10"],["G12","I12"],
-          ["K8","M8"],["K10","M10"],["K12","M12"]
-        ];
-        list.forEach((item, i) => {
-          if (i >= target.length) return;
-          const m = item.match(/(.+?)（(.+?)）/);
-          if (m) {
-            set(target[i][0], m[1]);
-            set(target[i][1], m[2]);
-          }
-        });
-      }
-
-      const kadai = ai.match(/課題[\s\S]*?(?=今後|支援方針)/);
-      if (kadai) set("C14", kadai[0].trim());
-
-      set("C18", ai);
-
-      const shien = ai.match(/(支援方針|今後)[\s\S]*/);
-      if (shien) set("C22", shien[0].trim());
-
-      if (kadai) set("C27", kadai[0].trim());
-
-      const next = memo.match(/次回[:：]\s*([^\n]+)/);
-      if (next) set("C31", next[1].trim());
-
-      /* ★ 修正ポイント（cellStyles を削除して書き出し） */
-      const out = XLSX.write(workbook, { bookType:"xlsx", type:"array" });
-
-      const blob = new Blob([out], { type:"application/octet-stream" });
-
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "議事録.xlsx";
-      a.click();
-    });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "議事録.xlsx";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ------------------------------------------------------------- */
