@@ -255,7 +255,7 @@ function exportXLSX() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "service_meeting.xlsx";
+    a.download = `${userName}_${date}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   })
