@@ -148,7 +148,7 @@ if (place) {
     /* ----------------------------
        ⑤ 参加者
     ---------------------------- */
-
+    let careManagerName = "";
     const membersMatch = memo.match(/参加者[:：]\s*([\s\S]*?)(?:\n\s*\n|$)/);
 
 if (membersMatch) {
@@ -186,8 +186,17 @@ if (membersMatch) {
     // 氏名 → E列
     set(targets[idx][1], m[3]);
 
+    // ケアマネ抽出（M3用）
+    if (!careManagerName && m[2].includes("ケアマネ")) {
+    careManagerName = m[3];
+}
+
     idx++;
   }
+    // M3：ケアマネジャー名
+    if (careManagerName) {
+    set("M3", careManagerName);
+}
 }
 
 
