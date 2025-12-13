@@ -221,7 +221,7 @@ async function generate() {
   const res = await fetch("/api/generate-conf", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: memo })
+    body: JSON.stringify({ memo })
   });
 
   const data = await res.json();
