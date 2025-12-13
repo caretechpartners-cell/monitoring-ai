@@ -28,7 +28,6 @@ export default async function handler(req, res) {
     /* ----------------------------
        ② テンプレート読み込み
     ---------------------------- */
-
     const templatePath = path.join(
       process.cwd(),
       "templates",
@@ -98,29 +97,14 @@ export default async function handler(req, res) {
     const shien = aiResult.match(/(支援方針|今後)[\s\S]*/);
     const next = memo.match(/次回[:：]\s*([^\n]+)/);
 
-    /* ===== C14 だけ箇条書き整形（唯一の変更点） ===== */
-    if (kadai) {
-      const body = kadai[0]
-        .replace(/^課題[:：]?\s*/, "")
-        .trim();
-
-      const lines = body
-        .split(/\n|・|-|—/)
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
-
-      const bulletText = lines.map(l => `・${l}`).join("\n");
-      set("C14", bulletText);
-    }
-    /* =============================================== */
-
+    if (kadai) set("C14", kadai[0].trim());
     set("C18", aiResult);
     if (shien) set("C22", shien[0].trim());
     if (kadai) set("C27", kadai[0].trim());
     if (next) set("C31", next[1].trim());
 
     /* ----------------------------
-       ⑥ 出力（利用者名_生成年月日.xlsx）
+       ⑥ 出力（日本語ファイル名安全）
     ---------------------------- */
 
     const fileName = `${userName}_${meetingDate}.xlsx`;
