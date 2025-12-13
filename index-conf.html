@@ -256,8 +256,31 @@ function exportXLSX() {
     const a = document.createElement("a");
 
     // ▼ 利用者名をメモから抽出
-    const userMatch = memoElem.value.match(/利用者[:：]\s*([^\n]+)/);
-    const userName = userMatch ? userMatch[1].trim() : "利用者";
+    let userName = "利用者";
+
+    // ① 利用者：山田太郎 があれば最優先
+    const explicitMatch = memoElem.value.match(/利用者[:：]\s*([^\n　]+)/);
+    if (explicitMatch) {
+  userName = explicitMatch[1].trim();
+} else {
+  // ② 冒頭付近の日本人名っぽい行を拾う
+  const lines = memoElem.value
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (
+      /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
+      !line.includes("参加") &&
+      !line.includes("場所")
+    ) {
+      userName = line.split(/\s+/)[0];
+      break;
+    }
+  }
+}
+
 
     // ▼ 開催日をメモから抽出
     const dateMatch = memoElem.value.match(/(\d{1,2})\/(\d{1,2})/);
