@@ -115,24 +115,30 @@ export default async function handler(req, res) {
     ---------------------------- */
 
     const membersMatch = memo.match(/参加者[:：]\s*([\s\S]*?)(?:\n\s*\n|$)/);
-    if (membersMatch) {
-      const list = membersMatch[1].split("、");
 
-      const targets = [
-        ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
-        ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
-        ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
-      ];
+if (membersMatch) {
+  const lines = membersMatch[1]
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
 
-      list.forEach((item, i) => {
-        if (i >= targets.length) return;
-        const m = item.match(/(.+?)（(.+?)）/);
-        if (m) {
-          set(targets[i][0], m[1]);
-          set(targets[i][1], m[2]);
-        }
-      });
+  const targets = [
+    ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
+    ["G8", "I8"], ["G10", "E10"], ["G12", "I12"],
+    ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
+  ];
+
+  lines.forEach((line, i) => {
+    if (i >= targets.length) return;
+
+    // 「所属（職種） 氏名」形式を想定
+    const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
+    if (m) {
+      set(targets[i][0], m[3]); // 氏名
+      set(targets[i][1], `${m[1]}（${m[2]}）`); // 所属（職種）
     }
+  });
+}
 
     /* ----------------------------
        ⑥ AI結果（見出し完全対応）
