@@ -100,29 +100,41 @@ export default async function handler(req, res) {
       set("B12", familyMatch[1].trim());
     }
 
-    /* ----------------------------
-       ④ 参加者
-    ---------------------------- */
+/* ----------------------------
+   ④ 参加者（ブロック対応・誤検出防止）
+---------------------------- */
 
-    const membersMatch = memo.match(/参加者[:：]\s*([^\n]+)/);
-    if (membersMatch) {
-      const list = membersMatch[1].split("、");
+const memberBlockMatch = memo.match(
+  /参加者[:：]\s*([\s\S]*?)(?=\n\s*\n|家族[:：]|次回|$)/
+);
 
-      const targets = [
-        ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
-        ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
-        ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
-      ];
+if (memberBlockMatch) {
+  const lines = memberBlockMatch[1]
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
 
-      list.forEach((item, i) => {
-        if (i >= targets.length) return;
-        const m = item.match(/(.+?)（(.+?)）/);
-        if (m) {
-          set(targets[i][0], m[1]);
-          set(targets[i][1], m[2]);
-        }
-      });
+  const targets = [
+    ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
+    ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
+    ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
+  ];
+
+  lines.forEach((line, i) => {
+    if (i >= targets.length) return;
+
+    // 想定例：
+    // 訪介 鈴木
+    // 訪問介護 鈴木
+    // CM 山本
+    const parts = line.split(/\s+/);
+    if (parts.length >= 2) {
+      set(targets[i][0], parts[0]); // 職種
+      set(targets[i][1], parts.slice(1).join(" ")); // 氏名
     }
+  });
+}
+
 
     /* ----------------------------
        ⑤ AI結果（見出し完全対応）
