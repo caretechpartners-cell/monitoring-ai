@@ -124,33 +124,38 @@ if (membersMatch) {
 
   const targets = [
     ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
-    ["G8", "I8"], ["G10", "E10"], ["G12", "I12"],
+    ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
     ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
   ];
 
-  lines.forEach((line, i) => {
-    if (i >= targets.length) return;
+  let idx = 0; // ← 有効参加者用インデックス
 
-  // ▼ 欠席者は除外
-  if (
-    line.includes("欠席") ||
-    line.includes("不参加") ||
-    line.includes("事前") ||
-    line.includes("電話")
-  ) {
-    return;
+  for (const line of lines) {
+    if (idx >= targets.length) break;
+
+    // 欠席者除外
+    if (
+      line.includes("欠席") ||
+      line.includes("不参加") ||
+      line.includes("事前") ||
+      line.includes("電話")
+    ) {
+      continue;
+    }
+
+    const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
+    if (!m) continue;
+
+    // m[1]：所属名
+    // m[2]：職種
+    // m[3]：氏名
+    set(targets[idx][0], m[3]);                 // 氏名
+    set(targets[idx][1], `${m[1]}（${m[2]}）`); // 所属（職種）
+
+    idx++;
   }
+}
 
-  const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
-  if (m) {
-  // m[1]：所属名
-  // m[2]：職種
-  // m[3]：氏名
-  set(targets[i][0], m[3]);                     // 氏名 → C列 / G列 / K列
-  set(targets[i][1], `${m[1]}（${m[2]}）`);     // 所属（職種） → E列 / I列 / M列
-}
-});
-}
 
     /* ----------------------------
        ⑥ AI結果（見出し完全対応）
