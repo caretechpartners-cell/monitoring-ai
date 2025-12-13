@@ -28,28 +28,32 @@ export default async function handler(req, res) {
        ① 利用者名・日付を memo から抽出
     ---------------------------- */
 
+    let userName = ""; // ★ 修正点：未宣言だったため追加
+
     const explicitMatch = memo.match(/利用者[:：]\s*([^\n　]+)/);
     if (explicitMatch) {
-    userName = explicitMatch[1].trim();
+      userName = explicitMatch[1].trim();
     }
-    if (!userName) {
-  const lines = memo.split("\n").map(l => l.trim()).filter(Boolean);
 
-  for (const line of lines) {
-    // 「山田太郎」「山田 太郎」「山田太郎 要介2」などを想定
-    if (
-      /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
-      !line.includes("参加") &&
-      !line.includes("場所")
-    ) {
-      userName = line.split(/\s+/)[0];
-      break;
-    }
-  }
-}
-      if (!userName) {
-      userName = "利用者";
+    if (!userName) {
+      const lines = memo.split("\n").map(l => l.trim()).filter(Boolean);
+
+      for (const line of lines) {
+        // 「山田太郎」「山田 太郎」「山田太郎 要介2」などを想定
+        if (
+          /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
+          !line.includes("参加") &&
+          !line.includes("場所")
+        ) {
+          userName = line.split(/\s+/)[0];
+          break;
+        }
       }
+    }
+
+    if (!userName) {
+      userName = "利用者";
+    }
 
     const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
     const meetingDate = dateMatch
@@ -120,19 +124,19 @@ export default async function handler(req, res) {
       });
     }
 
-/* ----------------------------
-   ⑤ AI結果（見出し完全対応）
----------------------------- */
+    /* ----------------------------
+       ⑤ AI結果（見出し完全対応）
+    ---------------------------- */
 
-const sectionKento = extractSection(aiResult, "検討事項");
-const sectionNaiyo = extractSection(aiResult, "検討内容");
-const sectionKetsuron = extractSection(aiResult, "会議の結論");
-const sectionKadai = extractSection(aiResult, "残された課題");
+    const sectionKento = extractSection(aiResult, "検討事項");
+    const sectionNaiyo = extractSection(aiResult, "検討内容");
+    const sectionKetsuron = extractSection(aiResult, "会議の結論");
+    const sectionKadai = extractSection(aiResult, "残された課題");
 
-if (sectionKento) set("C14", sectionKento);
-if (sectionNaiyo) set("C18", sectionNaiyo);
-if (sectionKetsuron) set("C22", sectionKetsuron);
-if (sectionKadai) set("C27", sectionKadai);
+    if (sectionKento) set("C14", sectionKento);
+    if (sectionNaiyo) set("C18", sectionNaiyo);
+    if (sectionKetsuron) set("C22", sectionKetsuron);
+    if (sectionKadai) set("C27", sectionKadai);
 
     /* ----------------------------
        ⑥ 出力（日本語ファイル名安全）
