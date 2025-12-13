@@ -28,26 +28,30 @@ export default async function handler(req, res) {
        ① 利用者名抽出
     ---------------------------- */
 
-    let userName = null;
+    let userName = "利用者";
 
+    // ① 明示的に「利用者：山田太郎」があれば最優先
     const explicitMatch = memo.match(/利用者[:：]\s*([^\n　]+)/);
     if (explicitMatch) {
-      userName = explicitMatch[1].trim();
-    }
+    userName = explicitMatch[1].trim();
+  } else {
+  // ② 先頭付近の日本人名っぽい行を探す
+    const lines = memo
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
 
-    if (!userName) {
-      const lines = memo.split("\n").map(l => l.trim()).filter(Boolean);
-      for (const line of lines) {
-        if (
-          /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
-          !line.includes("参加") &&
-          !line.includes("場所")
-        ) {
-          userName = line.split(/\s+/)[0];
-          break;
-        }
-      }
+  for (const line of lines) {
+    if (
+      /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
+      !line.includes("参加") &&
+      !line.includes("場所")
+    ) {
+      userName = line.split(/\s+/)[0];
+      break;
     }
+  }
+}
 
     if (!userName) {
       userName = "利用者";
