@@ -114,7 +114,7 @@ export default async function handler(req, res) {
        ⑤ 参加者
     ---------------------------- */
 
-    const membersMatch = memo.match(/参加者[:：]\s*([^\n]+)/);
+    const membersMatch = memo.match(/参加者[:：]\s*([\s\S]*?)(?:\n\s*\n|$)/);
     if (membersMatch) {
       const list = membersMatch[1].split("、");
 
