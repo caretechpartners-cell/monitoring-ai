@@ -78,6 +78,13 @@ export default async function handler(req, res) {
     /* ----------------------------
        ③ 日付関連（仕様通りに修正）
     ---------------------------- */
+    // 冒頭1〜2行だけを解析対象にする（次回開催対策）
+    const headLines = memo
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" ");
 
     // M1：作成年月日 → 今日の日付を強制セット
     const today = new Date().toISOString().split("T")[0];
@@ -95,13 +102,36 @@ export default async function handler(req, res) {
     set("B5", meetingDate);
 }
 
-    // K5：時間
-    const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
-    if (timeMatch) set("K5", timeMatch[0]);
+    // K5：開催時間（冒頭のみ参照）
+    const timeMatch = headLines.match(/(\d{1,2}:\d{2})\s*[〜\-]\s*(\d{1,2}:\d{2})/);
+    if (timeMatch) {
+    set("K5", `${timeMatch[1]}-${timeMatch[2]}`);
+}
 
-    // F5：場所
-    const placeMatch = memo.match(/場所[:：]\s*(.+)/);
-    if (placeMatch) set("F5", placeMatch[1].trim());
+    // F5：開催場所（冒頭から推測）
+    let place = "";
+
+    // ① 「〇〇にて」「〇〇で」
+    const placeMatch1 = headLines.match(
+    /(?:\d{1,2}\/\d{1,2})?\s*(?:\d{1,2}:\d{2}[〜\-]\d{1,2}:\d{2})?\s*(.+?)(にて|で)/
+);
+
+    if (placeMatch1) {
+    place = placeMatch1[1].trim();
+}
+
+    // ② 「利用者宅」など単語
+    if (!place) {
+    const placeMatch2 = headLines.match(/(利用者宅|自宅|事業所|会議室)/);
+    if (placeMatch2) {
+    place = placeMatch2[1];
+  }
+}
+
+if (place) {
+  set("F5", place);
+}
+
 
     /* ----------------------------
        ④ 本人・家族
