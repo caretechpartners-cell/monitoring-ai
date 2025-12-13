@@ -207,7 +207,7 @@ if (membersMatch) {
        ⑧ 出力
     ---------------------------- */
 
-    const fileName = userName + "_" + today + ".xlsx";
+    const fileName = userName + "_" + date + ".xlsx";
 
     res.setHeader(
     "Content-Type",
