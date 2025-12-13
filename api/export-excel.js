@@ -28,8 +28,28 @@ export default async function handler(req, res) {
        ① 利用者名・日付を memo から抽出
     ---------------------------- */
 
-    const userMatch = memo.match(/利用者[:：]\s*([^\n]+)/);
-    const userName = userMatch ? userMatch[1].trim() : "利用者";
+    const explicitMatch = memo.match(/利用者[:：]\s*([^\n　]+)/);
+    if (explicitMatch) {
+    userName = explicitMatch[1].trim();
+    }
+    if (!userName) {
+  const lines = memo.split("\n").map(l => l.trim()).filter(Boolean);
+
+  for (const line of lines) {
+    // 「山田太郎」「山田 太郎」「山田太郎 要介2」などを想定
+    if (
+      /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
+      !line.includes("参加") &&
+      !line.includes("場所")
+    ) {
+      userName = line.split(/\s+/)[0];
+      break;
+    }
+  }
+}
+      if (!userName) {
+      userName = "利用者";
+      }
 
     const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
     const meetingDate = dateMatch
