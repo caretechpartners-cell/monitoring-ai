@@ -207,20 +207,9 @@ if (membersMatch) {
     /* ----------------------------
        ⑧ 出力
     ---------------------------- */
-
-    const fileDate = meetingDate
-    ? meetingDate.replace(/\//g, "-")
-    : new Date().toISOString().split("T")[0];
-
-    const fileName = userName + "_" + fileDate + ".xlsx";
-
     res.setHeader(
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-);
-    res.setHeader(
-    "Content-Disposition",
-    "attachment; filename*=UTF-8''" + encodeURIComponent(fileName)
 );
 
 await workbook.xlsx.write(res);
