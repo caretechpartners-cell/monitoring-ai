@@ -83,6 +83,7 @@ export default async function handler(req, res) {
     set("B3", userName);
 
     // B5：開催日（年なしOK）
+    let meetingDate = "";
     const meetingDateMatch = memo.match(/(\d{1,2})\/(\d{1,2})/);
     if (meetingDateMatch) {
       const year = new Date().getFullYear();
@@ -207,8 +208,9 @@ if (membersMatch) {
        ⑧ 出力
     ---------------------------- */
 
-    const fileDate = meetingDate.replace(/\//g, "-");
-    const fileName = `${userName}_${fileDate}.xlsx`;
+    const fileDate = meetingDate
+    ? meetingDate.replace(/\//g, "-")
+    : new Date().toISOString().split("T")[0];
 
 
     res.setHeader(
