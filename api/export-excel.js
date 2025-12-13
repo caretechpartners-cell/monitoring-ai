@@ -207,19 +207,19 @@ if (membersMatch) {
        ⑧ 出力
     ---------------------------- */
 
-    const fileName = `${userName}_${today}.xlsx`;
+    const fileName = userName + "_" + today + ".xlsx";
 
     res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+);
     res.setHeader(
-      "Content-Disposition",
-      `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`
-    );
+    "Content-Disposition",
+    "attachment; filename*=UTF-8''" + encodeURIComponent(fileName)
+);
 
-    await workbook.xlsx.write(res);
-    res.end();
+await workbook.xlsx.write(res);
+res.end();
 
   } catch (err) {
     console.error(err);
