@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <title>やさしいサービス担当者会議録AI（議事録生成）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     body {
@@ -15,7 +12,6 @@
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
     }
-
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -24,21 +20,18 @@
       padding: 40px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
-
     h1 {
       text-align: center;
       color: #2a6f97;
       font-size: 32px;
       margin-bottom: 5px;
     }
-
     .powered {
       text-align: center;
       font-size: 16px;
       color: #777;
       margin-bottom: 20px;
     }
-
     label {
       display: block;
       font-size: 20px;
@@ -46,21 +39,15 @@
       margin-bottom: 6px;
       color: #2a6f97;
     }
-
-    textarea,
-    input {
+    textarea {
       width: 100%;
+      height: 160px;
       font-size: 18px;
       padding: 12px;
       border-radius: 10px;
       border: 2px solid #cfdfe8;
       box-sizing: border-box;
     }
-
-    textarea {
-      height: 160px;
-    }
-
     .btn {
       width: 100%;
       height: 70px;
@@ -70,19 +57,16 @@
       margin-top: 25px;
       cursor: pointer;
     }
-
     .generate-btn {
       background: #2a6f97;
       color: white;
     }
-
     .download-btn {
       background: #4caf50;
       color: white;
       margin-top: 15px;
       display: none;
     }
-
     .xlsx-btn {
       background: #1f7a3a;
       color: white;
@@ -94,7 +78,6 @@
       border: none;
       cursor: pointer;
     }
-
     .sample-btn {
       width: 100%;
       height: 55px;
@@ -106,7 +89,6 @@
       background: #6c9ab3;
       color: white;
     }
-
     .result-box {
       margin-top: 30px;
       font-size: 18px;
@@ -115,7 +97,6 @@
       padding: 20px;
       white-space: pre-wrap;
     }
-
     .copy-guide {
       margin-top: 15px;
       font-size: 18px;
@@ -123,7 +104,6 @@
       font-weight: bold;
       display: none;
     }
-
     .back-fixed {
       position: fixed;
       top: 20px;
@@ -136,9 +116,7 @@
       border: none;
       cursor: pointer;
       z-index: 9999;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
-
     .memo-guide {
       margin-top: 20px;
       text-align: center;
@@ -150,176 +128,129 @@
 </head>
 
 <body>
-  <button class="back-fixed" onclick="location.href='app.html'">
-    ← 会員専用ページへ戻る
-  </button>
 
-  <div class="container">
-    <h1>やさしいサービス担当者会議録AI</h1>
-    <div class="powered">Powered by ケアテックパートナーズ</div>
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
 
-    <button class="sample-btn" onclick="fillSample()">
-      サンプルメモを入力する
-    </button>
+<div class="container">
+  <h1>やさしいサービス担当者会議録AI</h1>
+  <div class="powered">Powered by ケアテックパートナーズ</div>
 
-    <div class="memo-guide">
-      ↓ ご自身でも入力いただけます（音声可） ↓
-    </div>
+  <button class="sample-btn" onclick="fillSample()">サンプルメモを入力する</button>
 
-    <label>■ 会議内容メモ</label>
-    <textarea
-      id="memoElem"
-      placeholder="ここにメモを書いてください（会議中の走り書き・箇条書きで問題ありません）"
-    ></textarea>
+  <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
-    <button class="btn generate-btn" onclick="generate()">
-      AIで議事録を生成する
-    </button>
+  <label>■ 会議内容メモ</label>
+  <textarea id="memoElem"></textarea>
 
-    <div class="copy-guide" id="copyGuide">
-      このままコピーして議事録に貼り付けできます。
-    </div>
+  <button class="btn generate-btn" onclick="generate()">AIで議事録を生成する</button>
 
-    <div id="result" class="result-box"></div>
-
-    <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
-      📄 Word（docx）でダウンロード
-    </button>
-
-    <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">
-      📊 Excel（議事録様式）で出力
-    </button>
+  <div class="copy-guide" id="copyGuide">
+    このままコピーして議事録に貼り付けできます。
   </div>
 
-  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  <div id="result" class="result-box"></div>
 
-  <script>
-    function fillSample() {
-    memoElem.value =
-    "12/10 14:00-15:00 利用者宅 山田太郎 要介2\n"
-    + "参加者：\n"
-    + "本人（利用者） 山田太郎\n"
-    + "株式会社あおぞら（訪問介護・ヘルパー） 鈴木花子\n"
-    + "さくら訪問看護ステーション（看護師） 田中一郎\n"
-    + "株式会社ケアサポート（福祉用具専門相談員） 佐藤健\n"
-    + "ひまわり居宅介護支援事業所（ケアマネジャー） 山本真由美\n"
-    + "家族（長男） 山田一朗 欠席（事前に電話）\n"
-    + "\n"
-    + "最近 転倒多い 特に 夜 トイレ\n"
-    + "本人「夜は足元が見えにくく不安」\n"
-    + "ふらつき強いとのこと（訪問介護）\n"
-    + "\n"
-    + "訪問看護： BP やや高め 服薬 OK 急変なし\n"
-    + "福祉用具： 歩行器 高さ合ってないかも 再調整検討\n"
-    + "\n"
-    + "結論：\n"
-    + "歩行器の再調整を優先\n"
-    + "夜間対応について事業所と調整\n"
-    + "センサーライト導入を検討\n"
-    + "\n"
-    + "残： 家族支援の方法 夜間見守りの限界\n"
-    + "次回 2026/2/1";
+  <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
+    📄 Word（docx）でダウンロード
+  </button>
+
+  <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">
+    📊 Excel（議事録様式）で出力
+  </button>
+</div>
+
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+<script>
+function fillSample() {
+  memoElem.value =
+    "12/10 14:00-15:00 利用者宅\n" +
+    "利用者：山田太郎　要介2\n\n" +
+    "参加者：\n" +
+    "本人（利用者） 山田太郎\n" +
+    "株式会社あおぞら（訪問介護・ヘルパー） 鈴木花子\n" +
+    "さくら訪問看護ステーション（看護師） 田中一郎\n" +
+    "株式会社ケアサポート（福祉用具専門相談員） 佐藤健\n" +
+    "ひまわり居宅介護支援事業所（ケアマネジャー） 山本真由美\n" +
+    "家族（長男） 山田一朗 欠席（事前に電話）\n\n" +
+    "最近：転倒多い（特に夜トイレ）\n" +
+    "本人「夜は足元が見えにくく不安」\n\n" +
+    "結論：歩行器再調整、夜間対応検討\n\n" +
+    "次回 2026/2/1";
 }
 
-    async function generate() {
-      try {
-        const memo = memoElem.value;
-        result.textContent = "生成中…";
-        copyGuide.style.display = "none";
-        downloadBtn.style.display = "none";
-        xlsxBtn.style.display = "none";
+async function generate() {
+  try {
+    var memo = memoElem.value;
+    result.textContent = "生成中…";
+    copyGuide.style.display = "none";
+    downloadBtn.style.display = "none";
+    xlsxBtn.style.display = "none";
 
-        const res = await fetch("/api/generate-conf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memo })
-        });
+    var res = await fetch("/api/generate-conf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memo: memo })
+    });
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(APIエラー: ${res.status} ${text});
-        }
-
-        const data = await res.json();
-
-        if (data.result) {
-          result.textContent = data.result;
-          copyGuide.style.display = "block";
-          downloadBtn.style.display = "block";
-          xlsxBtn.style.display = "block";
-        } else {
-          result.textContent = data.error || "生成に失敗しました";
-        }
-      } catch (err) {
-        console.error(err);
-        result.textContent =
-          "議事録の生成に失敗しました。しばらくしてから再度お試しください。";
-      }
+    if (!res.ok) {
+      var text = await res.text();
+      throw new Error("APIエラー: " + res.status + " " + text);
     }
 
-    function exportXLSX() {
-      fetch("/api/export-excel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          memo: memoElem.value,
-          aiResult: result.textContent
-        })
-      })
-        .then(res => {
-          if (!res.ok) throw new Error("Excel生成エラー");
-          return res.blob();
-        })
-        .then(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
+    var data = await res.json();
 
-          // ▼ 利用者名をメモから抽出
-          const userMatch = memoElem.value.match(/利用者[:：]\s*([^\n]+)/);
-          const userName = userMatch ? userMatch[1].trim() : "利用者";
-
-          // ▼ 開催日をメモから抽出
-          const dateMatch = memoElem.value.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
-          const date = dateMatch
-            ? dateMatch[0].replace(/\//g, "-")
-            : new Date().toISOString().split("T")[0];
-
-          a.href = url;
-          a.download = ${userName}_${date}.xlsx;
-          a.click();
-          URL.revokeObjectURL(url);
-        })
-        .catch(err => {
-          alert("Excelの生成に失敗しました");
-          console.error(err);
-        });
+    if (data.result) {
+      result.textContent = data.result;
+      copyGuide.style.display = "block";
+      downloadBtn.style.display = "block";
+      xlsxBtn.style.display = "block";
+    } else {
+      result.textContent = "生成に失敗しました";
     }
 
-    function downloadDocx() {
-      const text = result.textContent;
-      const { Document, Packer, Paragraph, TextRun } = window.docx;
+  } catch (err) {
+    console.error(err);
+    result.textContent = "議事録の生成に失敗しました。";
+  }
+}
 
-      const lines = text.split("\n").filter(line => line.trim() !== "");
-      const paragraphs = lines.map(
-        line =>
-          new Paragraph({
-            children: [new TextRun({ text: line, size: 24 })],
-            spacing: { after: 200 }
-          })
-      );
+function exportXLSX() {
+  fetch("/api/export-excel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      memo: memoElem.value,
+      aiResult: result.textContent
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error("Excel生成エラー");
+    return res.blob();
+  })
+  .then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
 
-      const doc = new Document({
-        sections: [{ children: paragraphs }]
-      });
+    var userMatch = memoElem.value.match(/利用者[:：]\s*([^\n]+)/);
+    var userName = userMatch ? userMatch[1].trim() : "利用者";
 
-      Packer.toBlob(doc).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-    }
-  </script>
+    var dateMatch = memoElem.value.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
+    var date = dateMatch ? dateMatch[0].replace(/\//g, "-") :
+               new Date().toISOString().split("T")[0];
+
+    a.href = url;
+    a.download = userName + "_" + date + ".xlsx";
+    a.click();
+
+    URL.revokeObjectURL(url);
+  })
+  .catch(function(err) {
+    alert("Excelの生成に失敗しました");
+    console.error(err);
+  });
+}
+</script>
+
 </body>
 </html>
