@@ -146,11 +146,10 @@ if (membersMatch) {
     const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
     if (!m) continue;
 
-    // m[1]：所属名
-    // m[2]：職種
-    // m[3]：氏名
-    set(targets[idx][0], m[3]);                 // 氏名
-    set(targets[idx][1], `${m[1]}（${m[2]}）`); // 所属（職種）
+    // 所属（職種） → C列
+    set(targets[idx][0], `${m[1]}（${m[2]}）`);
+    // 氏名 → E列
+    set(targets[idx][1], m[3]);
 
     idx++;
   }
