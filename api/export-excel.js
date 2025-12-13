@@ -207,7 +207,9 @@ if (membersMatch) {
        ⑧ 出力
     ---------------------------- */
 
-    const fileName = userName + "_" + date + ".xlsx";
+    const fileDate = meetingDate.replace(/\//g, "-");
+    const fileName = `${userName}_${fileDate}.xlsx`;
+
 
     res.setHeader(
     "Content-Type",
