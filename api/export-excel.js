@@ -25,10 +25,10 @@ export default async function handler(req, res) {
     }
 
     /* ----------------------------
-       ① 利用者名・日付を memo から抽出
+       ① 利用者名抽出
     ---------------------------- */
 
-    let userName = ""; // ★ 修正点：未宣言だったため追加
+    let userName = null;
 
     const explicitMatch = memo.match(/利用者[:：]\s*([^\n　]+)/);
     if (explicitMatch) {
@@ -37,9 +37,7 @@ export default async function handler(req, res) {
 
     if (!userName) {
       const lines = memo.split("\n").map(l => l.trim()).filter(Boolean);
-
       for (const line of lines) {
-        // 「山田太郎」「山田 太郎」「山田太郎 要介2」などを想定
         if (
           /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
           !line.includes("参加") &&
@@ -55,14 +53,10 @@ export default async function handler(req, res) {
       userName = "利用者";
     }
 
-    const dateMatch = memo.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
-    const meetingDate = dateMatch
-      ? dateMatch[0].replace(/\//g, "-")
-      : new Date().toISOString().split("T")[0];
-
     /* ----------------------------
        ② テンプレート読み込み
     ---------------------------- */
+
     const templatePath = path.join(
       process.cwd(),
       "templates",
@@ -78,19 +72,35 @@ export default async function handler(req, res) {
     };
 
     /* ----------------------------
-       ③ 値のセット（書式完全維持）
+       ③ 日付関連（仕様通りに修正）
     ---------------------------- */
 
-    set("M1", meetingDate);
+    // M1：作成年月日 → 今日の日付を強制セット
+    const today = new Date().toISOString().split("T")[0];
+    set("M1", today);
+
+    // B3：利用者名
     set("B3", userName);
 
-    if (dateMatch) set("B5", dateMatch[0]);
+    // B5：開催日（年なしOK）
+    const meetingDateMatch = memo.match(/(\d{1,2})\/(\d{1,2})/);
+    if (meetingDateMatch) {
+      const year = new Date().getFullYear();
+      const meetingDate = `${year}/${meetingDateMatch[1]}/${meetingDateMatch[2]}`;
+      set("B5", meetingDate);
+    }
 
+    // K5：時間
     const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
     if (timeMatch) set("K5", timeMatch[0]);
 
+    // F5：場所
     const placeMatch = memo.match(/場所[:：]\s*(.+)/);
     if (placeMatch) set("F5", placeMatch[1].trim());
+
+    /* ----------------------------
+       ④ 本人・家族
+    ---------------------------- */
 
     if (memo.includes("本人")) set("B10", "あり");
 
@@ -100,44 +110,32 @@ export default async function handler(req, res) {
       set("B12", familyMatch[1].trim());
     }
 
-/* ----------------------------
-   ④ 参加者（ブロック対応・誤検出防止）
----------------------------- */
+    /* ----------------------------
+       ⑤ 参加者
+    ---------------------------- */
 
-const memberBlockMatch = memo.match(
-  /参加者[:：]\s*([\s\S]*?)(?=\n\s*\n|家族[:：]|次回|$)/
-);
+    const membersMatch = memo.match(/参加者[:：]\s*([^\n]+)/);
+    if (membersMatch) {
+      const list = membersMatch[1].split("、");
 
-if (memberBlockMatch) {
-  const lines = memberBlockMatch[1]
-    .split("\n")
-    .map(l => l.trim())
-    .filter(Boolean);
+      const targets = [
+        ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
+        ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
+        ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
+      ];
 
-  const targets = [
-    ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
-    ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
-    ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
-  ];
-
-  lines.forEach((line, i) => {
-    if (i >= targets.length) return;
-
-    // 想定例：
-    // 訪介 鈴木
-    // 訪問介護 鈴木
-    // CM 山本
-    const parts = line.split(/\s+/);
-    if (parts.length >= 2) {
-      set(targets[i][0], parts[0]); // 職種
-      set(targets[i][1], parts.slice(1).join(" ")); // 氏名
+      list.forEach((item, i) => {
+        if (i >= targets.length) return;
+        const m = item.match(/(.+?)（(.+?)）/);
+        if (m) {
+          set(targets[i][0], m[1]);
+          set(targets[i][1], m[2]);
+        }
+      });
     }
-  });
-}
-
 
     /* ----------------------------
-       ⑤ AI結果（見出し完全対応）
+       ⑥ AI結果（見出し完全対応）
     ---------------------------- */
 
     const sectionKento = extractSection(aiResult, "検討事項");
@@ -151,10 +149,43 @@ if (memberBlockMatch) {
     if (sectionKadai) set("C27", sectionKadai);
 
     /* ----------------------------
-       ⑥ 出力（日本語ファイル名安全）
+       ⑦ 次回開催日（C31）
     ---------------------------- */
 
-    const fileName = `${userName}_${meetingDate}.xlsx`;
+    let nextDate = null;
+
+    // 年あり優先
+    const nextFullMatch = memo.match(/次回.*?(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+    if (nextFullMatch) {
+      nextDate = `${nextFullMatch[1]}/${nextFullMatch[2]}/${nextFullMatch[3]}`;
+    }
+
+    // 年なし（月/日のみ）
+    if (!nextDate) {
+      const nextShortMatch = memo.match(/次回.*?(\d{1,2})\/(\d{1,2})/);
+      if (nextShortMatch) {
+        const now = new Date();
+        let year = now.getFullYear();
+        const month = parseInt(nextShortMatch[1], 10);
+
+        // 年跨ぎ対策
+        if (month < now.getMonth() + 1) {
+          year += 1;
+        }
+
+        nextDate = `${year}/${nextShortMatch[1]}/${nextShortMatch[2]}`;
+      }
+    }
+
+    if (nextDate) {
+      set("C31", nextDate);
+    }
+
+    /* ----------------------------
+       ⑧ 出力
+    ---------------------------- */
+
+    const fileName = `${userName}_${today}.xlsx`;
 
     res.setHeader(
       "Content-Type",
