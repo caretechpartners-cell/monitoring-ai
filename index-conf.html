@@ -7,9 +7,6 @@
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
-  <!-- ❌ 削除：SheetJS（不要） -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> -->
-
   <style>
     body {
       margin: 0;
@@ -107,7 +104,6 @@
       font-weight: bold;
       display: none;
     }
-
     .back-fixed {
       position: fixed;
       top: 20px;
@@ -122,7 +118,6 @@
       z-index: 9999;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
-
     .memo-guide {
       margin-top: 20px;
       text-align: center;
@@ -130,7 +125,6 @@
       color: #2a6f97;
       font-weight: bold;
     }
-
   </style>
 </head>
 <body>
@@ -155,10 +149,7 @@
   <div id="result" class="result-box"></div>
 
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">📄 Word（docx）でダウンロード</button>
-
-  <!-- Excel出力ボタン -->
   <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">📊 Excel（議事録様式）で出力</button>
-
 </div>
 
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
@@ -211,28 +202,39 @@ BP やや高め
 }
 
 async function generate() {
-  const memo = memoElem.value;
+  try {
+    const memo = memoElem.value;
 
-  result.textContent = "生成中…";
-  copyGuide.style.display = "none";
-  downloadBtn.style.display = "none";
-  xlsxBtn.style.display = "none";
+    result.textContent = "生成中…";
+    copyGuide.style.display = "none";
+    downloadBtn.style.display = "none";
+    xlsxBtn.style.display = "none";
 
-  const res = await fetch("/api/generate-conf", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ memo })
-  });
+    const res = await fetch("/api/generate-conf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memo })
+    });
 
-  const data = await res.json();
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`APIエラー: ${res.status} ${text}`);
+    }
 
-  if (data.result) {
-    result.textContent = data.result;
-    copyGuide.style.display = "block";
-    downloadBtn.style.display = "block";
-    xlsxBtn.style.display = "block";
-  } else {
-    result.textContent = data.error;
+    const data = await res.json();
+
+    if (data.result) {
+      result.textContent = data.result;
+      copyGuide.style.display = "block";
+      downloadBtn.style.display = "block";
+      xlsxBtn.style.display = "block";
+    } else {
+      result.textContent = data.error || "生成に失敗しました";
+    }
+
+  } catch (err) {
+    console.error(err);
+    result.textContent = "議事録の生成に失敗しました。しばらくしてから再度お試しください。";
   }
 }
 
@@ -247,23 +249,13 @@ function exportXLSX() {
   })
   .then(res => {
     if (!res.ok) throw new Error("Excel生成エラー");
-
     return res.blob();
   })
   .then(blob => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const userMatch = memoElem.value.match(/利用者[:：]\s*([^\n]+)/);
-    const userName = userMatch ? userMatch[1].trim() : "利用者";
-
-    const dateMatch = memoElem.value.match(/\d{4}\/\d{1,2}\/\d{1,2}/);
-    const date = dateMatch
-    ? dateMatch[0].replace(/\//g, "-")
-    : new Date().toISOString().split("T")[0];
-
-
     a.href = url;
-    a.download = `${userName}_${date}.xlsx`; // ← これで確定
+    a.download = "service_meeting.xlsx";
     a.click();
     URL.revokeObjectURL(url);
   })
@@ -299,7 +291,6 @@ function downloadDocx() {
     URL.revokeObjectURL(url);
   });
 }
-
 </script>
 
 </body>
