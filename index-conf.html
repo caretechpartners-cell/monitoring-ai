@@ -240,6 +240,7 @@ function exportXLSX() {
 
 
     a.href = url;
+    a.download = `${userName}_${date}.xlsx`; // ← これで確定
     a.click();
     URL.revokeObjectURL(url);
   })
