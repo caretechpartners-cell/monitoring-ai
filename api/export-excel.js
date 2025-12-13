@@ -131,13 +131,15 @@ if (membersMatch) {
   lines.forEach((line, i) => {
     if (i >= targets.length) return;
 
-    // 「所属（職種） 氏名」形式を想定
-    const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
-    if (m) {
-      set(targets[i][0], m[3]); // 氏名
-      set(targets[i][1], `${m[1]}（${m[2]}）`); // 所属（職種）
-    }
-  });
+  const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
+  if (m) {
+  // m[1]：所属名
+  // m[2]：職種
+  // m[3]：氏名
+  set(targets[i][0], m[3]);                     // 氏名 → C列 / G列 / K列
+  set(targets[i][1], `${m[1]}（${m[2]}）`);     // 所属（職種） → E列 / I列 / M列
+}
+});
 }
 
     /* ----------------------------
