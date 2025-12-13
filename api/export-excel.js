@@ -86,10 +86,10 @@ export default async function handler(req, res) {
     let meetingDate = "";
     const meetingDateMatch = memo.match(/(\d{1,2})\/(\d{1,2})/);
     if (meetingDateMatch) {
-      const year = new Date().getFullYear();
-      const meetingDate = `${year}/${meetingDateMatch[1]}/${meetingDateMatch[2]}`;
-      set("B5", meetingDate);
-    }
+    const year = new Date().getFullYear();
+    meetingDate = `${year}/${meetingDateMatch[1]}/${meetingDateMatch[2]}`;
+    set("B5", meetingDate);
+}
 
     // K5：時間
     const timeMatch = memo.match(/\d{1,2}:\d{2}〜\d{1,2}:\d{2}/);
@@ -212,6 +212,7 @@ if (membersMatch) {
     ? meetingDate.replace(/\//g, "-")
     : new Date().toISOString().split("T")[0];
 
+    const fileName = userName + "_" + fileDate + ".xlsx";
 
     res.setHeader(
     "Content-Type",
