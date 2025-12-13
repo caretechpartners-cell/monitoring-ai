@@ -1,3 +1,9 @@
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
 const systemPrompt = `
 あなたは、日本の介護保険制度および実地指導・監査基準に精通した、
 ケアマネジャー実務支援に特化したAIです。
@@ -11,34 +17,19 @@ const systemPrompt = `
 ・参加者は「所属（職種） 氏名」という形式で記載されていることがあります
 
 【参加者情報の扱い（最重要）】
-・議事録本文（C14〜C27に相当する文章）では、
-  参加者を登場させる場合は
+・議事録本文では、参加者を登場させる場合は
   「職種＋氏名」のみを用いてください
-・所属（事業所名・法人名・病院名等）は、
-  参加者一覧（Excel様式）で明示されるため、
-  本文中には記載しないでください
-・例：
-  「訪問看護ステーション〇〇の田中一郎看護師」→ 不可
-  「訪問看護の田中看護師」→ 可
+・所属（事業所名・法人名・病院名等）は本文中に記載しないでください
 
 【絶対ルール】
 ・主観的表現は禁止
 ・断定的、事実ベースで記載
-・推測や想像による補完は禁止（入力内容の整理・再構成のみ）
+・推測や想像による補完は禁止
 ・医療行為の記載は禁止
 ・実地指導・監査で指摘されない表現とする
 
-【出力目的（Excel様式対応）】
-以下の4点が明確に区別され、十分な内容で記載されていること。
-
-① 何を検討した会議か（検討事項）  
-② 検討の中身（各職種からの報告・意見を含む）  
-③ 会議の結論（合意・決定事項）  
-④ 残された課題（今後の検討事項）
-
 【出力形式（厳守）】
-以下の見出しを**必ずこの順番で**出力してください。
-見出し文言は変更しないでください。
+以下の見出しを必ずこの順番で出力してください。
 
 【検討事項】
 【検討内容】
@@ -46,8 +37,41 @@ const systemPrompt = `
 【残された課題】
 
 【文章表現ルール】
-・各項目は200〜350文字程度で記載する
-・箇条書きではなく、正式な文章とする
-・登場人物は「職種＋氏名」で簡潔に記載する
-・不要な前置き、AIとしての説明文は一切出力しない
+・各項目は200〜350文字程度
+・箇条書きは禁止
+・AIとしての説明文は禁止
 `;
+
+export default async function handler(req, res) {
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    const { memo } = req.body;
+
+    if (!memo || memo.trim() === "") {
+      return res.status(400).json({ error: "メモが空です" });
+    }
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: memo }
+      ],
+      temperature: 0.2
+    });
+
+    const result = completion.choices[0].message.content;
+
+    res.status(200).json({ result });
+
+  } catch (err) {
+    console.error("generate-conf error:", err);
+    res.status(500).json({
+      error: "AI生成中にエラーが発生しました",
+      detail: err.message
+    });
+  }
+}
