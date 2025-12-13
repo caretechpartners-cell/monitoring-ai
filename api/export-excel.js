@@ -82,12 +82,15 @@ export default async function handler(req, res) {
     // B3：利用者名
     set("B3", userName);
 
+    let meetingDateForFile = null;
+
     // B5：開催日（年なしOK）
     const meetingDateMatch = memo.match(/(\d{1,2})\/(\d{1,2})/);
     if (meetingDateMatch) {
       const year = new Date().getFullYear();
       const meetingDate = `${year}/${meetingDateMatch[1]}/${meetingDateMatch[2]}`;
       set("B5", meetingDate);
+      meetingDateForFile = meetingDate;
     }
 
     // K5：時間
@@ -207,7 +210,7 @@ if (membersMatch) {
        ⑧ 出力
     ---------------------------- */
 
-    const fileName = `${userName}_${today}.xlsx`;
+    const fileName = `${userName}_${meetingDateForFile ?? today}.xlsx`;
 
     res.setHeader(
       "Content-Type",
