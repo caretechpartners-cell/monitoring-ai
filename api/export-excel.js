@@ -131,6 +131,16 @@ if (membersMatch) {
   lines.forEach((line, i) => {
     if (i >= targets.length) return;
 
+  // ▼ 欠席者は除外
+  if (
+    line.includes("欠席") ||
+    line.includes("不参加") ||
+    line.includes("事前") ||
+    line.includes("電話")
+  ) {
+    return;
+  }
+
   const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
   if (m) {
   // m[1]：所属名
