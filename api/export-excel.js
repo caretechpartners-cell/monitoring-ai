@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     }
 
     /* ----------------------------
-       ① 利用者名抽出
+       ① 利用者名抽出（修正①）
     ---------------------------- */
 
     let userName = null;
@@ -38,12 +38,14 @@ export default async function handler(req, res) {
     if (!userName) {
       const lines = memo.split("\n").map(l => l.trim()).filter(Boolean);
       for (const line of lines) {
+        const m = line.match(/^([一-龥]{2,4})([一-龥]{2,4})/);
         if (
-          /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
+          m &&
           !line.includes("参加") &&
-          !line.includes("場所")
+          !line.includes("場所") &&
+          !line.includes("次回")
         ) {
-          userName = line.split(/\s+/)[0];
+          userName = m[1] + m[2];
           break;
         }
       }
@@ -72,10 +74,10 @@ export default async function handler(req, res) {
     };
 
     /* ----------------------------
-       ③ 日付関連（仕様通りに修正）
+       ③ 日付関連（修正②）
     ---------------------------- */
 
-    // M1：作成年月日 → 今日の日付を強制セット
+    // M1：作成年月日 → 今日の日付
     const today = new Date().toISOString().split("T")[0];
     set("M1", today);
 
@@ -84,13 +86,22 @@ export default async function handler(req, res) {
 
     let meetingDateForFile = null;
 
-    // B5：開催日（年なしOK）
-    const meetingDateMatch = memo.match(/(\d{1,2})\/(\d{1,2})/);
-    if (meetingDateMatch) {
-      const year = new Date().getFullYear();
-      const meetingDate = `${year}/${meetingDateMatch[1]}/${meetingDateMatch[2]}`;
-      set("B5", meetingDate);
-      meetingDateForFile = meetingDate;
+    // 「次回」を含まない行から開催日を取得
+    const meetingLine = memo
+      .split("\n")
+      .find(line =>
+        /\d{1,2}\/\d{1,2}/.test(line) &&
+        !line.includes("次回")
+      );
+
+    if (meetingLine) {
+      const m = meetingLine.match(/(\d{1,2})\/(\d{1,2})/);
+      if (m) {
+        const year = new Date().getFullYear();
+        const meetingDate = `${year}/${m[1]}/${m[2]}`;
+        set("B5", meetingDate);
+        meetingDateForFile = meetingDate;
+      }
     }
 
     // K5：時間
@@ -119,48 +130,44 @@ export default async function handler(req, res) {
 
     const membersMatch = memo.match(/参加者[:：]\s*([\s\S]*?)(?:\n\s*\n|$)/);
 
-if (membersMatch) {
-  const lines = membersMatch[1]
-    .split("\n")
-    .map(l => l.trim())
-    .filter(Boolean);
+    if (membersMatch) {
+      const lines = membersMatch[1]
+        .split("\n")
+        .map(l => l.trim())
+        .filter(Boolean);
 
-  const targets = [
-    ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
-    ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
-    ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
-  ];
+      const targets = [
+        ["C8", "E8"], ["C10", "E10"], ["C12", "E12"],
+        ["G8", "I8"], ["G10", "I10"], ["G12", "I12"],
+        ["K8", "M8"], ["K10", "M10"], ["K12", "M12"]
+      ];
 
-  let idx = 0; // ← 有効参加者用インデックス
+      let idx = 0;
 
-  for (const line of lines) {
-    if (idx >= targets.length) break;
+      for (const line of lines) {
+        if (idx >= targets.length) break;
 
-    // 欠席者除外
-    if (
-      line.includes("欠席") ||
-      line.includes("不参加") ||
-      line.includes("事前") ||
-      line.includes("電話")
-    ) {
-      continue;
+        if (
+          line.includes("欠席") ||
+          line.includes("不参加") ||
+          line.includes("事前") ||
+          line.includes("電話")
+        ) {
+          continue;
+        }
+
+        const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
+        if (!m) continue;
+
+        set(targets[idx][0], `${m[1]}（${m[2]}）`);
+        set(targets[idx][1], m[3]);
+
+        idx++;
+      }
     }
 
-    const m = line.match(/(.+?)（(.+?)）\s*(.+)/);
-    if (!m) continue;
-
-    // 所属（職種） → C列
-    set(targets[idx][0], `${m[1]}（${m[2]}）`);
-    // 氏名 → E列
-    set(targets[idx][1], m[3]);
-
-    idx++;
-  }
-}
-
-
     /* ----------------------------
-       ⑥ AI結果（見出し完全対応）
+       ⑥ AI結果
     ---------------------------- */
 
     const sectionKento = extractSection(aiResult, "検討事項");
@@ -174,18 +181,16 @@ if (membersMatch) {
     if (sectionKadai) set("C27", sectionKadai);
 
     /* ----------------------------
-       ⑦ 次回開催日（C31）
+       ⑦ 次回開催日
     ---------------------------- */
 
     let nextDate = null;
 
-    // 年あり優先
     const nextFullMatch = memo.match(/次回.*?(\d{4})\/(\d{1,2})\/(\d{1,2})/);
     if (nextFullMatch) {
       nextDate = `${nextFullMatch[1]}/${nextFullMatch[2]}/${nextFullMatch[3]}`;
     }
 
-    // 年なし（月/日のみ）
     if (!nextDate) {
       const nextShortMatch = memo.match(/次回.*?(\d{1,2})\/(\d{1,2})/);
       if (nextShortMatch) {
@@ -193,7 +198,6 @@ if (membersMatch) {
         let year = now.getFullYear();
         const month = parseInt(nextShortMatch[1], 10);
 
-        // 年跨ぎ対策
         if (month < now.getMonth() + 1) {
           year += 1;
         }
