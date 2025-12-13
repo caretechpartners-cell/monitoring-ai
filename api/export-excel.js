@@ -1,6 +1,17 @@
 import ExcelJS from "exceljs";
 import path from "path";
 
+function extractSection(text, title) {
+  const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const regex = new RegExp(
+    `【${escaped}】([\\s\\S]*?)(?=【検討事項】|【検討内容】|【会議の結論】|【残された課題】|$)`
+  );
+
+  const match = text.match(regex);
+  return match ? match[1].trim() : "";
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -89,19 +100,19 @@ export default async function handler(req, res) {
       });
     }
 
-    /* ----------------------------
-       ⑤ AI結果
-    ---------------------------- */
+/* ----------------------------
+   ⑤ AI結果（見出し完全対応）
+---------------------------- */
 
-    const kadai = aiResult.match(/課題[\s\S]*?(?=今後|支援方針)/);
-    const shien = aiResult.match(/(支援方針|今後)[\s\S]*/);
-    const next = memo.match(/次回[:：]\s*([^\n]+)/);
+const sectionKento = extractSection(aiResult, "検討事項");
+const sectionNaiyo = extractSection(aiResult, "検討内容");
+const sectionKetsuron = extractSection(aiResult, "会議の結論");
+const sectionKadai = extractSection(aiResult, "残された課題");
 
-    if (kadai) set("C14", kadai[0].trim());
-    set("C18", aiResult);
-    if (shien) set("C22", shien[0].trim());
-    if (kadai) set("C27", kadai[0].trim());
-    if (next) set("C31", next[1].trim());
+if (sectionKento) set("C14", sectionKento);
+if (sectionNaiyo) set("C18", sectionNaiyo);
+if (sectionKetsuron) set("C22", sectionKetsuron);
+if (sectionKadai) set("C27", sectionKadai);
 
     /* ----------------------------
        ⑥ 出力（日本語ファイル名安全）
