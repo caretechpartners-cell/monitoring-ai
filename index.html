@@ -229,6 +229,30 @@
 </div>
 
 <script>
+let progressTimer = null;
+let progressValue = 0;
+
+function startProgress() {
+  progressValue = 0;
+  result.textContent = "生成中… 0%";
+
+  progressTimer = setInterval(() => {
+    if (progressValue < 90) {
+      progressValue += Math.floor(Math.random() * 5) + 3; // 3〜7%
+      if (progressValue > 90) progressValue = 90;
+      result.textContent = `生成中… ${progressValue}%`;
+    }
+  }, 300);
+}
+
+function finishProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  result.textContent = "生成完了（100%）";
+}
+
 const LIMIT = 3;
 
 function initLimit() {
@@ -292,10 +316,12 @@ async function generate() {
 【自由記載】${free.value}
   `;
 
-  result.textContent = "生成中…";
   copyGuide.style.display = "none";
   downloadBtn.style.display = "none";
 
+  startProgress();
+
+try {
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -305,20 +331,32 @@ async function generate() {
   const data = await res.json();
 
   if (data.result) {
+  finishProgress();
+
+  setTimeout(() => {
     result.textContent = data.result;
-    copyGuide.style.display = "block";
-    downloadBtn.style.display = "block";
+  }, 300);
 
-    document.getElementById("memberGuide").style.display = "block";
-    document.getElementById("limitTextBottom").style.display = "block";
+  copyGuide.style.display = "block";
+  downloadBtn.style.display = "block";
 
+  document.getElementById("memberGuide").style.display = "block";
+  document.getElementById("limitTextBottom").style.display = "block";
 
-    remain--;
-    localStorage.setItem("remain", remain);
-    updateLimit();
+  remain--;
+  localStorage.setItem("remain", remain);
+  updateLimit();
   } else {
-    result.textContent = data.error;
-  }
+  throw new Error(data.error);
+}
+
+
+} catch (e) {
+  if (progressTimer) clearInterval(progressTimer);
+  result.textContent = "通信エラーが発生しました。時間をおいて再度お試しください。";
+}
+
+
 }
 
 function downloadDocx() {
