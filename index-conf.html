@@ -31,7 +31,7 @@
       text-align: center;
       font-size: 16px;
       color: #777;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     label {
       display: block;
@@ -49,7 +49,7 @@
       box-sizing: border-box;
     }
     textarea {
-      height: 160px;
+      min-height: 230px;
     }
     .btn {
       width: 100%;
@@ -84,9 +84,9 @@
       font-size: 18px;
       border: none;
       border-radius: 12px;
-      margin-top: 10px;
+      margin-top: 15px;
       cursor: pointer;
-      background: #6c9ab3;
+      background: #f3a6b1;
       color: white;
     }
     .result-box {
@@ -104,20 +104,6 @@
       font-weight: bold;
       display: none;
     }
-    .back-fixed {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #cccccc;
-      color: #333;
-      padding: 12px 18px;
-      border-radius: 12px;
-      font-size: 16px;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
     .memo-guide {
       margin-top: 20px;
       text-align: center;
@@ -125,11 +111,27 @@
       color: #2a6f97;
       font-weight: bold;
     }
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+}
+
+
+
   </style>
 </head>
 <body>
-
-<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
 
 <div class="container">
   <h1>やさしいサービス担当者会議録AI</h1>
@@ -150,6 +152,12 @@
 
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">📄 Word（docx）でダウンロード</button>
   <button class="xlsx-btn" id="xlsxBtn" onclick="exportXLSX()">📊 Excel（議事録様式）で出力</button>
+</div>
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
 </div>
 
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
