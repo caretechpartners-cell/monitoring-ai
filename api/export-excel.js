@@ -149,6 +149,9 @@ if (place) {
        ⑤ 参加者
     ---------------------------- */
     let careManagerName = "";
+    let has本人 = false;
+    let familyRelations = [];
+    const FAMILY_KEYWORDS = ["兄弟", "姉妹", "妻", "夫", "父", "母"];
     const membersMatch = memo.match(/参加者[:：]\s*([\s\S]*?)(?:\n\s*\n|$)/);
 
 if (membersMatch) {
@@ -186,6 +189,18 @@ if (membersMatch) {
     // 氏名 → E列
     set(targets[idx][1], m[3]);
 
+    // 本人判定
+    if (m[2].includes("本人")) {
+    has本人 = true;
+  }
+
+    // 家族判定
+    for (const rel of FAMILY_KEYWORDS) {
+    if (m[2].includes(rel) && !familyRelations.includes(rel)) {
+      familyRelations.push(rel);
+    }
+  }
+
     // ケアマネ抽出（M3用）
     if (!careManagerName && m[2].includes("ケアマネ")) {
     careManagerName = m[3];
@@ -193,6 +208,17 @@ if (membersMatch) {
 
     idx++;
   }
+    // B10：本人
+    set("B10", has本人 ? "あり" : "なし");
+
+    // B11・B12：家族
+    if (familyRelations.length > 0) {
+    set("B11", "あり");
+    set("B12", familyRelations.join("、"));
+}   else {
+    set("B11", "なし");
+    set("B12", "");
+}
     // M3：ケアマネジャー名
     if (careManagerName) {
     set("M3", careManagerName);
