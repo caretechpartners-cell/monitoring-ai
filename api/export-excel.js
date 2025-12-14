@@ -268,6 +268,7 @@ if (membersMatch) {
 
     idx++;
 }
+}
 
     // B10：本人
     set("B10", has本人 ? "あり" : "なし");
