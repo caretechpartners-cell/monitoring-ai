@@ -182,7 +182,30 @@
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
     📄 Word（docx）でダウンロード
   </button>
+  
+  <div id="memberGuide" style="
+  display:none;
+  margin-top:20px;
+  padding:18px;
+  border-radius:12px;
+  background:#f0f8ff;
+  font-size:17px;
+  line-height:1.8;
+">
+  ・会員版では、回数制限なくモニタリング記録を作成できます。<br>
+  ・実地指導・監査を想定した表現で、記録業務を文章化します。<br>
+  ・内容はご自身の入力内容をもとに構成されます。<br><br>
+
+  <a href="lp.html" style="
+    font-weight:bold;
+    color:#2a6f97;
+    text-decoration:none;
+  ">
+    ★ 会員版の利用内容を確認する
+  </a>
+
 </div>
+</div> 
 
 <div class="footer-links">
   <a href="privacy.html">プライバシーポリシー</a>｜
@@ -259,6 +282,8 @@ async function generate() {
     result.textContent = data.result;
     copyGuide.style.display = "block";
     downloadBtn.style.display = "block";
+
+    document.getElementById("memberGuide").style.display = "block";
 
     remain--;
     localStorage.setItem("remain", remain);
