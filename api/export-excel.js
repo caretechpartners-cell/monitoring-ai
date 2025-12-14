@@ -190,9 +190,10 @@ if (membersMatch) {
     set(targets[idx][1], m[3]);
 
     // 本人判定
-    if (m[2].includes("本人")) {
-    has本人 = true;
-  }
+　　if (m[2].includes("本人") || m[2].includes("利用者")) {
+  　has本人 = true;
+　　}
+
 
     // 家族判定
     for (const rel of FAMILY_KEYWORDS) {
