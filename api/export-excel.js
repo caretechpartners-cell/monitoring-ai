@@ -24,16 +24,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "memo または aiResult が不足" });
     }
 
-function toBulletText(text) {
+function toBulletText(text, maxLines = 4, maxChars = 50) {
   if (!text) return "";
 
-  return text
-    // 文で分割（。で区切る）
+  const bullets = text
     .split("。")
     .map(s => s.trim())
     .filter(Boolean)
-    .map(s => `・${s}`)
-    .join("\n");
+    .map(s => {
+      let line = `・${s}`;
+
+      if (line.length > maxChars) {
+        return line.slice(0, maxChars - 1) + "…";
+      }
+
+      return line;
+    });
+
+  if (bullets.length <= maxLines) {
+    return bullets.join("\n");
+  }
+
+  return bullets.slice(0, maxLines).join("\n") + "\n（他省略）";
 }
 
     /* ----------------------------
