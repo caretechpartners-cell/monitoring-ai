@@ -281,7 +281,9 @@ if (membersMatch) {
     const sectionKadai = extractSection(aiResult, "残された課題");
 
     if (sectionKento) set("C14", sectionKento);
-    if (sectionNaiyo) set("C18", sectionNaiyo);
+    if (sectionNaiyo) {
+     set("C18", toBulletText(sectionNaiyo));
+    }
     if (sectionKetsuron) set("C22", sectionKetsuron);
     if (sectionKadai) set("C27", sectionKadai);
 
