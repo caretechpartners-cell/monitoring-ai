@@ -24,22 +24,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "memo または aiResult が不足" });
     }
 
-function toBulletText(text, maxLines = 4, maxChars = 50) {
+function toBulletText(text, maxLines = 4) {
   if (!text) return "";
 
   const bullets = text
     .split("。")
     .map(s => s.trim())
     .filter(Boolean)
-    .map(s => {
-      let line = `・${s}`;
-
-      if (line.length > maxChars) {
-        return line.slice(0, maxChars - 1) + "…";
-      }
-
-      return line;
-    });
+    .map(s => `・${s}`);
 
   if (bullets.length <= maxLines) {
     return bullets.join("\n");
