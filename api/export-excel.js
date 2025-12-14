@@ -109,7 +109,9 @@ const applyWrappedNormalText = (cellAddress) => {
     .join(" ");
 
     // M1：作成年月日 → 今日の日付を強制セット
-    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const today =
+     `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
     set("M1", today);
 
     // B3：利用者名
