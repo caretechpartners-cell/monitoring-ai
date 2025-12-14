@@ -152,6 +152,30 @@
 </div>
 
 <script>
+let progressTimer = null;
+let progressValue = 0;
+
+function startProgress() {
+  progressValue = 0;
+  result.textContent = "生成中… 0%";
+
+  progressTimer = setInterval(() => {
+    if (progressValue < 90) {
+      progressValue += Math.floor(Math.random() * 5) + 3;
+      if (progressValue > 90) progressValue = 90;
+      result.textContent = `生成中… ${progressValue}%`;
+    }
+  }, 300);
+}
+
+function finishProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  result.textContent = "生成完了（100%）";
+}
+
 function fillSample() {
   memoElem.value =
     "12/10 14:00-15:00 利用者宅にて\n" +
@@ -202,9 +226,10 @@ async function generate() {
   try {
     const memo = memoElem.value;
 
-    result.textContent = "生成中…";
     copyGuide.style.display = "none";
     xlsxBtn.style.display = "none";
+
+    startProgress();
 
     const res = await fetch("/api/generate-conf", {
       method: "POST",
@@ -220,15 +245,22 @@ async function generate() {
     const data = await res.json();
 
     if (data.result) {
-      result.textContent = data.result;
-      copyGuide.style.display = "block";
-      xlsxBtn.style.display = "block";
-    } else {
+    finishProgress(); // ★ 追加
+
+  setTimeout(() => {
+    result.textContent = data.result;
+  }, 300);
+
+  copyGuide.style.display = "block";
+  xlsxBtn.style.display = "block";
+  } else {
       result.textContent = data.error || "生成に失敗しました";
     }
 
   } catch (err) {
     console.error(err);
+    if (progressTimer) clearInterval(progressTimer);
+    progressValue = 0;
     result.textContent = "議事録の生成に失敗しました。しばらくしてから再度お試しください。";
   }
 }
