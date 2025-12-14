@@ -24,6 +24,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "memo または aiResult が不足" });
     }
 
+function toBulletText(text) {
+  if (!text) return "";
+
+  return text
+    // 文で分割（。で区切る）
+    .split("。")
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => `・${s}`)
+    .join("\n");
+}
+
     /* ----------------------------
        ① 利用者名抽出
     ---------------------------- */
@@ -262,6 +274,9 @@ if (membersMatch) {
 
     const sectionKento = extractSection(aiResult, "検討事項");
     const sectionNaiyo = extractSection(aiResult, "検討内容");
+    if (sectionNaiyo) {
+    set("C18", toBulletText(sectionNaiyo));
+    }
     const sectionKetsuron = extractSection(aiResult, "会議の結論");
     const sectionKadai = extractSection(aiResult, "残された課題");
 
