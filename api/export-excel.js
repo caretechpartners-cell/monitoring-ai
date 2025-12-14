@@ -274,18 +274,28 @@ if (membersMatch) {
 
     const sectionKento = extractSection(aiResult, "検討事項");
     const sectionNaiyo = extractSection(aiResult, "検討内容");
-    if (sectionNaiyo) {
-    set("C18", toBulletText(sectionNaiyo));
-    }
     const sectionKetsuron = extractSection(aiResult, "会議の結論");
     const sectionKadai = extractSection(aiResult, "残された課題");
 
-    if (sectionKento) set("C14", sectionKento);
-    if (sectionNaiyo) {
-     set("C18", toBulletText(sectionNaiyo));
+    // C14：検討した項目 → 箇条書き
+    if (sectionKento) {
+    set("C14", toBulletText(sectionKento));
     }
-    if (sectionKetsuron) set("C22", sectionKetsuron);
-    if (sectionKadai) set("C27", sectionKadai);
+
+    // C18：検討内容 → 箇条書き
+    if (sectionNaiyo) {
+    set("C18", toBulletText(sectionNaiyo));
+    }
+
+    // C22：会議の結論 → 文章のまま
+    if (sectionKetsuron) {
+    set("C22", sectionKetsuron);
+    }
+
+    // C27：残された課題 → 箇条書き
+    if (sectionKadai) {
+    set("C27", toBulletText(sectionKadai));
+    }
 
     applyWrappedNormalText("C14");
     applyWrappedNormalText("C18");
