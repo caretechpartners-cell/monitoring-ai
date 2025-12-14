@@ -75,6 +75,28 @@ export default async function handler(req, res) {
       sheet.getCell(cell).value = value;
     };
 
+    /* ============================
+       共通スタイルヘルパー（←ここ）
+    ============================ */
+
+    const applyWrappedSmallText = (cellAddress) => {
+    const cell = sheet.getCell(cellAddress);
+    cell.font = { size: 8 };
+    cell.alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
+};
+
+const applyWrappedNormalText = (cellAddress) => {
+  const cell = sheet.getCell(cellAddress);
+  cell.font = { size: 11 };
+  cell.alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
+};
+
     /* ----------------------------
        ③ 日付関連（仕様通りに修正）
     ---------------------------- */
@@ -132,25 +154,18 @@ if (place) {
   set("F5", place);
 }
 
-
-    /* ----------------------------
-       ④ 本人・家族
-    ---------------------------- */
-
-    if (memo.includes("本人")) set("B10", "あり");
-
-    const familyMatch = memo.match(/家族[:：]\s*([^\n]+)/);
-    if (familyMatch) {
-      set("B11", "あり");
-      set("B12", familyMatch[1].trim());
-    }
-
     /* ----------------------------
        ⑤ 参加者
     ---------------------------- */
+    // 出席者だけを対象に
+    // 欠席・電話・事前は除外
+    // 続柄を正規化して familyRelations に入れる
+
     let careManagerName = "";
     let has本人 = false;
     let familyRelations = [];
+
+
     const FAMILY_KEYWORDS = ["兄弟", "姉妹", "妻", "夫", "父", "母"];
     const membersMatch = memo.match(/参加者[:：]\s*([\s\S]*?)(?:\n\s*\n|$)/);
 
@@ -167,6 +182,18 @@ if (membersMatch) {
   ];
 
   let idx = 0; // ← 有効参加者用インデックス
+
+  applyWrappedSmallText("C8");
+  applyWrappedSmallText("C10");
+  applyWrappedSmallText("C12");
+
+  applyWrappedSmallText("G8");
+  applyWrappedSmallText("G10");
+  applyWrappedSmallText("G12");
+
+  applyWrappedSmallText("K8");
+  applyWrappedSmallText("K10");
+  applyWrappedSmallText("K12");
 
   for (const line of lines) {
     if (idx >= targets.length) break;
@@ -190,9 +217,10 @@ if (membersMatch) {
     set(targets[idx][1], m[3]);
 
     // 本人判定
-　　if (m[2].includes("本人") || m[2].includes("利用者")) {
-  　has本人 = true;
-　　}
+    if (m[2].includes("本人") || m[2].includes("利用者")) {
+    has本人 = true;
+    }
+
 
 
     // 家族判定
@@ -209,6 +237,8 @@ if (membersMatch) {
 
     idx++;
   }
+}
+
     // B10：本人
     set("B10", has本人 ? "あり" : "なし");
 
@@ -216,16 +246,15 @@ if (membersMatch) {
     if (familyRelations.length > 0) {
     set("B11", "あり");
     set("B12", familyRelations.join("、"));
-}   else {
+    } else {
     set("B11", "なし");
     set("B12", "");
-}
+    }
+
     // M3：ケアマネジャー名
     if (careManagerName) {
     set("M3", careManagerName);
-}
-}
-
+    }
 
     /* ----------------------------
        ⑥ AI結果（見出し完全対応）
@@ -240,6 +269,11 @@ if (membersMatch) {
     if (sectionNaiyo) set("C18", sectionNaiyo);
     if (sectionKetsuron) set("C22", sectionKetsuron);
     if (sectionKadai) set("C27", sectionKadai);
+
+    applyWrappedNormalText("C14");
+    applyWrappedNormalText("C18");
+    applyWrappedNormalText("C22");
+    applyWrappedNormalText("C27");
 
     /* ----------------------------
        ⑦ 次回開催日（C31）
