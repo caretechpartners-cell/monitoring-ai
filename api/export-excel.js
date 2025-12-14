@@ -27,6 +27,20 @@ function compactSentence(sentence) {
     .trim();
 }
 
+function removeNextMeetingSentences(text) {
+  if (!text) return "";
+
+  return text
+    // 「次回」を含む文を丸ごと削除
+    .split("。")
+    .map(s => s.trim())
+    .filter(s =>
+      !s.match(/次回/) &&
+      !s.match(/会議.*予定/) &&
+      !s.match(/開催.*予定/)
+    )
+    .join("。");
+}
 
 export default async function handler(req, res) {
   try {
@@ -313,8 +327,10 @@ if (membersMatch) {
 
     // C27：残された課題 → 箇条書き
     if (sectionKadai) {
-    set("C27", toBulletText(sectionKadai));
+    const cleanedKadai = removeNextMeetingSentences(sectionKadai);
+    set("C27", toBulletText(cleanedKadai));
     }
+
 
     applyWrappedNormalText("C14");
     applyWrappedNormalText("C18");
