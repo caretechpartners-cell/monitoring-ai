@@ -12,6 +12,22 @@ function extractSection(text, title) {
   return match ? match[1].trim() : "";
 }
 
+function compactSentence(sentence) {
+  return sentence
+    .replace(/が見られており/g, "があり")
+    .replace(/について検討が必要である/g, "を検討")
+    .replace(/について検討した/g, "を検討")
+    .replace(/必要である/g, "必要")
+    .replace(/を中心に話し合った/g, "を検討")
+    .replace(/と、それに伴う/g, "、")
+    .replace(/との報告があった/g, "とのこと")
+    .replace(/していく予定である/g, "予定")
+    .replace(/と考えられる/g, "と考える")
+    .replace(/今後の/g, "")
+    .trim();
+}
+
+
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -31,7 +47,7 @@ function toBulletText(text, maxLines = 4) {
     .split("。")
     .map(s => s.trim())
     .filter(Boolean)
-    .map(s => `・${s}`);
+    .map(s => `・${compactSentence(s)}`);
 
   if (bullets.length <= maxLines) {
     return bullets.join("\n");
@@ -244,15 +260,13 @@ if (membersMatch) {
     if (m[2].includes(rel) && !familyRelations.includes(rel)) {
       familyRelations.push(rel);
     }
-  }
-
+}
     // ケアマネ抽出（M3用）
     if (!careManagerName && m[2].includes("ケアマネ")) {
     careManagerName = m[3];
-}
+  }
 
     idx++;
-  }
 }
 
     // B10：本人
@@ -293,7 +307,7 @@ if (membersMatch) {
 
     // C22：会議の結論 → 文章のまま
     if (sectionKetsuron) {
-    set("C22", sectionKetsuron);
+    set("C22", compactSentence(sectionKetsuron));
     }
 
     // C27：残された課題 → 箇条書き
@@ -305,6 +319,16 @@ if (membersMatch) {
     applyWrappedNormalText("C18");
     applyWrappedNormalText("C22");
     applyWrappedNormalText("C27");
+
+function adjustRowHeight(cellAddress) {
+  const cell = sheet.getCell(cellAddress);
+  const row = sheet.getRow(cell.row);
+  const lines = (cell.value || "").toString().split("\n").length;
+  row.height = Math.max(18, lines * 18);
+}
+
+["C14", "C18", "C22", "C27"].forEach(adjustRowHeight);
+
 
     /* ----------------------------
        ⑦ 次回開催日（C31）
