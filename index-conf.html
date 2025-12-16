@@ -78,6 +78,22 @@
       background: #f3a6b1;
       color: white;
     }
+
+    .voice-btn {
+      display: inline-block;
+      background: #333;
+      color: #fff;
+      font-size: 16px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .voice-btn:hover {
+      background: #000;
+    }
+
+
     .result-box {
       margin-top: 30px;
       font-size: 18px;
@@ -130,14 +146,14 @@
 
   <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
+  <button class="voice-btn" onclick="startVoiceInput()">
+  🎤 音声で入力する
+  </button>
+
   <div style="text-align:center;font-size:14px;color:#777;margin-top:10px;">
   ※ 音声入力は議事録作成の補助機能です。<br>
      生成された内容は必ずご確認・修正の上ご利用ください。
   </div>
-
-  <button class="sample-btn" onclick="startVoiceInput()">
-  🎤 音声で入力する
-  </button>
 
   <label>■ 会議内容メモ</label>
   <textarea id="memoElem" placeholder="ここにメモを書いてください（会議中の走り書き・箇条書きで問題ありません）"></textarea>
