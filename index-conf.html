@@ -130,6 +130,15 @@
 
   <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
+  <div style="text-align:center;font-size:14px;color:#777;margin-top:10px;">
+  ※ 音声入力は議事録作成の補助機能です。<br>
+     生成された内容は必ずご確認・修正の上ご利用ください。
+  </div>
+
+  <button class="sample-btn" onclick="startVoiceInput()">
+  🎤 音声で入力する
+  </button>
+
   <label>■ 会議内容メモ</label>
   <textarea id="memoElem" placeholder="ここにメモを書いてください（会議中の走り書き・箇条書きで問題ありません）"></textarea>
 
@@ -223,6 +232,7 @@ function fillSample() {
 }
 
 async function generate() {
+  stopVoiceInput();
   try {
     const memo = memoElem.value;
 
@@ -325,6 +335,82 @@ function exportXLSX() {
   .catch(err => {
     alert("Excelの生成に失敗しました");
     console.error(err);
+  });
+}
+
+/* =========================
+   音声入力（マイク）
+========================= */
+
+let recognition = null;
+let isRecording = false;
+
+function startVoiceInput() {
+  // 対応ブラウザ確認
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("このブラウザは音声入力に対応していません（Chrome推奨）");
+    return;
+  }
+
+  // 初期化（初回のみ）
+  if (!recognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = "ja-JP";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+
+      // 既存のメモに追記する
+      memoElem.value = memoElem.value.replace(/\s*$/, "") + " " + transcript;
+    };
+
+    recognition.onerror = (event) => {
+      console.error("音声入力エラー:", event.error);
+      stopVoiceInput();
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      updateMicButton();
+    };
+  }
+
+  // トグル動作
+  if (!isRecording) {
+    recognition.start();
+    isRecording = true;
+  } else {
+    stopVoiceInput();
+  }
+
+  updateMicButton();
+}
+
+function stopVoiceInput() {
+  if (recognition && isRecording) {
+    recognition.stop();
+  }
+  isRecording = false;
+  updateMicButton();
+}
+
+function updateMicButton() {
+  const btns = document.querySelectorAll(".sample-btn");
+  btns.forEach(btn => {
+    if (btn.textContent.includes("音声")) {
+      btn.textContent = isRecording
+        ? "⏹ 音声入力を停止する"
+        : "🎤 音声で入力する";
+      btn.style.background = isRecording ? "#d9534f" : "#f3a6b1";
+    }
   });
 }
 
