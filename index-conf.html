@@ -146,9 +146,12 @@
 
   <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
 
+  <div style="text-align:center; margin-top:15px;">
   <button class="voice-btn" onclick="startVoiceInput()">
-  🎤 音声で入力する
+    🎤 音声で入力する
   </button>
+  </div>
+
 
   <div style="text-align:center;font-size:14px;color:#777;margin-top:10px;">
   ※ 音声入力は議事録作成の補助機能です。<br>
@@ -419,7 +422,7 @@ function stopVoiceInput() {
 }
 
 function updateMicButton() {
-  const btns = document.querySelectorAll(".sample-btn");
+  const btns = document.querySelectorAll(".voice-btn");
   btns.forEach(btn => {
     if (btn.textContent.includes("音声")) {
       btn.textContent = isRecording
