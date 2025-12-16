@@ -130,11 +130,12 @@
     }
     .footer-links a:hover {
       text-decoration: underline;
-}
+    }
+    .voice-area {
+      display: none;
+    }
 
-
-
-  </style>
+</style>
 </head>
 <body>
 
@@ -144,19 +145,24 @@
 
   <button class="sample-btn" onclick="fillSample()">サンプルメモを入力する</button>
 
-  <div class="memo-guide">↓ ご自身でも入力いただけます（音声可） ↓</div>
+  <div class="memo-guide">↓ ご自身でも入力いただけます ↓</div>
 
+<!-- ▼ 音声入力（デモでは非表示） -->
+<div class="voice-area">
   <div style="text-align:center; margin-top:15px;">
-  <button class="voice-btn" onclick="startVoiceInput()">
-    🎤 音声で入力する
-  </button>
+    <button class="voice-btn" onclick="startVoiceInput()">
+      🎤 音声で入力する
+    </button>
   </div>
-
 
   <div style="text-align:center;font-size:14px;color:#777;margin-top:10px;">
-  ※ 音声入力は議事録作成の補助機能です。<br>
-     生成された内容は必ずご確認・修正の上ご利用ください。
+    ※ 音声入力は議事録作成の補助機能です。<br>
+    マイクをご自身でご準備の上、<br>
+    生成された内容は必ずご確認・修正の上ご利用ください。
   </div>
+</div>
+<!-- ▲ 音声入力ここまで -->
+
 
   <label>■ 会議内容メモ</label>
   <textarea id="memoElem" placeholder="ここにメモを書いてください（会議中の走り書き・箇条書きで問題ありません）"></textarea>
@@ -428,7 +434,7 @@ function updateMicButton() {
       btn.textContent = isRecording
         ? "⏹ 音声入力を停止する"
         : "🎤 音声で入力する";
-      btn.style.background = isRecording ? "#d9534f" : "#f3a6b1";
+      btn.style.background = isRecording ? "#d9534f" : "#333";
     }
   });
 }
