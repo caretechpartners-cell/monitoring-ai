@@ -44,6 +44,7 @@ export default async function handler(req, res) {
 
   // ④ public.users に保存（ここが重要）
   const insertData = {
+    auth_user_id: userId,
     email,
     user_name,
     phone,
