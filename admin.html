@@ -97,6 +97,15 @@
         <label>法人ユーザー数（個人は1でOK）</label>
         <input id="users" type="number" value="1" min="1" />
 
+        <label style="font-weight: normal;">
+        <input type="checkbox" id="is_trial" checked />
+        無料30日トライアルで作成する
+        </label>
+
+        <div style="font-size:13px; color:#666; margin-top:6px;">
+        ※ チェックONの場合、30日後に自動でStripe課金が開始されます
+        </div>
+
         <button onclick="createUser()">ユーザーを作成</button>
 
         <div id="result"></div>
@@ -105,6 +114,7 @@
 <script>
 async function createUser() {
     const email = document.getElementById("email").value;
+    const isTrial = document.getElementById("is_trial").checked;
     const user_name = document.getElementById("user_name").value;
     const phone = document.getElementById("phone").value;
     const plan = document.getElementById("plan").value;
@@ -116,6 +126,25 @@ async function createUser() {
     }
 
     const payload = { email, user_name, phone, plan, users };
+
+    if (isTrial) {
+    const now = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 30);
+
+    payload.billing_status = "trial";
+    payload.trial_start_at = now.toISOString();
+    payload.trial_end_at = end.toISOString();
+  } else {
+    payload.billing_status = "active";
+  }
+
+    if (!isTrial && plan === "corp") {
+    if (!confirm("法人プランで即課金ユーザーを作成します。よろしいですか？")) {
+    return;
+    }
+  }
+
 
     const res = await fetch("/api/create-user?v=" + Date.now(), {
         method: "POST",
