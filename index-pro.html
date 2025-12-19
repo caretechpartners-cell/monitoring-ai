@@ -113,6 +113,10 @@
       margin-bottom: 20px;
     }
 
+    .sample-text {
+      color: #aaa; /* 薄いグレー */
+    }
+
     label {
       display: block;
       font-size: 20px;
@@ -224,22 +228,22 @@
   </div>
 
   <label>■ 生活状況</label>
-  <textarea id="life"></textarea>
+  <textarea id="life" class="sample-text"></textarea>
 
   <label>■ 身体状況</label>
-  <textarea id="body"></textarea>
+  <textarea id="body" class="sample-text"></textarea>
 
   <label>■ 服薬状況</label>
-  <textarea id="medicine"></textarea>
+  <textarea id="medicine" class="sample-text"></textarea>
 
   <label>■ サービス利用状況</label>
-  <textarea id="service"></textarea>
+  <textarea id="service" class="sample-text"></textarea>
 
   <label>■ 本人・家族の希望</label>
-  <textarea id="wish"></textarea>
+  <textarea id="wish" class="sample-text"></textarea>
 
   <label>■ 自由記載</label>
-  <textarea id="free"></textarea>
+  <textarea id="free" class="sample-text"></textarea>
 
   <button class="btn generate-btn" onclick="generate()">AIでモニタリング文章生成</button>
 
@@ -265,14 +269,48 @@
 // --------------------------
 // サンプル入力
 // --------------------------
+
+const sampleTexts = {
+  life: "自宅にて妻と二人暮らし。日中はテレビ視聴が中心。",
+  body: "歩行は屋内自立、屋外は手すり使用。転倒歴なし。",
+  medicine: "降圧薬を朝1回内服。飲み忘れなし。",
+  service: "週2回デイサービス利用。入浴・機能訓練実施。",
+  wish: "できる範囲で家事を続けたい。家族としては、安全に過ごしながら外出機会も維持したいと希望。",
+  free: "表情は穏やかで会話も成立。"
+};
+
 function insertSample() {
-  life.value = "自宅にて妻と二人暮らし。日中はテレビ視聴が中心。";
-  body.value = "歩行は屋内自立、屋外は手すり使用。転倒歴なし。";
-  medicine.value = "降圧薬を朝1回内服。飲み忘れなし。";
-  service.value = "週2回デイサービス利用。入浴・機能訓練実施。";
-  wish.value = "できる範囲で家事を続けたい。家族としては、安全に過ごしながら外出機会も維持したいと希望。";
-  free.value = "表情は穏やかで会話も成立。";
+  Object.keys(sampleTexts).forEach(id => {
+    const el = document.getElementById(id);
+    el.value = sampleTexts[id];
+    el.classList.remove("sample-text"); // ★重要
+  });
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  Object.keys(sampleTexts).forEach(id => {
+    const el = document.getElementById(id);
+    el.value = sampleTexts[id];
+    el.classList.add("sample-text");
+
+    // フォーカス時：消す
+    el.addEventListener("focus", () => {
+      if (el.classList.contains("sample-text")) {
+        el.value = "";
+        el.classList.remove("sample-text");
+      }
+    });
+
+    // フォーカスアウト時：空なら戻す
+    el.addEventListener("blur", () => {
+      if (el.value.trim() === "") {
+        el.value = sampleTexts[id];
+        el.classList.add("sample-text");
+      }
+    });
+  });
+});
+
 
 // --------------------------
 // AI生成処理
