@@ -211,6 +211,41 @@
   </button>
 </div>
 
+<hr style="margin:30px 0" />
+
+<h2>課金ステータス変更（Admin）</h2>
+
+<label>Supabase User ID</label>
+<input id="billing_user_id" type="text" placeholder="uuid" />
+
+<label>現在のステータス（参考）</label>
+<input id="current_billing_status" type="text" disabled />
+
+<label>新しい billing_status</label>
+<select id="new_billing_status">
+  <option value="trial">trial（無料トライアル）</option>
+  <option value="active">active（有料）</option>
+  <option value="canceled">canceled（停止）</option>
+</select>
+
+<label>トライアル日数（trial の場合のみ）</label>
+<input id="trial_days" type="number" min="1" placeholder="例：30" />
+
+<label>変更理由（必須）</label>
+<input id="billing_reason" type="text" placeholder="例：手動延長対応" />
+
+<button onclick="updateBillingStatus()">ステータスを変更</button>
+
+<div id="billingResult" style="
+  display:none;
+  margin-top:20px;
+  padding:15px;
+  background:#fffbea;
+  border:1px solid #f6e05e;
+  border-radius:6px;
+  white-space:pre-wrap;
+"></div>
+
     </div>
 
 <script>
@@ -263,6 +298,7 @@ async function createUser() {
 resultBox.textContent = "❌ エラー\n" + JSON.stringify(data, null, 2);
     return;
 }
+
     const box = document.getElementById("createResult");
     const passInput = document.getElementById("createdPassword");
     const userIdSpan = document.getElementById("createdUserId");
@@ -323,6 +359,59 @@ function copyPassword() {
   input.setSelectionRange(0, 99999);
   document.execCommand("copy");
   alert("パスワードをコピーしました");
+}
+
+async function updateBillingStatus() {
+  const userId = document.getElementById("billing_user_id").value;
+  const newStatus = document.getElementById("new_billing_status").value;
+  const trialDays = document.getElementById("trial_days").value;
+  const reason = document.getElementById("billing_reason").value;
+  const resultBox = document.getElementById("billingResult");
+
+  if (!userId || !reason) {
+    alert("User ID と変更理由は必須です");
+    return;
+  }
+
+  if (
+    newStatus === "trial" &&
+    (!trialDays || Number(trialDays) <= 0)
+  ) {
+    alert("trial の場合はトライアル日数を指定してください");
+    return;
+  }
+
+  if (
+    !confirm(
+      `billing_status を「${newStatus}」に変更します。\n本当によろしいですか？`
+    )
+  ) {
+    return;
+  }
+
+  const res = await fetch("/api/admin-update-billing", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      auth_user_id: userId,
+      billing_status: newStatus,
+      trial_days: trialDays ? Number(trialDays) : null,
+      reason,
+    }),
+  });
+
+  const data = await res.json();
+  resultBox.style.display = "block";
+
+  if (!res.ok) {
+    resultBox.textContent =
+      "❌ エラー\n" + JSON.stringify(data, null, 2);
+    return;
+  }
+
+  resultBox.textContent =
+    "✅ ステータスを更新しました\n\n" +
+    JSON.stringify(data, null, 2);
 }
 
 </script>
