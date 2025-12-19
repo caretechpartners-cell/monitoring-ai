@@ -62,18 +62,10 @@
 <body>
 
 <script>
-// ▼▼ URL キー検証（完全版） ▼▼
-(function () {
-    const params = new URLSearchParams(window.location.search);
-    const key = params.get("key");
 
-    if (key !== "vjed5148") {
-        document.body.innerHTML = "";
-        alert("アクセス権限がありません（無効な key）");
-        // 完全に止める
-        window.stop();
-    }
-})();
+const ADMIN_KEY = new URLSearchParams(location.search).get("key");
+
+
 </script>
 
     <div class="container">
@@ -283,11 +275,18 @@ async function createUser() {
   }
 
 
-    const res = await fetch("/api/create-user?v=" + Date.now(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
+    const res = await fetch("/api/admin?v=" + Date.now(), {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-admin-key": ADMIN_KEY
+  },
+  body: JSON.stringify({
+    action: "create-user",
+    ...payload
+  }),
+});
+
 
     const resultBox = document.getElementById("result");
     resultBox.style.display = "block";
@@ -332,11 +331,18 @@ async function resetPassword() {
     return;
   }
 
-  const res = await fetch("/api/reset-password-admin?v=" + Date.now(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id, email }),
-  });
+  const res = await fetch("/api/admin?v=" + Date.now(), {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-admin-key": ADMIN_KEY
+  },
+  body: JSON.stringify({
+    action: "reset-password",
+    user_id,
+    email
+  }),
+});
 
   const data = await res.json();
 
@@ -389,16 +395,20 @@ async function updateBillingStatus() {
     return;
   }
 
-  const res = await fetch("/api/admin-update-billing", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      auth_user_id: userId,
-      billing_status: newStatus,
-      trial_days: trialDays ? Number(trialDays) : null,
-      reason,
-    }),
-  });
+const res = await fetch("/api/admin", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-admin-key": ADMIN_KEY
+  },
+  body: JSON.stringify({
+    action: "update-billing",
+    auth_user_id: userId,
+    billing_status: newStatus,
+    trial_days: trialDays ? Number(trialDays) : null,
+    reason,
+  }),
+});
 
   const data = await res.json();
   resultBox.style.display = "block";
