@@ -262,44 +262,6 @@
 
 <script>
 
-(async () => {
-  try {
-    const raw = localStorage.getItem("user");
-    const token = localStorage.getItem("auth_token");
-
-    if (!raw || !token) {
-      return (window.location.href = "login.html");
-    }
-
-    const user = JSON.parse(raw);
-    if (!user || !user.id) {
-      return (window.location.href = "login.html");
-    }
-
-    const res = await fetch("/api/session-verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, token }),
-    });
-
-    const data = await res.json();
-
-    if (!data.valid) {
-      localStorage.setItem(
-        "forced_logout_reason",
-        "他の端末でログインされたためログアウトしました"
-      );
-
-      localStorage.removeItem("user");
-      localStorage.removeItem("auth_token");
-
-      return (window.location.href = "login.html");
-    }
-  } catch (e) {
-    window.location.href = "login.html";
-  }
-})();
-
 // --------------------------
 // サンプル入力
 // --------------------------
@@ -338,7 +300,37 @@ function finishProgress() {
   result.textContent = "生成完了（100%）";
 }
 
+async function checkUsageAllowed() {
+  try{
+  const raw = localStorage.getItem("user");
+  if (!raw) return { allowed: false, reason: "not_logged_in" };
+
+  const user = JSON.parse(raw);
+
+  const res = await fetch("/api/usage-check", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: user.id }),
+  });
+
+  if (!res.ok) throw new Error("usage-check failed");
+
+  return await res.json();
+  } catch (e) {
+    return { allowed: false, reason: "system_error" };
+  }
+}
+
+
 async function generate() {
+
+ // ⭐⭐⭐ usage-check を最初に実行 ⭐⭐⭐
+  const usage = await checkUsageAllowed();
+
+  if (!usage.allowed) {
+    handleUsageBlocked(usage.reason);
+    return; // ← ここで完全に止める
+  }
 
   const text = `
 【生活状況】${life.value}
@@ -398,6 +390,40 @@ async function generate() {
     result.textContent = "通信エラーが発生しました。時間をおいて再度お試しください。";
   }
 }
+
+function handleUsageBlocked(reason) {
+  let message = "";
+
+  switch (reason) {
+    case "trial_expired":
+      message =
+        "⚠️ 無料トライアル期間が終了しました。\n\n" +
+        "引き続きご利用いただくには、有料プランへの切り替えが必要です。";
+      break;
+
+    case "billing_inactive":
+      message =
+        "⚠️ 現在このアカウントでは利用できません。\n\n" +
+        "課金状態をご確認ください。";
+      break;
+
+    case "system_error":
+      message =
+        "⚠️ 現在システムが混み合っています。\n\n" +
+       "時間をおいて再度お試しください。";
+    break;
+
+    default:
+      message =
+        "⚠️ 現在この機能を利用できません。\n\n" +
+        "時間をおいて再度お試しください。";
+  }
+
+  result.textContent = message;
+  copyGuide.style.display = "none";
+  downloadBtn.style.display = "none";
+}
+
 
 // --------------------------
 // Word ダウンロード

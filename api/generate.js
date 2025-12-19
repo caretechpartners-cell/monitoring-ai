@@ -1,10 +1,17 @@
 import OpenAI from "openai";
+import { createClient } from "@supabase/supabase-js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ✅ 無料回数（IP制限）
+// ✅ Supabase Admin Client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// ✅ 無料回数（IP制限：未ログイン用）
 const freeUsageMap = {};
 const FREE_LIMIT = 3;
 
@@ -14,20 +21,69 @@ export default async function handler(req, res) {
   }
 
   try {
-    const userIP =
-      req.headers["x-forwarded-for"] ||
-      req.socket.remoteAddress ||
-      "unknown";
+    const { text, user_id } = req.body;
+    let userIP = null;
 
-    const currentCount = freeUsageMap[userIP] || 0;
+    /* ===============================
+       🔐 ① 課金・利用可否チェック
+       =============================== */
 
-    if (currentCount >= FREE_LIMIT) {
-      return res.status(403).json({ error: "無料回数終了" });
+    if (user_id) {
+      // ▶ ログインユーザー：DBで判定
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("billing_status, trial_end_at")
+        .eq("auth_user_id", user_id)
+        .single();
+
+      if (error || !user) {
+        return res.status(403).json({
+          error: "user_not_found",
+        });
+      }
+
+      const now = new Date();
+
+      // ❌ トライアル終了
+      if (
+        user.billing_status === "trial" &&
+        user.trial_end_at &&
+        new Date(user.trial_end_at) < now
+      ) {
+        return res.status(403).json({
+          error: "trial_expired",
+        });
+      }
+
+      // ❌ 課金無効
+      if (
+        user.billing_status !== "active" &&
+        user.billing_status !== "trial"
+      ) {
+        return res.status(403).json({
+          error: "billing_inactive",
+        });
+      }
+
+      // ✅ ここまで来たら「有料 or 有効トライアル」
+      // → IP制限・回数制限は一切かけない
+    } else {
+      // ▶ 未ログインユーザー：IP無料制限
+        userIP =
+        req.headers["x-forwarded-for"] ||
+        req.socket.remoteAddress ||
+        "unknown";
+
+      const currentCount = freeUsageMap[userIP] || 0;
+
+      if (currentCount >= FREE_LIMIT) {
+        return res.status(403).json({
+          error: "free_limit_exceeded",
+        });
+      }
+
+      freeUsageMap[userIP] = currentCount + 1;
     }
-
-    freeUsageMap[userIP] = currentCount + 1;
-
-    const userText = req.body.text;
 
     const systemPrompt = `
 あなたは日本の介護保険制度に精通した、実務特化型のケアマネジャー支援AIです。
@@ -91,18 +147,23 @@ export default async function handler(req, res) {
       model: "gpt-4.1-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userText },
+        { role: "user", content: text },
       ],
     });
 
     const result = response.choices[0].message.content;
 
-    res.status(200).json({
-      result,
-      remaining: FREE_LIMIT - freeUsageMap[userIP],
-    });
+    const responseBody = { result };
+
+    // 未ログイン時のみ remaining を返す
+    if (userIP) {
+      responseBody.remaining = FREE_LIMIT - freeUsageMap[userIP];
+    }
+
+    return res.status(200).json(responseBody);
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "生成エラー" });
+    return res.status(500).json({ error: "生成エラー" });
   }
 }
