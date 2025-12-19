@@ -109,6 +109,20 @@
         <button onclick="createUser()">ユーザーを作成</button>
 
         <div id="result"></div>
+
+        <hr style="margin:30px 0" />
+
+        <h2>パスワード再発行（Admin）</h2>
+
+        <label>Supabase User ID</label>
+        <input id="reset_user_id" type="text" placeholder="uuid" />
+
+        <label>メールアドレス</label>
+        <input id="reset_email" type="email" placeholder="user@example.com" />
+
+        <button onclick="resetPassword()">パスワードを再発行</button>
+
+
     </div>
 
 <script>
@@ -167,6 +181,42 @@ async function createUser() {
     }
 }
 </script>
+
+<script>
+async function resetPassword() {
+  const user_id = document.getElementById("reset_user_id").value;
+  const email = document.getElementById("reset_email").value;
+
+  if (!user_id || !email) {
+    alert("Supabase User ID とメールアドレスは必須です");
+    return;
+  }
+
+  if (!confirm("本当にパスワードを再発行しますか？")) {
+    return;
+  }
+
+  const res = await fetch("/api/reset-password-admin?v=" + Date.now(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id, email }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert("❌ エラー\n" + JSON.stringify(data, null, 2));
+  } else {
+    alert(
+      "✅ 再発行成功\n\n" +
+      "メール: " + data.email + "\n" +
+      "新しい一時パスワード: " + data.temporaryPassword +
+      "\n\n※ 必ず安全な方法でユーザーに伝えてください"
+    );
+  }
+}
+</script>
+
 
 </body>
 </html>
