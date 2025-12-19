@@ -122,6 +122,54 @@
 
         <button onclick="resetPassword()">パスワードを再発行</button>
 
+<div id="createResult" style="
+  display:none;
+  margin-top:20px;
+  padding:15px;
+  background:#f0fff4;
+  border:1px solid #9ae6b4;
+  border-radius:6px;
+">
+  <div style="font-weight:bold; margin-bottom:6px;">
+    作成された一時パスワード
+  </div>
+
+  <input
+    id="createdPassword"
+    type="text"
+    readonly
+    style="
+      width:100%;
+      padding:10px;
+      font-size:16px;
+      font-family:monospace;
+    "
+  />
+
+  <button
+    onclick="copyCreatedPassword()"
+    style="
+      margin-top:10px;
+      width:100%;
+      padding:10px;
+      background:#38a169;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    "
+  >
+    パスワードをコピー
+  </button>
+
+  <div style="margin-top:10px; font-size:13px; color:#555;">
+    Supabase User ID:<br>
+    <span id="createdUserId"></span>
+  </div>
+</div>
+
+
+
 <div id="resetResult" style="
   display:none;
   margin-top:20px;
@@ -211,15 +259,27 @@ async function createUser() {
 
     const data = await res.json();
     if (!res.ok) {
-        resultBox.textContent = "❌ エラー\n" + JSON.stringify(data, null, 2);
-    } else {
-        resultBox.textContent =
-            "✅ ユーザー作成成功\n" +
-            "メール: " + data.email + "\n" +
-            "一時パスワード: " + data.temporaryPassword + "\n" +
-            "Supabase User ID: " + data.supabaseUserId;
-    }
+
+resultBox.textContent = "❌ エラー\n" + JSON.stringify(data, null, 2);
+    return;
 }
+    const box = document.getElementById("createResult");
+    const passInput = document.getElementById("createdPassword");
+    const userIdSpan = document.getElementById("createdUserId");
+
+passInput.value = data.temporaryPassword;
+userIdSpan.textContent = data.supabaseUserId;
+box.style.display = "block";
+}
+
+function copyCreatedPassword() {
+  const input = document.getElementById("createdPassword");
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  alert("一時パスワードをコピーしました");
+}
+
 </script>
 
 <script>
