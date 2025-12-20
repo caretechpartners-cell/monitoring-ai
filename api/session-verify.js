@@ -17,23 +17,23 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // DB の token と一致するか確認
+    // ✅ users.id で検索する（ここが修正点）
     const { data: user, error } = await supabase
       .from("users")
       .select("login_session_token")
-      .eq("auth_user_id", user_id)
+      .eq("id", user_id)
       .single();
 
     if (error || !user) {
       return res.status(200).json({ valid: false });
     }
 
-    // ★ ここが同時ログイン防止のコア判定
+    // 🔐 同時ログイン防止のコア判定
     if (user.login_session_token !== token) {
       return res.status(200).json({ valid: false });
     }
 
-    // 問題なし → 有効
+    // 問題なし
     return res.status(200).json({ valid: true });
 
   } catch (err) {
