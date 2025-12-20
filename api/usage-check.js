@@ -8,15 +8,18 @@ const supabase = createClient(
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
-      return res.status(405).json({ allowed: false, reason: "method_not_allowed" });
+      return res.status(405).json({ allowed: false });
     }
 
     const { user_id } = req.body;
     if (!user_id) {
-      return res.json({ allowed: false, reason: "not_logged_in" });
+      return res.status(200).json({
+        allowed: false,
+        reason: "user_id_required",
+      });
     }
 
-    // 🔑 users.id で検索（ここが超重要）
+    // ✅ users.id で取得
     const { data: user, error } = await supabase
       .from("users")
       .select("stripe_subscription_status")
@@ -24,30 +27,49 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !user) {
-      return res.json({ allowed: false, reason: "user_not_found" });
+      return res.status(200).json({
+        allowed: false,
+        reason: "user_not_found",
+      });
     }
 
     const status = user.stripe_subscription_status;
 
-    // ✅ 利用可能
+    // 🔴 まだWebhook未反映
+    if (!status) {
+      return res.status(200).json({
+        allowed: false,
+        reason: "payment_required",
+      });
+    }
+
+    // ✅ 利用OK条件
     if (status === "trialing" || status === "active") {
-      return res.json({ allowed: true });
+      return res.status(200).json({
+        allowed: true,
+        reason: null,
+      });
     }
 
-    // ❌ 支払い未完了
-    if (status === "incomplete" || status === "past_due") {
-      return res.json({ allowed: false, reason: "payment_required" });
-    }
-
-    // ❌ 解約
+    // 🔴 解約
     if (status === "canceled") {
-      return res.json({ allowed: false, reason: "subscription_canceled" });
+      return res.status(200).json({
+        allowed: false,
+        reason: "subscription_canceled",
+      });
     }
 
-    return res.json({ allowed: false, reason: "billing_inactive" });
+    // 🔴 支払い不備など
+    return res.status(200).json({
+      allowed: false,
+      reason: "payment_required",
+    });
 
   } catch (err) {
     console.error("usage-check error:", err);
-    return res.json({ allowed: false, reason: "system_error" });
+    return res.status(200).json({
+      allowed: false,
+      reason: "system_error",
+    });
   }
 }
