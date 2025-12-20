@@ -5,13 +5,12 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ✅ Supabase Admin Client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ✅ 無料回数（IP制限：未ログイン用）
+// 未ログイン用無料制限
 const freeUsageMap = {};
 const FREE_LIMIT = 3;
 
@@ -24,52 +23,11 @@ export default async function handler(req, res) {
     const { text, user_id } = req.body;
     let userIP = null;
 
-    /* ===============================
-       🔐 ① 課金・利用可否チェック
-       =============================== */
-
-    if (user_id) {
-      // ▶ ログインユーザー：DBで判定
-      const { data: user, error } = await supabase
-        .from("users")
-        .select("billing_status, trial_end_at")
-        .eq("auth_user_id", user_id)
-        .single();
-
-      if (error || !user) {
-        return res.status(403).json({
-          error: "user_not_found",
-        });
-      }
-
-      const now = new Date();
-
-      // ❌ トライアル終了
-      if (
-        user.billing_status === "trial" &&
-        user.trial_end_at &&
-        new Date(user.trial_end_at) < now
-      ) {
-        return res.status(403).json({
-          error: "trial_expired",
-        });
-      }
-
-      // ❌ 課金無効
-      if (
-        user.billing_status !== "active" &&
-        user.billing_status !== "trial"
-      ) {
-        return res.status(403).json({
-          error: "billing_inactive",
-        });
-      }
-
-      // ✅ ここまで来たら「有料 or 有効トライアル」
-      // → IP制限・回数制限は一切かけない
-    } else {
-      // ▶ 未ログインユーザー：IP無料制限
-        userIP =
+    // ----------------------------
+    // 未ログインユーザーのみ制限
+    // ----------------------------
+    if (!user_id) {
+      userIP =
         req.headers["x-forwarded-for"] ||
         req.socket.remoteAddress ||
         "unknown";
