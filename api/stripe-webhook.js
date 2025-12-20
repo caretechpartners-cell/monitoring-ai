@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("❌ Signature error:", err.message);
+    console.error("❌ Signature verification failed:", err.message);
     return res.status(400).send("Webhook Error");
   }
 
@@ -50,16 +50,8 @@ export default async function handler(req, res) {
     ) {
       const sub = event.data.object;
 
-      // 🔑 customer 情報を取得
-      const customer = await stripe.customers.retrieve(sub.customer);
-      const email = customer.email;
-
-      if (!email) {
-        throw new Error("customer.email not found");
-      }
-
       const updateData = {
-        stripe_customer_id: customer.id,
+        stripe_customer_id: sub.customer,
         stripe_subscription_id: sub.id,
         stripe_subscription_status: sub.status, // trialing / active / canceled
         trial_end_at: sub.trial_end
@@ -72,22 +64,20 @@ export default async function handler(req, res) {
       };
 
       const { error } = await supabase
-  .from("users")
-  .update(updateData)
-  .eq("email", email);
+        .from("users")
+        .update(updateData)
+        .eq("stripe_customer_id", sub.customer);
 
-if (error) {
-  console.error("Supabase update failed:", {
-    email,
-    error,
-  });
-  // ❌ throw しない
-}
+      if (error) {
+        console.error("⚠️ Supabase update failed (ignored):", error);
+      }
+    }
 
-
+    // ⭐ 何が起きても 200 を返す
     return res.status(200).json({ received: true });
+
   } catch (err) {
-    console.error("❌ Webhook handler error:", err);
-    return res.status(500).send("Internal Server Error");
+    console.error("❌ Webhook internal error (ignored):", err);
+    return res.status(200).json({ received: true });
   }
 }
