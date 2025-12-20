@@ -1,431 +1,199 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin User Create</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin User Create</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f6fa;
-            padding: 30px;
-        }
-        .container {
-            width: 420px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            margin-bottom: 20px;
-            font-size: 20px;
-            text-align: center;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 12px;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 12px;
-            font-size: 16px;
-            background: #0078ff;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        #result {
-            margin-top: 25px;
-            padding: 15px;
-            background: #eef7ff;
-            border: 1px solid #b6d9ff;
-            border-radius: 6px;
-            display: none;
-            white-space: pre-wrap;
-        }
-    </style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f6fa;
+      padding: 30px;
+    }
+    .container {
+      width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 20px;
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      font-size: 16px;
+      background: #0078ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
 <script>
-
 const ADMIN_KEY = new URLSearchParams(location.search).get("key");
-
-
 </script>
 
-    <div class="container">
-        <h2>ユーザー新規作成（Admin）</h2>
+<div class="container">
 
-        <label>メールアドレス</label>
-        <input id="email" type="email" placeholder="user@example.com" />
+  <h2>ユーザー新規作成（Admin）</h2>
 
-        <label>名前</label>
-        <input id="user_name" type="text" placeholder="山田太郎" />
+  <label>メールアドレス</label>
+  <input id="email" type="email" placeholder="user@example.com" />
 
-        <label>電話番号</label>
-        <input id="phone" type="text" placeholder="090-xxxx-xxxx" />
+  <label>名前</label>
+  <input id="user_name" type="text" placeholder="山田太郎" />
 
-        <label>プラン</label>
-        <select id="plan">
-            <option value="personal">個人プラン</option>
-            <option value="corp">法人プラン</option>
-        </select>
+  <label>電話番号</label>
+  <input id="phone" type="text" placeholder="090-xxxx-xxxx" />
 
-        <label>法人ユーザー数（個人は1でOK）</label>
-        <input id="users" type="number" value="1" min="1" />
+  <label>プラン</label>
+  <select id="plan">
+    <option value="personal">個人プラン</option>
+    <option value="corp">法人プラン</option>
+  </select>
 
-        <label style="font-weight: normal;">
-        <input type="checkbox" id="is_trial" checked />
-        無料30日トライアルで作成する
-        </label>
+  <label>法人ユーザー数（個人は1でOK）</label>
+  <input id="users" type="number" value="1" min="1" />
 
-        <div style="font-size:13px; color:#666; margin-top:6px;">
-        ※ チェックONの場合、30日後に自動でStripe課金が開始されます
-        </div>
+  <button onclick="createUser()">ユーザーを作成</button>
 
-        <button onclick="createUser()">ユーザーを作成</button>
-
-        <div id="result"></div>
-
-        <hr style="margin:30px 0" />
-
-        <h2>パスワード再発行（Admin）</h2>
-
-        <label>Supabase User ID</label>
-        <input id="reset_user_id" type="text" placeholder="uuid" />
-
-        <label>メールアドレス</label>
-        <input id="reset_email" type="email" placeholder="user@example.com" />
-
-        <button onclick="resetPassword()">パスワードを再発行</button>
-
-<div id="createResult" style="
-  display:none;
-  margin-top:20px;
-  padding:15px;
-  background:#f0fff4;
-  border:1px solid #9ae6b4;
-  border-radius:6px;
-">
-  <div style="font-weight:bold; margin-bottom:6px;">
-    作成された一時パスワード
-  </div>
-
-  <input
-    id="createdPassword"
-    type="text"
-    readonly
-    style="
-      width:100%;
-      padding:10px;
-      font-size:16px;
-      font-family:monospace;
-    "
-  />
-
-  <button
-    onclick="copyCreatedPassword()"
-    style="
-      margin-top:10px;
-      width:100%;
-      padding:10px;
-      background:#38a169;
-      color:#fff;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    "
-  >
-    パスワードをコピー
-  </button>
-
-  <div style="margin-top:10px; font-size:13px; color:#555;">
-    Supabase User ID:<br>
-    <span id="createdUserId"></span>
-  </div>
-</div>
-
-
-
-<div id="resetResult" style="
-  display:none;
-  margin-top:20px;
-  padding:15px;
-  background:#f0f8ff;
-  border:1px solid #b6d9ff;
-  border-radius:6px;
-">
-  <div style="font-weight:bold; margin-bottom:6px;">
-    再発行された一時パスワード
-  </div>
-
-  <input
-    id="newPassword"
-    type="text"
-    readonly
-    style="
-      width:100%;
-      padding:10px;
-      font-size:16px;
-      font-family:monospace;
-    "
-  />
-
-  <button
-    onclick="copyPassword()"
-    style="
-      margin-top:10px;
-      width:100%;
-      padding:10px;
-      background:#0078ff;
-      color:#fff;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    "
-  >
-    パスワードをコピー
-  </button>
-</div>
-
-<hr style="margin:30px 0" />
-
-<h2>課金ステータス変更（Admin）</h2>
-
-<label>Supabase User ID</label>
-<input id="billing_user_id" type="text" placeholder="uuid" />
-
-<label>現在のステータス（参考）</label>
-<input id="current_billing_status" type="text" disabled />
-
-<label>新しい billing_status</label>
-<select id="new_billing_status">
-  <option value="trial">trial（無料トライアル）</option>
-  <option value="active">active（有料）</option>
-  <option value="canceled">canceled（停止）</option>
-</select>
-
-<label>トライアル日数（trial の場合のみ）</label>
-<input id="trial_days" type="number" min="1" placeholder="例：30" />
-
-<label>変更理由（必須）</label>
-<input id="billing_reason" type="text" placeholder="例：手動延長対応" />
-
-<button onclick="updateBillingStatus()">ステータスを変更</button>
-
-<div id="billingResult" style="
-  display:none;
-  margin-top:20px;
-  padding:15px;
-  background:#fffbea;
-  border:1px solid #f6e05e;
-  border-radius:6px;
-  white-space:pre-wrap;
-"></div>
-
+  <div id="createResult" style="display:none; margin-top:20px;">
+    <div style="font-weight:bold;">一時パスワード</div>
+    <input id="createdPassword" type="text" readonly />
+    <button onclick="copyCreatedPassword()">コピー</button>
+    <div style="margin-top:10px;">
+      Supabase User ID:<br>
+      <span id="createdUserId"></span>
     </div>
+  </div>
+
+  <hr style="margin:30px 0" />
+
+  <h2>パスワード再発行（Admin）</h2>
+
+  <label>Supabase User ID</label>
+  <input id="reset_user_id" type="text" placeholder="uuid" />
+
+  <label>メールアドレス</label>
+  <input id="reset_email" type="email" placeholder="user@example.com" />
+
+  <button onclick="resetPassword()">パスワードを再発行</button>
+
+  <div id="resetResult" style="display:none; margin-top:20px;">
+    <div style="font-weight:bold;">新しい一時パスワード</div>
+    <input id="newPassword" type="text" readonly />
+    <button onclick="copyPassword()">コピー</button>
+  </div>
+
+</div>
 
 <script>
 async function createUser() {
-    const email = document.getElementById("email").value;
-    const isTrial = document.getElementById("is_trial").checked;
-    const user_name = document.getElementById("user_name").value;
-    const phone = document.getElementById("phone").value;
-    const plan = document.getElementById("plan").value;
-    const users = document.getElementById("users").value;
+  const email = email.value;
+  const user_name = user_name.value;
+  const phone = phone.value;
+  const plan = plan.value;
+  const usersCount = users.value;
 
-    if (!email || !user_name) {
-        alert("メールアドレスと名前は必須です");
-        return;
-    }
-
-    const payload = { email, user_name, phone, plan, users };
-
-    if (isTrial) {
-    const now = new Date();
-    const end = new Date();
-    end.setDate(end.getDate() + 30);
-
-    payload.billing_status = "trial";
-    payload.trial_start_at = now.toISOString();
-    payload.trial_end_at = end.toISOString();
-  } else {
-    payload.billing_status = "active";
+  if (!email || !user_name) {
+    alert("メールアドレスと名前は必須です");
+    return;
   }
 
-    if (!isTrial && plan === "corp") {
-    if (!confirm("法人プランで即課金ユーザーを作成します。よろしいですか？")) {
+  const res = await fetch("/api/admin", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-key": ADMIN_KEY
+    },
+    body: JSON.stringify({
+      action: "create-user",
+      email,
+      user_name,
+      phone,
+      plan,
+      users: usersCount
+    })
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    alert(JSON.stringify(data));
     return;
-    }
   }
 
-
-    const res = await fetch("/api/admin?v=" + Date.now(), {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-admin-key": ADMIN_KEY
-  },
-  body: JSON.stringify({
-    action: "create-user",
-    ...payload
-  }),
-});
-
-
-    const resultBox = document.getElementById("result");
-    resultBox.style.display = "block";
-
-    const data = await res.json();
-    if (!res.ok) {
-
-resultBox.textContent = "❌ エラー\n" + JSON.stringify(data, null, 2);
-    return;
-}
-
-    const box = document.getElementById("createResult");
-    const passInput = document.getElementById("createdPassword");
-    const userIdSpan = document.getElementById("createdUserId");
-
-passInput.value = data.temporaryPassword;
-userIdSpan.textContent = data.supabaseUserId;
-box.style.display = "block";
+  createdPassword.value = data.temporaryPassword;
+  createdUserId.textContent = data.supabaseUserId;
+  createResult.style.display = "block";
 }
 
 function copyCreatedPassword() {
-  const input = document.getElementById("createdPassword");
-  input.select();
-  input.setSelectionRange(0, 99999);
+  createdPassword.select();
   document.execCommand("copy");
-  alert("一時パスワードをコピーしました");
+  alert("コピーしました");
 }
 
-</script>
-
-<script>
 async function resetPassword() {
-  const user_id = document.getElementById("reset_user_id").value;
-  const email = document.getElementById("reset_email").value;
+  const user_id = reset_user_id.value;
+  const emailVal = reset_email.value;
 
-  if (!user_id || !email) {
-    alert("Supabase User ID とメールアドレスは必須です");
+  if (!user_id || !emailVal) {
+    alert("User ID と email は必須です");
     return;
   }
 
-  if (!confirm("本当にパスワードを再発行しますか？")) {
-    return;
-  }
-
-  const res = await fetch("/api/admin?v=" + Date.now(), {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-admin-key": ADMIN_KEY
-  },
-  body: JSON.stringify({
-    action: "reset-password",
-    user_id,
-    email
-  }),
-});
+  const res = await fetch("/api/admin", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-key": ADMIN_KEY
+    },
+    body: JSON.stringify({
+      action: "reset-password",
+      user_id,
+      email: emailVal
+    })
+  });
 
   const data = await res.json();
-
   if (!res.ok) {
-    alert("❌ エラー\n" + JSON.stringify(data, null, 2));
+    alert(JSON.stringify(data));
     return;
   }
 
-  // ▼▼ ここが変更点 ▼▼
-  const box = document.getElementById("resetResult");
-  const input = document.getElementById("newPassword");
-
-  input.value = data.temporaryPassword;
-  box.style.display = "block";
+  newPassword.value = data.temporaryPassword;
+  resetResult.style.display = "block";
 }
 
 function copyPassword() {
-  const input = document.getElementById("newPassword");
-  input.select();
-  input.setSelectionRange(0, 99999);
+  newPassword.select();
   document.execCommand("copy");
-  alert("パスワードをコピーしました");
+  alert("コピーしました");
 }
-
-async function updateBillingStatus() {
-  const userId = document.getElementById("billing_user_id").value;
-  const newStatus = document.getElementById("new_billing_status").value;
-  const trialDays = document.getElementById("trial_days").value;
-  const reason = document.getElementById("billing_reason").value;
-  const resultBox = document.getElementById("billingResult");
-
-  if (!userId || !reason) {
-    alert("User ID と変更理由は必須です");
-    return;
-  }
-
-  if (
-    newStatus === "trial" &&
-    (!trialDays || Number(trialDays) <= 0)
-  ) {
-    alert("trial の場合はトライアル日数を指定してください");
-    return;
-  }
-
-  if (
-    !confirm(
-      `billing_status を「${newStatus}」に変更します。\n本当によろしいですか？`
-    )
-  ) {
-    return;
-  }
-
-const res = await fetch("/api/admin", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-admin-key": ADMIN_KEY
-  },
-  body: JSON.stringify({
-    action: "update-billing",
-    auth_user_id: userId,
-    billing_status: newStatus,
-    trial_days: trialDays ? Number(trialDays) : null,
-    reason,
-  }),
-});
-
-  const data = await res.json();
-  resultBox.style.display = "block";
-
-  if (!res.ok) {
-    resultBox.textContent =
-      "❌ エラー\n" + JSON.stringify(data, null, 2);
-    return;
-  }
-
-  resultBox.textContent =
-    "✅ ステータスを更新しました\n\n" +
-    JSON.stringify(data, null, 2);
-}
-
 </script>
-
 
 </body>
 </html>
