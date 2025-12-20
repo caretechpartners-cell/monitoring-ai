@@ -8,13 +8,19 @@ const supabase = createClient(
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
+      return res.status(405).json({
+        allowed: false,
+        reason: "method_not_allowed",
+      });
     }
 
     const { user_id } = req.body;
 
     if (!user_id) {
-      return res.status(400).json({ error: "user_id is required" });
+      return res.status(400).json({
+        allowed: false,
+        reason: "user_id_required",
+      });
     }
 
     // --------------------------
@@ -22,8 +28,14 @@ export default async function handler(req, res) {
     // --------------------------
     const { data: user, error } = await supabase
       .from("users")
-      .select("billing_status, trial_start_at, trial_end_at")
-      .eq("id", user_id)
+      .select(`
+        stripe_subscription_status,
+        stripe_customer_id,
+        stripe_subscription_id,
+        trial_end_at,
+        current_period_end
+      `)
+      .eq("auth_user_id", user_id)
       .single();
 
     if (error || !user) {
@@ -33,46 +45,48 @@ export default async function handler(req, res) {
       });
     }
 
-    const now = new Date();
+    const status = user.stripe_subscription_status;
 
     // --------------------------
-    // 課金状態判定
+    // Stripe ステータス判定
     // --------------------------
-    if (user.billing_status === "active") {
+
+    // 利用 OK
+    if (status === "trialing" || status === "active") {
       return res.json({
         allowed: true,
         reason: null,
       });
     }
 
-    if (user.billing_status === "trial") {
-      if (!user.trial_end_at) {
-        return res.json({
-          allowed: false,
-          reason: "trial_invalid",
-        });
-      }
-
-      const trialEnd = new Date(user.trial_end_at);
-
-      if (now <= trialEnd) {
-        return res.json({
-          allowed: true,
-          reason: null,
-        });
-      }
-
-      // trial 期限切れ
+    // 支払い失敗系
+    if (status === "past_due" || status === "unpaid") {
       return res.json({
         allowed: false,
-        reason: "trial_expired",
+        reason: "payment_required",
       });
     }
 
-    // それ以外（expired / unpaid / etc）
+    // 解約
+    if (status === "canceled") {
+      return res.json({
+        allowed: false,
+        reason: "subscription_canceled",
+      });
+    }
+
+    // 未完了（カード未登録など）
+    if (status === "incomplete") {
+      return res.json({
+        allowed: false,
+        reason: "subscription_incomplete",
+      });
+    }
+
+    // それ以外（null / 不正 / 未登録）
     return res.json({
       allowed: false,
-      reason: "billing_inactive",
+      reason: "not_subscribed",
     });
 
   } catch (e) {

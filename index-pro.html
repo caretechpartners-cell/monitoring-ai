@@ -433,17 +433,17 @@ function handleUsageBlocked(reason) {
   let message = "";
 
   switch (reason) {
-    case "trial_expired":
-      message =
-        "⚠️ 無料トライアル期間が終了しました。\n\n" +
-        "引き続きご利用いただくには、有料プランへの切り替えが必要です。";
-      break;
+    case "payment_required":
+  message =
+    "⚠️ お支払いが確認できていません。\n\n" +
+    "Stripeの決済状況をご確認ください。";
+  break;
 
-    case "billing_inactive":
-      message =
-        "⚠️ 現在このアカウントでは利用できません。\n\n" +
-        "課金状態をご確認ください。";
-      break;
+case "subscription_canceled":
+  message =
+    "⚠️ サブスクリプションが解約されています。\n\n" +
+    "再度ご利用いただくには、プランへのお申し込みが必要です。";
+  break;
 
     case "system_error":
       message =
