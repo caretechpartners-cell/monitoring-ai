@@ -72,15 +72,18 @@ export default async function handler(req, res) {
       };
 
       const { error } = await supabase
-        .from("users")
-        .update(updateData)
-        .eq("email", email);
+  .from("users")
+  .update(updateData)
+  .eq("email", email);
 
-      if (error) {
-        console.error("❌ Supabase update failed:", error);
-        throw error;
-      }
-    }
+if (error) {
+  console.error("Supabase update failed:", {
+    email,
+    error,
+  });
+  // ❌ throw しない
+}
+
 
     return res.status(200).json({ received: true });
   } catch (err) {
