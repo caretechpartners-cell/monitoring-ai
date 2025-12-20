@@ -101,6 +101,27 @@ export default async function handler(req, res) {
         });
       }
 
+// ✅ Stripe Payment Link で先に入っている情報を取り込む（emailキー）
+const { data: link, error: linkError } = await supabase
+  .from("stripe_links")
+  .select("stripe_customer_id, stripe_subscription_id, stripe_subscription_status, trial_end_at, current_period_end")
+  .eq("email", email)
+  .single();
+
+if (!linkError && link) {
+  await supabase
+    .from("users")
+    .update({
+      stripe_customer_id: link.stripe_customer_id,
+      stripe_subscription_id: link.stripe_subscription_id,
+      stripe_subscription_status: link.stripe_subscription_status,
+      trial_end_at: link.trial_end_at,
+      current_period_end: link.current_period_end,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("email", email);
+}
+
       return res.json({
         message: "ユーザーが作成されました",
         email,
