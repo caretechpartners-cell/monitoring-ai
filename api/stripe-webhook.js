@@ -42,42 +42,90 @@ export default async function handler(req, res) {
     return res.status(400).send("Webhook Error");
   }
 
-  try {
-    if (
-      event.type === "customer.subscription.created" ||
-      event.type === "customer.subscription.updated" ||
-      event.type === "customer.subscription.deleted"
-    ) {
-      const sub = event.data.object;
+try {
+  // =========================================
+  // ① Checkout 完了（最初の紐付け）
+  // =========================================
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
 
-      const updateData = {
-        stripe_customer_id: sub.customer,
-        stripe_subscription_id: sub.id,
-        stripe_subscription_status: sub.status, // trialing / active / canceled
-        trial_end_at: sub.trial_end
-          ? new Date(sub.trial_end * 1000).toISOString()
-          : null,
-        current_period_end: sub.current_period_end
-          ? new Date(sub.current_period_end * 1000).toISOString()
-          : null,
-        updated_at: new Date().toISOString(),
-      };
+    // Payment Link 経由でも必ず入る
+    const email = session.customer_email;
+    const customerId = session.customer;
+    const subscriptionId = session.subscription;
 
-      const { error } = await supabase
-        .from("users")
-        .update(updateData)
-        .eq("stripe_customer_id", sub.customer);
-
-      if (error) {
-        console.error("⚠️ Supabase update failed (ignored):", error);
-      }
+    if (!email || !customerId) {
+      console.warn("checkout.session.completed: missing email or customer");
+      return res.status(200).json({ received: true });
     }
 
-    // ⭐ 何が起きても 200 を返す
-    return res.status(200).json({ received: true });
+    const { error } = await supabase
+      .from("users")
+      .update({
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("email", email);
 
-  } catch (err) {
-    console.error("❌ Webhook internal error (ignored):", err);
+    if (error) {
+      console.error("Supabase update (checkout) failed:", error);
+    }
+
+    // ★ ここで return してOK（他の処理に行かせない）
     return res.status(200).json({ received: true });
   }
+
+// =========================================
+// ② subscription 作成・更新・削除
+// =========================================
+if (
+  event.type === "customer.subscription.created" ||
+  event.type === "customer.subscription.updated" ||
+  event.type === "customer.subscription.deleted"
+) {
+  const sub = event.data.object;
+
+  const customer = await stripe.customers.retrieve(sub.customer);
+  const email = customer.email;
+
+  if (!email) {
+    console.warn("subscription event: customer.email not found");
+    return res.status(200).json({ received: true });
+  }
+
+  // ✅ status を先に確定
+  let status = sub.status;
+  if (event.type === "customer.subscription.deleted") {
+    status = "canceled";
+  }
+
+  const updateData = {
+    stripe_customer_id: sub.customer,
+    stripe_subscription_id: sub.id,
+    stripe_subscription_status: status, // trialing / active / canceled
+    trial_end_at: sub.trial_end
+      ? new Date(sub.trial_end * 1000).toISOString()
+      : null,
+    current_period_end: sub.current_period_end
+      ? new Date(sub.current_period_end * 1000).toISOString()
+      : null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("users")
+    .update(updateData)
+    .eq("email", email);
+
+  if (error) {
+    console.error("Supabase update (subscription) failed:", error);
+  }
+}
+  return res.status(200).json({ received: true });
+} catch (err) {
+  console.error("❌ Webhook handler error:", err);
+  return res.status(500).send("Internal Server Error");
+}
+
 }

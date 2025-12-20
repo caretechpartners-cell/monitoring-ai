@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // ★ service_role 必須
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export default async function handler(req, res) {
@@ -31,9 +31,7 @@ export default async function handler(req, res) {
       .select(`
         stripe_subscription_status,
         stripe_customer_id,
-        stripe_subscription_id,
-        trial_end_at,
-        current_period_end
+        stripe_subscription_id
       `)
       .eq("auth_user_id", user_id)
       .single();
@@ -48,49 +46,25 @@ export default async function handler(req, res) {
     const status = user.stripe_subscription_status;
 
     // --------------------------
-    // Stripe ステータス判定
+    // Stripe 課金状態判定
     // --------------------------
-
-    // 利用 OK
     if (status === "trialing" || status === "active") {
-      return res.json({
+      return res.status(200).json({
         allowed: true,
         reason: null,
       });
     }
 
-    // 支払い失敗系
-    if (status === "past_due" || status === "unpaid") {
-      return res.json({
-        allowed: false,
-        reason: "payment_required",
-      });
-    }
-
-    // 解約
-    if (status === "canceled") {
-      return res.json({
-        allowed: false,
-        reason: "subscription_canceled",
-      });
-    }
-
-    // 未完了（カード未登録など）
-    if (status === "incomplete") {
-      return res.json({
-        allowed: false,
-        reason: "subscription_incomplete",
-      });
-    }
-
-    // それ以外（null / 不正 / 未登録）
-    return res.json({
+    // --------------------------
+    // 利用不可ステータス
+    // --------------------------
+    return res.status(200).json({
       allowed: false,
-      reason: "not_subscribed",
+      reason: status || "subscription_inactive",
     });
 
-  } catch (e) {
-    console.error("usage-check error:", e);
+  } catch (err) {
+    console.error("usage-check error:", err);
     return res.status(500).json({
       allowed: false,
       reason: "server_error",
