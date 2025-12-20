@@ -8,66 +8,46 @@ const supabase = createClient(
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
-      return res.status(405).json({
-        allowed: false,
-        reason: "method_not_allowed",
-      });
+      return res.status(405).json({ allowed: false, reason: "method_not_allowed" });
     }
 
     const { user_id } = req.body;
-
     if (!user_id) {
-      return res.status(400).json({
-        allowed: false,
-        reason: "user_id_required",
-      });
+      return res.json({ allowed: false, reason: "not_logged_in" });
     }
 
-    // --------------------------
-    // ユーザー情報取得
-    // --------------------------
+    // 🔑 users.id で検索（ここが超重要）
     const { data: user, error } = await supabase
       .from("users")
-      .select(`
-        stripe_subscription_status,
-        stripe_customer_id,
-        stripe_subscription_id
-      `)
-      .eq("auth_user_id", user_id)
+      .select("stripe_subscription_status")
+      .eq("id", user_id)
       .single();
 
     if (error || !user) {
-      return res.status(404).json({
-        allowed: false,
-        reason: "user_not_found",
-      });
+      return res.json({ allowed: false, reason: "user_not_found" });
     }
 
     const status = user.stripe_subscription_status;
 
-    // --------------------------
-    // Stripe 課金状態判定
-    // --------------------------
+    // ✅ 利用可能
     if (status === "trialing" || status === "active") {
-      return res.status(200).json({
-        allowed: true,
-        reason: null,
-      });
+      return res.json({ allowed: true });
     }
 
-    // --------------------------
-    // 利用不可ステータス
-    // --------------------------
-    return res.status(200).json({
-      allowed: false,
-      reason: status || "subscription_inactive",
-    });
+    // ❌ 支払い未完了
+    if (status === "incomplete" || status === "past_due") {
+      return res.json({ allowed: false, reason: "payment_required" });
+    }
+
+    // ❌ 解約
+    if (status === "canceled") {
+      return res.json({ allowed: false, reason: "subscription_canceled" });
+    }
+
+    return res.json({ allowed: false, reason: "billing_inactive" });
 
   } catch (err) {
     console.error("usage-check error:", err);
-    return res.status(500).json({
-      allowed: false,
-      reason: "server_error",
-    });
+    return res.json({ allowed: false, reason: "system_error" });
   }
 }
