@@ -1,7 +1,128 @@
-<script>
-const ADMIN_KEY = new URLSearchParams(location.search).get("key");
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin User Create</title>
 
-async function createUser() {
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f6fa;
+      padding: 30px;
+    }
+
+    .container {
+      width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      font-size: 16px;
+      background: #0078ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<script>
+  const ADMIN_KEY = new URLSearchParams(location.search).get("key");
+</script>
+
+<div class="container">
+
+  <h2>ユーザー新規作成（Admin）</h2>
+
+  <label>メールアドレス</label>
+  <input id="email" type="email" placeholder="user@example.com" />
+
+  <label>名前</label>
+  <input id="user_name" type="text" placeholder="山田太郎" />
+
+  <label>電話番号</label>
+  <input id="phone" type="text" placeholder="090-xxxx-xxxx" />
+
+  <label>プラン</label>
+  <select id="plan">
+    <option value="personal">個人プラン</option>
+    <option value="corp">法人プラン</option>
+  </select>
+
+  <label>法人ユーザー数（個人は1でOK）</label>
+  <input id="users" type="number" value="1" min="1" />
+
+  <button onclick="createUser()">ユーザーを作成</button>
+
+  <div id="createResult" style="display:none; margin-top:20px;">
+    <div style="font-weight:bold;">一時パスワード</div>
+
+    <input id="createdPassword" type="text" readonly />
+
+    <button onclick="copyCreatedPassword()">コピー</button>
+
+    <div style="margin-top:10px;">
+      Supabase User ID:<br />
+      <span id="createdUserId"></span>
+    </div>
+  </div>
+
+  <hr style="margin:30px 0" />
+
+  <h2>パスワード再発行（Admin）</h2>
+
+  <label>Supabase User ID</label>
+  <input id="reset_user_id" type="text" placeholder="uuid" />
+
+  <label>メールアドレス</label>
+  <input id="reset_email" type="email" placeholder="user@example.com" />
+
+  <button onclick="resetPassword()">パスワードを再発行</button>
+
+  <div id="resetResult" style="display:none; margin-top:20px;">
+    <div style="font-weight:bold;">新しい一時パスワード</div>
+
+    <input id="newPassword" type="text" readonly />
+
+    <button onclick="copyPassword()">コピー</button>
+  </div>
+
+</div>
+
+<script>
+  async function createUser() {
   const email = document.getElementById("email").value;
   const user_name = document.getElementById("user_name").value;
   const phone = document.getElementById("phone").value;
@@ -88,3 +209,6 @@ function copyPassword() {
   alert("コピーしました");
 }
 </script>
+
+</body>
+</html>
