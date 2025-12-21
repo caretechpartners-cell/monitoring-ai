@@ -1,62 +1,56 @@
-// /api/get-user-info.js
-
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
-  // POST 以外は拒否
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      success: false,
-      message: "Method Not Allowed",
-    });
-  }
-
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({
-      success: false,
-      message: "email は必須です",
-    });
-  }
-
   try {
-    // Supabase クライアント
+    if (req.method !== "POST") {
+      return res.status(405).json({ success: false });
+    }
+
+    const { user_id } = req.body;
+
+    if (!user_id) {
+      return res.status(200).json({
+        success: false,
+        reason: "user_id_required",
+      });
+    }
+
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    console.log("🔍 Fetching user info for:", email);
-
-    // users テーブルからメールで検索
-    const { data, error } = await supabase
+    const { data: user, error } = await supabase
       .from("users")
-      .select("*")
-      .eq("email", email)
+      .select(`
+        id,
+        email,
+        user_name,
+        plan,
+        corp_user_limit,
+        last_login_at,
+        purchased_at
+      `)
+      .eq("id", user_id)
       .single();
 
-    if (error || !data) {
-      console.log("❌ USER NOT FOUND:", error);
-      return res.status(404).json({
+    if (error || !user) {
+      return res.status(200).json({
         success: false,
-        message: "ユーザーが見つかりません",
+        reason: "user_not_found",
       });
     }
 
-    console.log("✅ USER FOUND:", data);
-
     return res.status(200).json({
       success: true,
-      user: data,
+      user,
     });
 
   } catch (err) {
-    console.error("❌ API ERROR:", err);
-
-    return res.status(500).json({
+    console.error("get-user-info error:", err);
+    return res.status(200).json({
       success: false,
-      message: "サーバーエラー",
+      reason: "system_error",
     });
   }
 }
