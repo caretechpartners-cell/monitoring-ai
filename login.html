@@ -114,13 +114,16 @@ async function login() {
 
   const data = await res.json();
 
-  if (data.success) {
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("auth_token", data.user.login_session_token);
-    location.href = "app.html";
-  } else {
-    errorDiv.textContent = "IDまたはパスワードが異なります";
-  }
+if (data.success) {
+  // ★ 新・正規キー（これが唯一の正）
+  localStorage.setItem("auth_user_id", data.user.id);
+  localStorage.setItem("login_session_token", data.user.login_session_token);
+
+  // 旧キーは今後使わない（入れない）
+  localStorage.removeItem("user");
+  localStorage.removeItem("auth_token");
+
+  location.href = "app.html";
 }
 
 document.getElementById("password").addEventListener("keypress", e => {
