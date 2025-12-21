@@ -122,65 +122,83 @@
 </div>
 
 <script>
-  // ログインチェック
-  let localUser = null;
+(async () => {
   try {
-    const raw = localStorage.getItem("user");
-    if (!raw) location.href = "login.html";
-    localUser = JSON.parse(raw);
-    if (!localUser) location.href = "login.html";
-  } catch {
-    location.href = "login.html";
-  }
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-  // Supabase から最新データ取得
-  async function loadUserInfo() {
-    const res = await fetch("/api/get-user-info", {
+    if (!user_id || !token) {
+      return location.href = "login.html";
+    }
+
+    const res = await fetch("/api/auth-guard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: localUser.email })
+      body: JSON.stringify({ user_id, token }),
     });
 
     const data = await res.json();
 
-    if (!data.success) {
-      alert("ユーザー情報の取得に失敗しました");
-      return;
+    if (!data.valid) {
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
     }
+  } catch {
+    location.href = "login.html";
+  }
+})();
 
-    const user = data.user;
+// Supabase から最新データ取得
+async function loadUserInfo() {
+  const user_id = localStorage.getItem("auth_user_id");
 
-    // プラン名
-    const planLabel = user.plan === "corp" ? "法人プラン" :
-                      user.plan === "personal" ? "個人プラン" :
-                      user.plan;
+  const res = await fetch("/api/get-user-info", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id })
+  });
 
-    document.getElementById("planName").textContent = planLabel;
+  const data = await res.json();
 
-    // 法人プランの場合は契約人数表示
-    if (user.plan === "corp") {
-      document.getElementById("corpCountTitle").style.display = "block";
-      document.getElementById("corpCount").style.display = "block";
-      document.getElementById("corpCount").textContent = user.corp_user_limit || "—";
-    }
-
-    // 名前
-    document.getElementById("userName").textContent = user.user_name || "未登録";
-
-    // メール
-    document.getElementById("userEmail").textContent = user.email;
-
-    // 最終ログイン
-    document.getElementById("lastLogin").textContent =
-      user.last_login_at ? new Date(user.last_login_at).toLocaleString() : "—";
-
-    // 購入日
-    document.getElementById("purchasedAt").textContent =
-      user.purchased_at ? new Date(user.purchased_at).toLocaleDateString() : "—";
+  if (!data.success) {
+    alert("ユーザー情報の取得に失敗しました");
+    return;
   }
 
-  loadUserInfo();
+  const user = data.user;
 
+  // プラン名
+  const planLabel =
+    user.plan === "corp" ? "法人プラン" :
+    user.plan === "personal" ? "個人プラン" :
+    user.plan;
+
+  document.getElementById("planName").textContent = planLabel;
+
+  // 法人プランの場合は契約人数表示
+  if (user.plan === "corp") {
+    document.getElementById("corpCountTitle").style.display = "block";
+    document.getElementById("corpCount").style.display = "block";
+    document.getElementById("corpCount").textContent = user.corp_user_limit || "—";
+  }
+
+  // 名前
+  document.getElementById("userName").textContent = user.user_name || "未登録";
+
+  // メール
+  document.getElementById("userEmail").textContent = user.email;
+
+  // 最終ログイン
+  document.getElementById("lastLogin").textContent =
+    user.last_login_at ? new Date(user.last_login_at).toLocaleString() : "—";
+
+  // 登録日
+  document.getElementById("purchasedAt").textContent =
+    user.purchased_at ? new Date(user.purchased_at).toLocaleDateString() : "—";
+}
+
+loadUserInfo();
 </script>
 
 </body>
