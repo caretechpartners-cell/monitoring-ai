@@ -96,54 +96,44 @@
 ---------------------------------------------------- */
 (async () => {
   try {
-    const raw = localStorage.getItem("user");
-    const token = localStorage.getItem("auth_token");
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-    if (!raw || !token) {
-      return (location.href = "login.html");
+    if (!user_id || !token) {
+      return location.href = "login.html";
     }
 
-    const user = JSON.parse(raw);
-    if (!user || !user.id) {
-      return (location.href = "login.html");
-    }
-
-    const res = await fetch("/api/session-verify", {
+    const res = await fetch("/api/auth-guard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        token
-      })
+      body: JSON.stringify({ user_id, token }),
     });
 
     const data = await res.json();
     if (!data.valid) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("auth_token");
-      return (location.href = "login.html");
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
     }
-  } catch (e) {
+  } catch {
     location.href = "login.html";
   }
 })();
 
-
 async function loadHistory() {
 
-  // 🔒 ログイン確認
-  const userRaw = localStorage.getItem("user");
-  if (!userRaw) {
+  // 🔒 ログイン確認（新方式）
+  const user_id = localStorage.getItem("auth_user_id");
+  if (!user_id) {
     location.href = "login.html";
     return;
   }
-  const user = JSON.parse(userRaw);
 
   // 🔎 データ取得
   const { data, error } = await _supabase
     .from("ai_history")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", user_id)
     .order("created_at", { ascending: false });
 
   const area = document.getElementById("historyArea");
