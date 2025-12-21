@@ -77,27 +77,18 @@
 
 <script>
 // ---------------------------------------------------------
-// ★ 強制ログアウトメッセージの表示（決定版）
+// ★ 強制ログアウトメッセージの表示
 // ---------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    const msg = localStorage.getItem("forced_logout_reason");
-
-    if (msg && msg.length > 0) {
-      const forcedDiv = document.getElementById("forcedMsg");
-      forcedDiv.textContent = msg;
-    }
-
-    // 表示後に削除（1 ステップ遅らせる）
-    setTimeout(() => {
-      localStorage.removeItem("forced_logout_reason");
-    }, 50);
-
-  }, 0);
+  const msg = localStorage.getItem("forced_logout_reason");
+  if (msg) {
+    document.getElementById("forcedMsg").textContent = msg;
+    localStorage.removeItem("forced_logout_reason");
+  }
 });
 
 // ---------------------------------------------------------
-// ログイン処理（既存）
+// ログイン処理（最終・正規版）
 // ---------------------------------------------------------
 async function login() {
   const email = document.getElementById("email").value;
@@ -106,30 +97,38 @@ async function login() {
 
   errorDiv.textContent = "";
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-if (data.success) {
-  // ★ 新・正規キー（これが唯一の正）
-  localStorage.setItem("auth_user_id", data.user.id);
-  localStorage.setItem("login_session_token", data.user.login_session_token);
+    if (data.success) {
+      // ★ 新・正規キー（唯一の正）
+      localStorage.setItem("auth_user_id", data.user.id);
+      localStorage.setItem("login_session_token", data.user.login_session_token);
 
-  // 旧キーは今後使わない（入れない）
-  localStorage.removeItem("user");
-  localStorage.removeItem("auth_token");
+      // 旧キーは完全廃止
+      localStorage.removeItem("user");
+      localStorage.removeItem("auth_token");
 
-  location.href = "app.html";
+      location.href = "app.html";
+    } else {
+      errorDiv.textContent = "IDまたはパスワードが異なります";
+    }
+  } catch (e) {
+    errorDiv.textContent = "通信エラーが発生しました";
+    console.error(e);
+  }
 }
 
-document.getElementById("password").addEventListener("keypress", e => {
+// Enterキー対応
+document.getElementById("password").addEventListener("keypress", (e) => {
   if (e.key === "Enter") login();
 });
-
 </script>
 
 </body>
