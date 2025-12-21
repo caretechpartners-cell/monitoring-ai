@@ -213,34 +213,34 @@ h1 {
 // ---------------------------- 
 (async () => {
   try {
-    const raw = localStorage.getItem("user");
-    const token = localStorage.getItem("auth_token");
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-    if (!raw || !token) {
+    if (!user_id || !token) {
       return (window.location.href = "login.html");
     }
 
-    const user = JSON.parse(raw);
-    if (!user || !user.id) {
-      return (window.location.href = "login.html");
-    }
-
-    // 🔍 同時ログインチェック
-    const res = await fetch("/api/session-verify", {
+    const res = await fetch("/api/auth-guard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, token }),
+      body: JSON.stringify({ user_id, token }),
     });
 
     const data = await res.json();
 
     if (!data.valid) {
-      localStorage.setItem("forced_logout_reason", "他の端末でログインされたためログアウトしました");
+      localStorage.setItem(
+        "forced_logout_reason",
+        "他の端末でログインされたためログアウトしました"
+      );
 
-      localStorage.removeItem("user");
-      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+
       return (window.location.href = "login.html");
     }
+
+    // ※ allowed 判定は app.html では不要（generate側で使う）
   } catch (e) {
     window.location.href = "login.html";
   }
@@ -261,10 +261,10 @@ function goHistory() {
 // 🔓 ログアウト処理 
 // ---------------------------- 
 function logout() { 
-  localStorage.removeItem("user"); 
-  localStorage.removeItem("auth_token"); 
+  localStorage.removeItem("auth_user_id"); 
+  localStorage.removeItem("login_session_token"); 
   window.location.href = "login.html"; 
-} 
+}
 </script> 
 
 </body> 
