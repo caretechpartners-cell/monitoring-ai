@@ -15,48 +15,38 @@
     }
   </script>
 
-  <!-- ⭐⭐⭐ ここから session-verify（追加）⭐⭐⭐ -->
-  <script>
-  (async () => {
-    try {
-      const raw = localStorage.getItem("user");
-      const token = localStorage.getItem("auth_token");
+<script>
+(async () => {
+  try {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-      if (!raw || !token) {
-        return (window.location.href = "login.html");
-      }
-
-      const user = JSON.parse(raw);
-      if (!user || !user.id) {
-        return (window.location.href = "login.html");
-      }
-
-      const res = await fetch("/api/auth-guard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, token }),
-      });
-
-      const data = await res.json();
-
-      if (!data.valid) {
-        // 🔥 強制ログアウト理由を保存（login.html の赤字に表示）
-        localStorage.setItem(
-          "forced_logout_reason",
-          "他の端末でログインされたためログアウトしました"
-        );
-
-        localStorage.removeItem("user");
-        localStorage.removeItem("auth_token");
-
-        return (window.location.href = "login.html");
-      }
-    } catch (e) {
-      window.location.href = "login.html";
+    if (!user_id || !token) {
+      return location.href = "login.html";
     }
-  })();
-  </script>
-  <!-- ⭐⭐⭐ ここまで追加 ⭐⭐⭐ -->
+
+    const res = await fetch("/api/auth-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, token }),
+    });
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      localStorage.setItem(
+        "forced_logout_reason",
+        "他の端末でログインされたためログアウトしました"
+      );
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
+    }
+  } catch {
+    location.href = "login.html";
+  }
+})();
+</script>
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
@@ -339,26 +329,25 @@ function finishProgress() {
 }
 
 async function checkUsageAllowed() {
-  try{
-  const raw = localStorage.getItem("user");
-  if (!raw) return { allowed: false, reason: "not_logged_in" };
+  try {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-  const user = JSON.parse(raw);
+    if (!user_id || !token) {
+      return { allowed: false, reason: "not_logged_in" };
+    }
 
-  const res = await fetch("/api/auth-guard", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: user.id }),
-  });
+    const res = await fetch("/api/auth-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, token }),
+    });
 
-  if (!res.ok) throw new Error("usage-check failed");
-
-  return await res.json();
+    return await res.json();
   } catch (e) {
     return { allowed: false, reason: "system_error" };
   }
 }
-
 
 async function generate() {
 
@@ -403,25 +392,23 @@ async function generate() {
     downloadBtn.style.display = "block";
 
     // 履歴保存
-    const userRaw = localStorage.getItem("user");
-    if (userRaw) {
-      const user = JSON.parse(userRaw);
-
-      await fetch("/api/ai-history-insert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.id,
-          seikatsu: life.value,
-          shintai: body.value,
-          fukuyaku: medicine.value,
-          service: service.value,
-          kibou: wish.value,
-          free_text: free.value,
-          generated_text: data.result,
-        })
-      });
-    }
+const user_id = localStorage.getItem("auth_user_id");
+if (user_id) {
+  await fetch("/api/ai-history-insert", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id,
+      seikatsu: life.value,
+      shintai: body.value,
+      fukuyaku: medicine.value,
+      service: service.value,
+      kibou: wish.value,
+      free_text: free.value,
+      generated_text: data.result,
+    })
+  });
+}
 
   } catch (e) {
     if (progressTimer) clearInterval(progressTimer);
