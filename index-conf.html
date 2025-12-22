@@ -305,6 +305,7 @@ function exportXLSX() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      action: "excel",
       memo: memoElem.value,
       aiResult: result.textContent
     })
