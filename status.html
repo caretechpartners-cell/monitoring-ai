@@ -27,7 +27,7 @@
       border-radius: 14px;
       font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       z-index: 1000;
     }
 
@@ -37,7 +37,7 @@
       background: #ffffff;
       border-radius: 20px;
       padding: 40px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
 
     h1 {
@@ -92,6 +92,7 @@
 
   <div class="container">
     <h1>利用状況の確認</h1>
+
     <div class="powered">
       やさしいAIシリーズ｜ケアテックパートナーズ
     </div>
@@ -107,7 +108,9 @@
       >
         ■ 契約ユーザー数（法人）
       </div>
-      <div id="corpCount" style="display:none;">読み込み中...</div>
+      <div id="corpCount" style="display:none;">
+        読み込み中...
+      </div>
 
       <div class="item-title">■ 登録名</div>
       <div id="userName">読み込み中...</div>
@@ -197,26 +200,21 @@
           user.corp_user_limit || "—";
       }
 
-      // 名前
       document.getElementById("userName").textContent =
         user.user_name || "未登録";
 
-      // メール
       document.getElementById("userEmail").textContent = user.email;
 
-      // 最終ログイン
       document.getElementById("lastLogin").textContent =
         user.last_login_at
           ? new Date(user.last_login_at).toLocaleString()
           : "—";
 
-      // 登録日
       document.getElementById("createdAt").textContent =
         user.created_at
           ? new Date(user.created_at).toLocaleDateString()
           : "—";
 
-      // 無料トライアル終了日
       const trialEl = document.getElementById("trialEndAt");
 
       if (!user.trial_end_at) {
