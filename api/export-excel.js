@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import path from "path";
+import fs from "fs";
 
 function extractSection(text, title) {
   const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -114,8 +115,15 @@ function toBulletText(text, maxLines = 4) {
     );
 
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(templatePath);
+
+const buffer = fs.readFileSync(templatePath);
+await workbook.xlsx.load(buffer);
+
     const sheet = workbook.getWorksheet(1);
+if (!sheet) {
+  throw new Error("テンプレートの1番目のシートが見つかりません");
+}
+
 
     const set = (cell, value) => {
       sheet.getCell(cell).value = value;
@@ -383,16 +391,24 @@ function adjustRowHeight(cellAddress) {
     /* ----------------------------
        ⑧ 出力
     ---------------------------- */
-    res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+const buffer = await workbook.xlsx.writeBuffer();
+
+res.setHeader(
+  "Content-Type",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+);
+res.setHeader(
+  "Content-Disposition",
+  "attachment; filename=kaigiroku.xlsx"
 );
 
-await workbook.xlsx.write(res);
-res.end();
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Excel生成エラー", detail: err.message });
+res.send(Buffer.from(buffer));
+} catch (err) {
+    console.error("export-excel error:", err);
+    return res.status(500).json({
+      error: "Excel生成に失敗しました",
+      detail: err.message,
+    });
   }
 }
+
