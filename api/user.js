@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       reason: "POST_only",
     });
   }
-
+  
   const { action = "get" } = req.body;
 
   try {
@@ -48,6 +48,8 @@ export default async function handler(req, res) {
     ===================================================== */
     if (action === "get") {
       const { user_id } = req.body;
+
+      console.log("GET user_id:", user_id);
 
       if (!user_id) {
         return res.json({
@@ -96,7 +98,7 @@ export default async function handler(req, res) {
       const { data: user } = await supabase
         .from("users")
         .select("email, stripe_customer_id")
-        .eq("id", user_id)
+        .eq("auth_user_id", user_id)
         .single();
 
       let customerId = user?.stripe_customer_id;
