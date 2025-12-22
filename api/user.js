@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const { action } = req.body;
+  const { action = "get" } = req.body;
 
   try {
     /* =====================================================
