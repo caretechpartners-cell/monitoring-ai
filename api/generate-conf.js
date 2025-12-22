@@ -49,29 +49,33 @@ export default async function handler(req, res) {
     }
 
     const { memo } = req.body;
-
     if (!memo || memo.trim() === "") {
       return res.status(400).json({ error: "メモが空です" });
     }
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
+    // ✅ responses API 正しい使い方
+    const response = await client.responses.create({
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: memo }
+        { role: "user", content: memo },
       ],
-      temperature: 0.2
+      temperature: 0.2,
     });
 
-    const result = completion.choices[0].message.content;
+    const result = response.output_text;
 
-    res.status(200).json({ result });
+    if (!result || !result.trim()) {
+      throw new Error("AIの出力が空でした");
+    }
+
+    return res.status(200).json({ result });
 
   } catch (err) {
     console.error("generate-conf error:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: "AI生成中にエラーが発生しました",
-      detail: err.message
+      detail: err.message,
     });
   }
 }
