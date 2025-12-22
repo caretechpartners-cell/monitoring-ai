@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 const systemPrompt = `
@@ -49,35 +49,29 @@ export default async function handler(req, res) {
     }
 
     const { memo } = req.body;
+
     if (!memo || memo.trim() === "") {
       return res.status(400).json({ error: "メモが空です" });
     }
 
-    const response = await client.responses.create({
-      model: "gpt-4o-mini",
-      input: [
+    const completion = await client.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: memo },
+        { role: "user", content: memo }
       ],
-      temperature: 0.2,
+      temperature: 0.2
     });
 
-    const result =
-      response.output_text ||
-      response.output?.[0]?.content?.[0]?.text;
+    const result = completion.choices[0].message.content;
 
-    if (!result || !result.trim()) {
-      throw new Error("AIの出力が空でした");
-    }
-
-    // ✅ ← これが無いと絶対にダメ
-    return res.status(200).json({ result });
+    res.status(200).json({ result });
 
   } catch (err) {
     console.error("generate-conf error:", err);
-    return res.status(500).json({
+    res.status(500).json({
       error: "AI生成中にエラーが発生しました",
-      detail: err.message,
+      detail: err.message
     });
   }
 }
