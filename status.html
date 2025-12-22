@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>ご利用状況</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>利用状況｜やさしいAIシリーズ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
 
   <style>
     body {
@@ -13,106 +16,226 @@
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
     }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2a6f97;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+    }
+
     .container {
-      max-width: 700px;
+      max-width: 900px;
       margin: 40px auto;
-      background: #fff;
+      background: #ffffff;
       border-radius: 20px;
       padding: 40px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
+
     h1 {
       text-align: center;
       color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 10px;
     }
-    .item {
-      margin-top: 25px;
-      font-size: 18px;
+
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 30px;
     }
-    .warning {
-      margin-top: 30px;
-      padding: 15px;
-      border-radius: 12px;
-      background: #ffe5e5;
-      color: #c00;
-      font-size: 18px;
-      display: none;
-    }
-    .btn {
-      width: 100%;
-      height: 60px;
-      margin-top: 30px;
-      font-size: 20px;
-      border: none;
+
+    .info-box {
+      background: #f7fbff;
       border-radius: 14px;
-      cursor: pointer;
-      background: #ccc;
-      color: #333;
+      padding: 25px;
+      border: 1px solid #dfeef7;
+      font-size: 18px;
+      line-height: 1.9;
+    }
+
+    .item-title {
+      font-size: 20px;
+      color: #2a6f97;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .footer-links {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #777;
+    }
+
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 10px;
     }
   </style>
 </head>
+
 <body>
-
-<div class="container">
-  <h1>ご利用状況</h1>
-
-  <div class="item">
-    無料トライアル終了日：
-    <strong id="trialEnd">—</strong>
+  <div class="back-btn" onclick="location.href='app.html'">
+    ← 戻る
   </div>
 
-  <div class="warning" id="trialExpired">
-    ⚠️ 無料トライアルは終了しています
+  <div class="container">
+    <h1>利用状況の確認</h1>
+    <div class="powered">
+      やさしいAIシリーズ｜ケアテックパートナーズ
+    </div>
+
+    <div class="info-box">
+      <div class="item-title">■ プラン名</div>
+      <div id="planName">読み込み中...</div>
+
+      <div
+        class="item-title"
+        id="corpCountTitle"
+        style="display:none;"
+      >
+        ■ 契約ユーザー数（法人）
+      </div>
+      <div id="corpCount" style="display:none;">読み込み中...</div>
+
+      <div class="item-title">■ 登録名</div>
+      <div id="userName">読み込み中...</div>
+
+      <div class="item-title">■ 登録メールアドレス</div>
+      <div id="userEmail">読み込み中...</div>
+
+      <div class="item-title">■ 最終ログイン</div>
+      <div id="lastLogin">読み込み中...</div>
+
+      <div class="item-title">■ 登録日</div>
+      <div id="createdAt">読み込み中...</div>
+
+      <div class="item-title">■ 無料トライアル終了日</div>
+      <div id="trialEndAt">読み込み中...</div>
+    </div>
+
+    <div class="footer-links">
+      <a href="privacy.html">プライバシーポリシー</a>
+      <a href="terms.html">利用規約</a>
+      <a href="tokusho.html">特定商取引法表記</a>
+    </div>
   </div>
 
-  <button class="btn" onclick="openPortal()">
-    お支払い・解約・領収書
-  </button>
-</div>
+  <script>
+    (async () => {
+      try {
+        const user_id = localStorage.getItem("auth_user_id");
+        const token = localStorage.getItem("login_session_token");
 
-<script>
-async function loadStatus() {
-  const userId = localStorage.getItem("user_id");
-  if (!userId) return;
+        if (!user_id || !token) {
+          return location.href = "login.html";
+        }
 
-  const res = await fetch("/api/user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId })
-  });
+        const res = await fetch("/api/auth-guard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, token }),
+        });
 
-  const data = await res.json();
-  if (!data.success) return;
+        const data = await res.json();
 
-  const trialEndAt = data.user.trial_end_at;
-  if (!trialEndAt) return;
+        if (!data.valid) {
+          localStorage.removeItem("auth_user_id");
+          localStorage.removeItem("login_session_token");
+          location.href = "login.html";
+        }
+      } catch {
+        location.href = "login.html";
+      }
+    })();
 
-  const end = new Date(trialEndAt);
-  document.getElementById("trialEnd").textContent = end.toLocaleDateString();
+    // Supabase から最新データ取得
+    async function loadUserInfo() {
+      const user_id = localStorage.getItem("auth_user_id");
 
-  if (end < new Date()) {
-    document.getElementById("trialExpired").style.display = "block";
-  }
-}
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id }),
+      });
 
-async function openPortal() {
-  const userId = localStorage.getItem("user_id");
-  if (!userId) return;
+      const data = await res.json();
 
-  const res = await fetch("/api/user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId, action: "portal" })
-  });
+      if (!data.success) {
+        alert("ユーザー情報の取得に失敗しました");
+        return;
+      }
 
-  const data = await res.json();
-  if (data.success && data.url) {
-    location.href = data.url;
-  }
-}
+      const user = data.user;
 
-loadStatus();
-</script>
+      // プラン名
+      const planLabel =
+        user.plan === "corp"
+          ? "法人プラン"
+          : user.plan === "personal"
+          ? "個人プラン"
+          : user.plan;
 
+      document.getElementById("planName").textContent = planLabel;
+
+      // 法人プランの場合は契約人数表示
+      if (user.plan === "corp") {
+        document.getElementById("corpCountTitle").style.display = "block";
+        document.getElementById("corpCount").style.display = "block";
+        document.getElementById("corpCount").textContent =
+          user.corp_user_limit || "—";
+      }
+
+      // 名前
+      document.getElementById("userName").textContent =
+        user.user_name || "未登録";
+
+      // メール
+      document.getElementById("userEmail").textContent = user.email;
+
+      // 最終ログイン
+      document.getElementById("lastLogin").textContent =
+        user.last_login_at
+          ? new Date(user.last_login_at).toLocaleString()
+          : "—";
+
+      // 登録日
+      document.getElementById("createdAt").textContent =
+        user.created_at
+          ? new Date(user.created_at).toLocaleDateString()
+          : "—";
+
+      // 無料トライアル終了日
+      const trialEl = document.getElementById("trialEndAt");
+
+      if (!user.trial_end_at) {
+        trialEl.textContent = "—";
+      } else {
+        const trialEnd = new Date(user.trial_end_at);
+        const today = new Date();
+
+        if (trialEnd < today) {
+          trialEl.textContent = "⚠️ 無料トライアルは終了しています";
+          trialEl.style.color = "red";
+          trialEl.style.fontWeight = "bold";
+        } else {
+          trialEl.textContent = trialEnd.toLocaleDateString();
+        }
+      }
+    }
+
+    loadUserInfo();
+  </script>
 </body>
 </html>
