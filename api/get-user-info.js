@@ -29,7 +29,8 @@ export default async function handler(req, res) {
         plan,
         corp_user_limit,
         last_login_at,
-        created_at
+        created_at,
+	trial_end_at
       `)
       .eq("id", user_id)
       .single();
