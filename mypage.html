@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>マイページ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>マイページ｜やさしいモニタリングAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
 
   <style>
     body {
@@ -13,122 +16,167 @@
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
     }
+
     .container {
-      max-width: 700px;
-      margin: 40px auto;
-      background: #fff;
+      max-width: 800px;
+      margin: 60px auto;
+      background: #ffffff;
       border-radius: 20px;
       padding: 40px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
-    h1 {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
       text-align: center;
+    }
+
+    h1 {
       color: #2a6f97;
+      font-size: 30px;
+      margin-bottom: 25px;
     }
-    .item {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-    .label {
-      color: #777;
-      font-size: 14px;
-    }
-    .value {
-      font-size: 20px;
-      margin-top: 4px;
-    }
+
     .btn {
       width: 100%;
-      height: 60px;
-      margin-top: 30px;
-      font-size: 20px;
+      height: 70px;
+      font-size: 22px;
       border: none;
-      border-radius: 14px;
+      border-radius: 16px;
       cursor: pointer;
+      margin-top: 20px;
     }
+
+    .status-btn {
+      background: #2a6f97;
+      color: white;
+    }
+
+    .plan-btn {
+      background: #f3a6b1;
+      color: white;
+    }
+
     .portal-btn {
-      background: #ccc;
+      background: #b0b0b0; /* グレー */
       color: #333;
+    }
+
+    .portal-btn:hover {
+      opacity: 0.9;
+    }
+
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #cccccc;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
   </style>
 </head>
+
 <body>
-
-<div class="container">
-  <h1>マイページ</h1>
-
-  <div class="item">
-    <div class="label">プラン名</div>
-    <div class="value" id="plan">—</div>
-  </div>
-
-  <div class="item">
-    <div class="label">登録名</div>
-    <div class="value" id="name">—</div>
-  </div>
-
-  <div class="item">
-    <div class="label">登録メールアドレス</div>
-    <div class="value" id="email">—</div>
-  </div>
-
-  <div class="item">
-    <div class="label">登録日</div>
-    <div class="value" id="createdAt">—</div>
-  </div>
-
-  <div class="item">
-    <div class="label">最終ログイン</div>
-    <div class="value" id="lastLogin">—</div>
-  </div>
-
-  <button class="btn portal-btn" onclick="openPortal()">
-    お支払い・解約・領収書
+  <button
+    class="back-fixed"
+    onclick="location.href='app.html'"
+  >
+    ← 会員専用ページへ戻る
   </button>
-</div>
 
-<script>
-async function loadUser() {
-  const userId = localStorage.getItem("user_id");
-  if (!userId) return;
+  <div class="container">
+    <h1>マイページ</h1>
 
-  const res = await fetch("/api/user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId })
-  });
+    <button class="btn status-btn" onclick="goStatus()">
+      利用状況の確認
+    </button>
 
-  const data = await res.json();
-  if (!data.success) return;
+    <button class="btn plan-btn" onclick="goPlan()">
+      利用プランの変更（フォーム入力へ）
+    </button>
 
-  const u = data.user;
-  document.getElementById("plan").textContent = u.plan || "—";
-  document.getElementById("name").textContent = u.user_name || "—";
-  document.getElementById("email").textContent = u.email || "—";
-  document.getElementById("createdAt").textContent =
-    u.created_at ? new Date(u.created_at).toLocaleString() : "—";
-  document.getElementById("lastLogin").textContent =
-    u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "—";
-}
+    <button class="btn portal-btn" onclick="openPortal()">
+      お支払い・解約・領収書
+    </button>
 
-async function openPortal() {
-  const userId = localStorage.getItem("user_id");
-  if (!userId) return;
+    <div id="portalErr" style="color:red; margin-top:12px;"></div>
+  </div>
 
-  const res = await fetch("/api/user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId, action: "portal" })
-  });
+  <script>
+    // 🔒 app.html からの遷移チェック
+    if (!sessionStorage.getItem("fromApp")) {
+      location.href = "login.html";
+    }
 
-  const data = await res.json();
-  if (data.success && data.url) {
-    location.href = data.url;
-  }
-}
+    function goStatus() {
+      location.href = "status.html";
+    }
 
-loadUser();
-</script>
+    function goPlan() {
+      location.href = "form-corp.html";
+    }
 
+    // ================================
+    // 💳 Stripe Customer Portal を開く
+    // ================================
+    async function openPortal() {
+      const user_id = localStorage.getItem("auth_user_id");
+      const token = localStorage.getItem("login_session_token");
+      const errEl = document.getElementById("portalErr");
+
+      errEl.textContent = "";
+
+      try {
+        // ① セッション有効チェック
+        const guardRes = await fetch("/api/auth-guard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, token }),
+        });
+
+        const guardData = await guardRes.json();
+
+        if (!guardData.valid) {
+          localStorage.removeItem("auth_user_id");
+          localStorage.removeItem("login_session_token");
+          location.href = "login.html";
+          return;
+        }
+
+        // ② Portal URL 発行
+        const res = await fetch("/api/get-user-info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id,
+            action: "portal",
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!data.success || !data.url) {
+          if (data.reason === "stripe_customer_not_found") {
+            errEl.textContent =
+              "Stripeの顧客情報が見つかりませんでした。管理者にご連絡ください。";
+            return;
+          }
+
+          errEl.textContent =
+            "ポータルを開けませんでした。時間をおいて再度お試しください。";
+          return;
+        }
+
+        // ③ Stripe Customer Portal を開く（別タブ）
+        window.open(data.url, "_blank");
+      } catch (e) {
+        console.error(e);
+        errEl.textContent = "通信エラーが発生しました。";
+      }
+    }
+  </script>
 </body>
 </html>
