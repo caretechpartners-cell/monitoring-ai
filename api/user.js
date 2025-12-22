@@ -71,7 +71,7 @@ export default async function handler(req, res) {
           stripe_customer_id
         `
         )
-        .eq("id", user_id)
+        .eq("auth_user_id", user_id)
         .single();
 
       if (error || !user) {
