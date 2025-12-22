@@ -109,7 +109,7 @@
     <div id="lastLogin">読み込み中...</div>
 
     <div class="item-title">■ 登録日</div>
-    <div id="purchasedAt">読み込み中...</div>
+    <div id="createdAt">読み込み中...</div>
 
   </div>
 
@@ -194,8 +194,8 @@ async function loadUserInfo() {
     user.last_login_at ? new Date(user.last_login_at).toLocaleString() : "—";
 
   // 登録日
-  document.getElementById("purchasedAt").textContent =
-    user.purchased_at ? new Date(user.purchased_at).toLocaleDateString() : "—";
+  + document.getElementById("createdAt").textContent =
++   user.created_at ? new Date(user.created_at).toLocaleDateString() : "—";
 }
 
 loadUserInfo();
