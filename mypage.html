@@ -73,6 +73,12 @@
 
   <button class="btn status-btn" onclick="goStatus()">利用状況の確認</button>
   <button class="btn plan-btn" onclick="goPlan()">利用プランの変更（フォーム入力へ）</button>
+  <button class="btn status-btn" onclick="openPortal()">
+  お支払い・解約・領収書</button>
+
+<div id="portalErr" style="color:red; margin-top:12px;"></div>
+
+
 </div>
 
 <script>
@@ -88,6 +94,64 @@
   function goPlan() {
     location.href = "form-corp.html";
   }
+
+  // ================================
+  // 💳 Stripe Customer Portal を開く
+  // ================================
+  async function openPortal() {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
+    const errEl = document.getElementById("portalErr");
+    errEl.textContent = "";
+
+    try {
+      // ① セッション有効チェック
+      const guardRes = await fetch("/api/auth-guard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id, token }),
+      });
+      const guardData = await guardRes.json();
+
+      if (!guardData.valid) {
+        localStorage.removeItem("auth_user_id");
+        localStorage.removeItem("login_session_token");
+        location.href = "login.html";
+        return;
+      }
+
+      // ② Portal URL 発行
+      const res = await fetch("/api/get-user-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id,
+          action: "portal",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success || !data.url) {
+        if (data.reason === "stripe_customer_not_found") {
+          errEl.textContent =
+            "Stripeの顧客情報が見つかりませんでした。管理者にご連絡ください。";
+          return;
+        }
+        errEl.textContent =
+          "ポータルを開けませんでした。時間をおいて再度お試しください。";
+        return;
+      }
+
+      // ③ Stripe Customer Portal を開く（別タブ）
+      window.open(data.url, "_blank");
+
+    } catch (e) {
+      console.error(e);
+      errEl.textContent = "通信エラーが発生しました。";
+    }
+  }
+
 </script>
 
 </body>
