@@ -194,8 +194,8 @@ async function loadUserInfo() {
     user.last_login_at ? new Date(user.last_login_at).toLocaleString() : "—";
 
   // 登録日
-  + document.getElementById("createdAt").textContent =
-+   user.created_at ? new Date(user.created_at).toLocaleDateString() : "—";
+   document.getElementById("createdAt").textContent =
+    user.created_at ? new Date(user.created_at).toLocaleDateString() : "—";
 }
 
 loadUserInfo();
