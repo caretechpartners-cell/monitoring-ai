@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 /* ===============================
    初期化
 ================================ */
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -17,6 +18,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 /* ===============================
    共通ユーティリティ
 ================================ */
+
 function generatePassword() {
   return Math.random().toString(36).slice(-10);
 }
@@ -29,9 +31,13 @@ function isAdmin(req) {
 /* ===============================
    user.js 統合ハンドラ
 ================================ */
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, reason: "POST_only" });
+    return res.status(405).json({
+      success: false,
+      reason: "POST_only",
+    });
   }
 
   const { action = "get" } = req.body;
@@ -39,17 +45,21 @@ export default async function handler(req, res) {
   try {
     /* =====================================================
        👤 ① ユーザー情報取得（旧 get-user-info）
-       ===================================================== */
+    ===================================================== */
     if (action === "get") {
       const { user_id } = req.body;
 
       if (!user_id) {
-        return res.json({ success: false, reason: "user_id_required" });
+        return res.json({
+          success: false,
+          reason: "user_id_required",
+        });
       }
 
       const { data: user, error } = await supabase
         .from("users")
-        .select(`
+        .select(
+          `
           id,
           email,
           user_name,
@@ -59,20 +69,27 @@ export default async function handler(req, res) {
           created_at,
           trial_end_at,
           stripe_customer_id
-        `)
+        `
+        )
         .eq("id", user_id)
         .single();
 
       if (error || !user) {
-        return res.json({ success: false, reason: "user_not_found" });
+        return res.json({
+          success: false,
+          reason: "user_not_found",
+        });
       }
 
-      return res.json({ success: true, user });
+      return res.json({
+        success: true,
+        user,
+      });
     }
 
     /* =====================================================
        💳 ② Stripe Customer Portal
-       ===================================================== */
+    ===================================================== */
     if (action === "portal") {
       const { user_id } = req.body;
 
@@ -122,10 +139,12 @@ export default async function handler(req, res) {
 
     /* =====================================================
        📋 ③ ユーザー一覧（旧 list-users）
-       ===================================================== */
+    ===================================================== */
     if (action === "list") {
       if (!isAdmin(req)) {
-        return res.status(401).json({ error: "unauthorized_admin" });
+        return res.status(401).json({
+          error: "unauthorized_admin",
+        });
       }
 
       const { data, error } = await supabase
@@ -134,18 +153,24 @@ export default async function handler(req, res) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+          error: error.message,
+        });
       }
 
-      return res.json({ users: data });
+      return res.json({
+        users: data,
+      });
     }
 
     /* =====================================================
        🧑‍💼 ④ 管理者：ユーザー作成（旧 admin.js）
-       ===================================================== */
+    ===================================================== */
     if (action === "create-user") {
       if (!isAdmin(req)) {
-        return res.status(401).json({ error: "unauthorized_admin" });
+        return res.status(401).json({
+          error: "unauthorized_admin",
+        });
       }
 
       const { email, plan, users, user_name, phone } = req.body;
@@ -161,7 +186,9 @@ export default async function handler(req, res) {
         });
 
       if (authError) {
-        return res.status(400).json({ error: authError.message });
+        return res.status(400).json({
+          error: authError.message,
+        });
       }
 
       const userId = authData.user.id;
@@ -188,13 +215,16 @@ export default async function handler(req, res) {
 
     /* =====================================================
        🔑 ⑤ 管理者：パスワード再発行
-       ===================================================== */
+    ===================================================== */
     if (action === "reset-password") {
       if (!isAdmin(req)) {
-        return res.status(401).json({ error: "unauthorized_admin" });
+        return res.status(401).json({
+          error: "unauthorized_admin",
+        });
       }
 
       const { user_id, email } = req.body;
+
       const newPassword = generatePassword();
 
       await supabase.auth.admin.updateUserById(user_id, {
@@ -219,11 +249,14 @@ export default async function handler(req, res) {
 
     /* =====================================================
        ❌ 未対応
-       ===================================================== */
-    return res.status(400).json({ error: "unknown_action" });
-
+    ===================================================== */
+    return res.status(400).json({
+      error: "unknown_action",
+    });
   } catch (err) {
     console.error("user.js error:", err);
-    return res.status(500).json({ error: "system_error" });
+    return res.status(500).json({
+      error: "system_error",
+    });
   }
 }
