@@ -301,11 +301,10 @@ async function generate() {
 }
 
 function exportXLSX() {
-  fetch("/api/export", {
+  fetch("/api/export-excel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      action: "excel",
       memo: memoElem.value,
       aiResult: result.textContent
     })

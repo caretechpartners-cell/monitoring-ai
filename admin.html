@@ -134,7 +134,7 @@
     return;
   }
 
-  const res = await fetch("/api/user", {
+  const res = await fetch("/api/admin", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -178,7 +178,7 @@ async function resetPassword() {
     return;
   }
 
-  const res = await fetch("/api/user", {
+  const res = await fetch("/api/admin", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
