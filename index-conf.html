@@ -301,7 +301,7 @@ async function generate() {
 }
 
 function exportXLSX() {
-  fetch("/api/export-excel", {
+  fetch("/api/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
