@@ -134,50 +134,53 @@
 
   <script>
     (async () => {
-      try {
-        const user_id = localStorage.getItem("auth_user_id");
-        const token = localStorage.getItem("login_session_token");
+  try {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-        if (!user_id || !token) {
-          return location.href = "login.html";
-        }
+    if (!user_id || !token) {
+      return location.href = "login.html";
+    }
 
-        const res = await fetch("/api/auth-guard", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id, token }),
-        });
+    const res = await fetch("/api/auth-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, token }),
+    });
 
-        const data = await res.json();
+    const data = await res.json();
 
-        if (!data.valid) {
-          localStorage.removeItem("auth_user_id");
-          localStorage.removeItem("login_session_token");
-          location.href = "login.html";
-        }
-      } catch {
-        location.href = "login.html";
-      }
-    })();
+    if (!data.valid) {
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
+    }
+  } catch {
+    location.href = "login.html";
+  }
+})();
 
     // Supabase から最新データ取得
     async function loadUserInfo() {
-      const user_id = localStorage.getItem("auth_user_id");
+  const user_id = localStorage.getItem("auth_user_id");
 
-      const res = await fetch("/api/user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id }),
-      });
+  const res = await fetch("/api/user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "get",   // ← ★ ここが正解
+      user_id,
+    }),
+  });
 
-      const data = await res.json();
+  const data = await res.json();
 
-      if (!data.success) {
-        alert("ユーザー情報の取得に失敗しました");
-        return;
-      }
+  if (!data.success) {
+    alert("ユーザー情報の取得に失敗しました");
+    return;
+  }
 
-      const user = data.user;
+  const user = data.user;
 
       // プラン名
       const planLabel =
