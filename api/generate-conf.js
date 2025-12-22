@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 const systemPrompt = `
@@ -53,22 +53,24 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "メモが空です" });
     }
 
-    // ✅ responses API 正しい使い方
     const response = await client.responses.create({
       model: "gpt-4o-mini",
-      messages: [
+      input: [
         { role: "system", content: systemPrompt },
         { role: "user", content: memo },
       ],
       temperature: 0.2,
     });
 
-    const result = response.output_text;
+    const result =
+      response.output_text ||
+      response.output?.[0]?.content?.[0]?.text;
 
     if (!result || !result.trim()) {
       throw new Error("AIの出力が空でした");
     }
 
+    // ✅ ← これが無いと絶対にダメ
     return res.status(200).json({ result });
 
   } catch (err) {
