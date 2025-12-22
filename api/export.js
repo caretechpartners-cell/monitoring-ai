@@ -1,6 +1,6 @@
+import fs from "fs";
 import ExcelJS from "exceljs";
 import path from "path";
-import { Document, Packer, Paragraph } from "docx";
 
 /* ===============================
    共通ユーティリティ
@@ -107,8 +107,9 @@ export default async function handler(req, res) {
         "kaigiroku.xlsx"
       );
 
+      const templateBuffer = fs.readFileSync(templatePath);
       const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.readFile(templatePath);
+      await workbook.xlsx.load(templateBuffer);
       const sheet = workbook.getWorksheet(1);
 
       const set = (cell, value) => {
