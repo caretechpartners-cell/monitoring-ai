@@ -56,6 +56,7 @@ export default async function handler(req, res) {
     });
   }
 
+  // ① users テーブル取得
   const { data: user, error } = await supabase
     .from("users")
     .select(
@@ -81,11 +82,31 @@ export default async function handler(req, res) {
     });
   }
 
+  // ② trial_end_at 補完
+  let trialEndAt = user.trial_end_at;
+
+  if (!trialEndAt) {
+    const { data: link } = await supabase
+      .from("stripe_links")
+      .select("trial_end_at")
+      .eq("email", user.email)
+      .single();
+
+    if (link?.trial_end_at) {
+      trialEndAt = link.trial_end_at;
+    }
+  }
+
+  // ③ 返却
   return res.json({
     success: true,
-    user,
+    user: {
+      ...user,
+      trial_end_at: trialEndAt,
+    },
   });
 }
+
 
     /* =====================================================
        💳 ② Stripe Customer Portal
