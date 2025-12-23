@@ -93,10 +93,6 @@
 
     <button onclick="copyCreatedPassword()">コピー</button>
 
-    <div style="margin-top:10px;">
-      Supabase User ID:<br />
-      <span id="createdUserId"></span>
-    </div>
   </div>
 
   <hr style="margin:30px 0" />
@@ -170,11 +166,10 @@ function copyCreatedPassword() {
 }
 
 async function resetPassword() {
-  const user_id = document.getElementById("reset_user_id").value;
   const email = document.getElementById("reset_email").value;
 
-  if (!user_id || !email) {
-    alert("User ID と email は必須です");
+    if (!email) {
+    alert("email は必須です");
     return;
   }
 
@@ -186,7 +181,6 @@ async function resetPassword() {
     },
     body: JSON.stringify({
       action: "reset-password",
-      user_id,
       email
     })
   });
