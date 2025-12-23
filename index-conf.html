@@ -142,6 +142,7 @@
 <div class="container">
   <h1>やさしいサービス担当者会議録AI</h1>
   <div class="powered">Powered by ケアテックパートナーズ</div>
+  <div class="limit" id="limitText"></div>
 
   <button class="sample-btn" onclick="fillSample()">サンプルメモを入力する</button>
 
@@ -177,7 +178,33 @@
   📊 Excel（議事録様式）で出力
   </button>
 
+<div
+  id="memberGuide"
+  style="
+    display:none;
+    margin-top:20px;
+    padding:18px;
+    border-radius:12px;
+    background:#f0f8ff;
+    font-size:17px;
+    line-height:1.8;
+  "
+>
+  ・会員版では、回数制限なく議事録を作成できます。<br>
+  ・Excel様式（サービス担当者会議録）でそのまま出力可能です。<br>
+  ・実地指導・監査を想定した構成です。<br><br>
+
+  <a href="lp.html" style="
+    display:block;
+    text-align:center;
+    font-weight:bold;
+    color:#2a6f97;
+    text-decoration:none;
+  ">
+    会員版の詳細を見る
+  </a>
 </div>
+
 
 <div class="footer-links">
   <a href="privacy.html">プライバシーポリシー</a>｜
@@ -186,6 +213,28 @@
 </div>
 
 <script>
+const LIMIT = 3;
+
+function initLimit() {
+  if (!localStorage.getItem("conf_remain")) {
+    localStorage.setItem("conf_remain", LIMIT);
+  }
+  updateLimit();
+}
+
+function updateLimit() {
+  const remain = Number(localStorage.getItem("conf_remain"));
+  const limitText = document.getElementById("limitText");
+
+  if (remain > 0) {
+    limitText.textContent = `🌷 無料であと「${remain}回」ご利用いただけます`;
+  } else {
+    limitText.textContent = "無料作成分は終了しました。";
+  }
+}
+
+initLimit();
+
 let progressTimer = null;
 let progressValue = 0;
 
@@ -257,6 +306,21 @@ function fillSample() {
 }
 
 async function generate() {
+let remain = Number(localStorage.getItem("conf_remain"));
+
+if (remain <= 0) {
+  alert(
+    "ここまでお試しいただき、ありがとうございます 😊\n\n" +
+    "このあとも議事録AIをご利用いただけますので、\n" +
+    "よろしければ会員版のご案内をご覧ください。"
+  );
+
+  setTimeout(() => {
+    location.href = "lp.html";
+  }, 1200);
+  return;
+}
+
   stopVoiceInput();
   try {
     const memo = memoElem.value;
@@ -285,6 +349,12 @@ async function generate() {
   setTimeout(() => {
     result.textContent = data.result;
   }, 300);
+
+document.getElementById("memberGuide").style.display = "block";
+
+remain--;
+localStorage.setItem("conf_remain", remain);
+updateLimit();
 
   copyGuide.style.display = "block";
   xlsxBtn.style.display = "block";
@@ -438,6 +508,21 @@ function updateMicButton() {
     }
   });
 }
+
+/* 管理者隠しコマンド（Ctrl + Shift + R） */
+document.addEventListener("keydown", function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    const pass = prompt("管理者パスワードを入力してください");
+
+    if (pass === "admin123") {
+      localStorage.setItem("conf_remain", 3);
+      alert("議事録AIの無料回数を3回にリセットしました");
+      location.reload();
+    } else {
+      alert("パスワードが違います");
+    }
+  }
+});
 
 </script>
 
