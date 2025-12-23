@@ -337,14 +337,33 @@ if (membersMatch) {
     applyWrappedNormalText("C22");
     applyWrappedNormalText("C27");
 
-function adjustRowHeight(cellAddress) {
+function adjustRowHeight(cellAddress, minHeight = 24, perLine = 20) {
   const cell = sheet.getCell(cellAddress);
   const row = sheet.getRow(cell.row);
-  const lines = (cell.value || "").toString().split("\n").length;
-  row.height = Math.max(18, lines * 18);
+
+  const text = (cell.value || "").toString();
+  if (!text) {
+    row.height = minHeight;
+    return;
+  }
+
+  const lineCount = text.split("\n").length;
+
+  // 1行あたりの文字量も考慮（全角20文字 ≒ 1行）
+  const approxLinesByLength = Math.ceil(text.length / 20);
+
+  const lines = Math.max(lineCount, approxLinesByLength);
+
+  row.height = Math.max(minHeight, lines * perLine);
 }
 
-["C14", "C18", "C22", "C27"].forEach(adjustRowHeight);
+// 見出し・短文（高さ控えめ）
+adjustRowHeight("C14", 26, 18);
+adjustRowHeight("C22", 26, 18);
+
+// 内容多め（余裕を持たせる）
+adjustRowHeight("C18", 40, 22);
+adjustRowHeight("C27", 40, 22);
 
 
     /* ----------------------------
