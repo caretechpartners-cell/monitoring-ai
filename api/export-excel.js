@@ -337,7 +337,7 @@ if (membersMatch) {
     applyWrappedNormalText("C22");
     applyWrappedNormalText("C27");
 
-function adjustRowHeight(cellAddress, minHeight = 24, perLine = 20) {
+function adjustRowHeight(cellAddress, minHeight = 18, perLine = 15) {
   const cell = sheet.getCell(cellAddress);
   const row = sheet.getRow(cell.row);
 
@@ -350,7 +350,7 @@ function adjustRowHeight(cellAddress, minHeight = 24, perLine = 20) {
   const lineCount = text.split("\n").length;
 
   // 1行あたりの文字量も考慮（全角20文字 ≒ 1行）
-  const approxLinesByLength = Math.ceil(text.length / 20);
+  const approxLinesByLength = Math.ceil(text.length / 30);
 
   const lines = Math.max(lineCount, approxLinesByLength);
 
@@ -358,12 +358,12 @@ function adjustRowHeight(cellAddress, minHeight = 24, perLine = 20) {
 }
 
 // 見出し・短文（高さ控えめ）
-adjustRowHeight("C14", 26, 18);
-adjustRowHeight("C22", 26, 18);
+adjustRowHeight("C14", 20, 14);
+adjustRowHeight("C22", 20, 14);
 
 // 内容多め（余裕を持たせる）
-adjustRowHeight("C18", 40, 22);
-adjustRowHeight("C27", 40, 22);
+adjustRowHeight("C18", 26, 16);
+adjustRowHeight("C27", 26, 16);
 
 
     /* ----------------------------
