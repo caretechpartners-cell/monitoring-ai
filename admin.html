@@ -99,9 +99,6 @@
 
   <h2>パスワード再発行（Admin）</h2>
 
-  <label>Supabase User ID</label>
-  <input id="reset_user_id" type="text" placeholder="uuid" />
-
   <label>メールアドレス</label>
   <input id="reset_email" type="email" placeholder="user@example.com" />
 
@@ -153,7 +150,6 @@
   }
 
   document.getElementById("createdPassword").value = data.temporaryPassword;
-  document.getElementById("createdUserId").textContent = data.supabaseUserId;
   document.getElementById("createResult").style.display = "block";
 }
 
