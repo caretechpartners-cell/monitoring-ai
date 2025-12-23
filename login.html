@@ -110,6 +110,7 @@ async function login() {
       // ★ 新・正規キー（唯一の正）
       localStorage.setItem("auth_user_id", data.user.id);
       localStorage.setItem("login_session_token", data.user.login_session_token);
+      localStorage.setItem("user_email", email);
 
       // 旧キーは完全廃止
       localStorage.removeItem("user");

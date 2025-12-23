@@ -165,13 +165,22 @@
 
     // Supabase から最新データ取得
     async function loadUserInfo() {
-      const user_id = localStorage.getItem("auth_user_id");
+      const email = localStorage.getItem("user_email");
 
-      const res = await fetch("/api/user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id }),
-      });
+if (!email) {
+  location.href = "login.html";
+  return;
+}
+
+const res = await fetch("/api/user", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "get",
+    email
+  }),
+});
+
 
       const data = await res.json();
 
