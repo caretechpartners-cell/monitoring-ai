@@ -47,45 +47,45 @@ export default async function handler(req, res) {
        👤 ① ユーザー情報取得（旧 get-user-info）
     ===================================================== */
     if (action === "get") {
-      const { user_id } = req.body;
+  const { email } = req.body;
 
-      if (!user_id) {
-        return res.json({
-          success: false,
-          reason: "user_id_required",
-        });
-      }
+  if (!email) {
+    return res.json({
+      success: false,
+      reason: "email_required",
+    });
+  }
 
-      const { data: user, error } = await supabase
-        .from("users")
-        .select(
-          `
-          id,
-          email,
-          user_name,
-          plan,
-          corp_user_limit,
-          last_login_at,
-          created_at,
-          trial_end_at,
-          stripe_customer_id
-        `
-        )
-        .eq("id", user_id)
-        .single();
+  const { data: user, error } = await supabase
+    .from("users")
+    .select(
+      `
+      id,
+      email,
+      user_name,
+      plan,
+      corp_user_limit,
+      last_login_at,
+      created_at,
+      trial_end_at,
+      stripe_customer_id
+    `
+    )
+    .eq("email", email)
+    .single();
 
-      if (error || !user) {
-        return res.json({
-          success: false,
-          reason: "user_not_found",
-        });
-      }
+  if (error || !user) {
+    return res.json({
+      success: false,
+      reason: "user_not_found",
+    });
+  }
 
-      return res.json({
-        success: true,
-        user,
-      });
-    }
+  return res.json({
+    success: true,
+    user,
+  });
+}
 
     /* =====================================================
        💳 ② Stripe Customer Portal
@@ -193,24 +193,33 @@ export default async function handler(req, res) {
 
       const userId = authData.user.id;
 
-      await supabase.from("users").insert({
-        auth_user_id: userId,
-        email,
-        user_name,
-        phone,
-        plan,
-        status: "active",
-        corp_user_limit: Number(users),
-        password_hash,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      const { error: insertError } = await supabase
+  .from("users")
+  .insert({
+    auth_user_id: userId,
+    email,
+    user_name,
+    phone,
+    plan,
+    status: "active",
+    corp_user_limit: Number(users),
+    password_hash,
+  });
 
-      return res.json({
-        success: true,
-        email,
-        temporaryPassword: rawPassword,
-      });
+if (insertError) {
+  console.error("users insert error:", insertError);
+  return res.status(500).json({
+    error: "users_insert_failed",
+    detail: insertError.message,
+  });
+}
+
+return res.json({
+  success: true,
+  email,
+  temporaryPassword: rawPassword,
+});
+
     }
 
     /* =====================================================
@@ -223,7 +232,25 @@ export default async function handler(req, res) {
         });
       }
 
-      const { user_id, email } = req.body;
+      const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "email_required" });
+  }
+
+ // users テーブルから auth_user_id を取得
+ const { data: user, error } = await supabase
+   .from("users")
+   .select("auth_user_id")
+   .eq("email", email)
+   .single();
+
+ if (error || !user?.auth_user_id) {
+   return res.status(404).json({ error: "user_not_found" });
+ }
+
+ const user_id = user.auth_user_id;
+
+
 
       const newPassword = generatePassword();
 
