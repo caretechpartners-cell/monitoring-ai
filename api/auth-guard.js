@@ -25,10 +25,10 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // ✅ users.id で統一取得（1回だけ）
+    // users 取得（email を必ず含める）
     const { data: user, error } = await supabase
       .from("users")
-      .select("login_session_token, stripe_subscription_status")
+      .select("login_session_token, stripe_subscription_status, email")
       .eq("id", user_id)
       .single();
 
@@ -40,9 +40,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // =========================
-    // 🔐 session-verify.js 相当
-    // =========================
+    // セッション確認
     if (user.login_session_token !== token) {
       return res.status(200).json({
         valid: false,
@@ -51,13 +49,29 @@ export default async function handler(req, res) {
       });
     }
 
-    // =========================
-    // 💳 usage-check.js 相当
-    // =========================
     const status = user.stripe_subscription_status;
 
-    // Webhook未反映
+    // -------------------------
+    // Webhook 未反映（暫定）
+    // -------------------------
     if (!status) {
+      const { data: link } = await supabase
+        .from("stripe_links")
+        .select("subscription_status")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      if (
+        link?.subscription_status === "trialing" ||
+        link?.subscription_status === "active"
+      ) {
+        return res.status(200).json({
+          valid: true,
+          allowed: true,
+          reason: null,
+        });
+      }
+
       return res.status(200).json({
         valid: true,
         allowed: false,
@@ -65,7 +79,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // 利用OK
+    // -------------------------
+    // 通常判定
+    // -------------------------
     if (status === "trialing" || status === "active") {
       return res.status(200).json({
         valid: true,
@@ -74,7 +90,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 解約
     if (status === "canceled") {
       return res.status(200).json({
         valid: true,
@@ -83,7 +98,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // その他（支払い不備など）
     return res.status(200).json({
       valid: true,
       allowed: false,
