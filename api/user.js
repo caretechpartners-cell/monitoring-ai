@@ -58,22 +58,18 @@ export default async function handler(req, res) {
 
   // ① users テーブル取得
   const { data: user, error } = await supabase
-    .from("users")
-    .select(
-      `
-      id,
-      email,
-      user_name,
-      plan,
-      corp_user_limit,
-      last_login_at,
-      created_at,
-      trial_end_at,
-      stripe_customer_id
-    `
-    )
-    .eq("email", email)
-    .single();
+  .from("users")
+  .select(`
+    id,
+    email,
+    user_name,
+    plan,
+    corp_user_limit,
+    stripe_customer_id,
+    stripe_subscription_status
+  `)
+  .eq("email", email)
+  .single();
 
   if (error || !user) {
     return res.json({
@@ -83,29 +79,25 @@ export default async function handler(req, res) {
   }
 
   // ② trial_end_at 補完
-  let trialEndAt = user.trial_end_at;
+  let trialEndAt = null;
 
-  if (!trialEndAt) {
-    const { data: link } = await supabase
-      .from("stripe_links")
-      .select("trial_end_at")
-      .eq("email", user.email)
-      .single();
+const { data: link } = await supabase
+  .from("stripe_links")
+  .select("trial_end_at")
+  .eq("email", user.email)
+  .maybeSingle();
 
-    if (link?.trial_end_at) {
-      trialEndAt = link.trial_end_at;
-    }
-  }
-
-  // ③ 返却
-  return res.json({
-    success: true,
-    user: {
-      ...user,
-      trial_end_at: trialEndAt,
-    },
-  });
+if (link?.trial_end_at) {
+  trialEndAt = link.trial_end_at;
 }
+
+return res.json({
+  success: true,
+  user: {
+    ...user,
+    trial_end_at: trialEndAt,
+  },
+});
 
 
     /* =====================================================
@@ -217,15 +209,12 @@ export default async function handler(req, res) {
       const { error: insertError } = await supabase
   .from("users")
   .insert({
-    auth_user_id: userId,
-    email,
-    user_name,
-    phone,
-    plan,
-    status: "active",
-    corp_user_limit: Number(users),
-    password_hash,
-  });
+  auth_user_id: userId,
+  email,
+  user_name,
+  plan,
+  corp_user_limit: Number(users),
+});
 
 if (insertError) {
   console.error("users insert error:", insertError);
