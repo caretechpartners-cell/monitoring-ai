@@ -38,6 +38,32 @@
       border-radius: 10px;
       border: 2px solid #cfdfe8;
     }
+
+    /* ★追加：パスワード＋目マーク用 */
+    .password-wrapper {
+      position: relative;
+      margin-top: 15px;
+    }
+
+.password-wrapper input {
+  padding-right: 44px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 20px;
+  color: #777;
+  user-select: none;
+}
+
+.toggle-password:hover {
+  color: #2a6f97;
+}
+
     .btn {
       width: 100%;
       height: 60px;
@@ -68,7 +94,10 @@
   <div id="forcedMsg" class="error"></div>
 
   <input type="email" id="email" placeholder="メールアドレス">
+  <div class="password-wrapper">
   <input type="password" id="password" placeholder="パスワード">
+  <span class="toggle-password" onclick="togglePassword()">👁</span>
+</div>
 
   <button class="btn" onclick="login()">ログイン</button>
 
@@ -86,6 +115,14 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("forced_logout_reason");
   }
 });
+
+// ---------------------------------------------------------
+// ★ パスワード表示／非表示
+// ---------------------------------------------------------
+function togglePassword() {
+  const pw = document.getElementById("password");
+  pw.type = pw.type === "password" ? "text" : "password";
+}
 
 // ---------------------------------------------------------
 // ログイン処理（最終・正規版）
