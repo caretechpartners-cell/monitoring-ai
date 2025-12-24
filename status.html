@@ -143,31 +143,53 @@ if (!user_id || !token) {
 
     // Supabase から最新データ取得
     async function loadUserInfo() {
-      const email = localStorage.getItem("user_email");
+  console.log("loadUserInfo start");
 
-if (!email) {
-  location.href = "login.html";
-  return;
-}
+  const email = localStorage.getItem("user_email");
+  console.log("email:", email);
 
-const res = await fetch("/api/user", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    action: "get",
-    email
-  }),
-});
+  if (!email) {
+    alert("user_email が localStorage にありません");
+    location.href = "login.html";
+    return;
+  }
 
+  let res;
+  try {
+    res = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "get",
+        email
+      }),
+    });
+  } catch (e) {
+    console.error("fetch failed", e);
+    alert("API通信に失敗しました");
+    return;
+  }
 
-      const data = await res.json();
+  console.log("api status:", res.status);
 
-      if (!data.success) {
-        alert("ユーザー情報の取得に失敗しました");
-        return;
-      }
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    console.error("json parse failed", e);
+    alert("JSONの解析に失敗しました");
+    return;
+  }
 
-      const user = data.user;
+  console.log("api response:", data);
+
+  if (!data.success) {
+    alert("ユーザー情報の取得に失敗しました");
+    return;
+  }
+
+  const user = data.user;
+  console.log("user:", user);
 
       // プラン名
       const planLabel =
