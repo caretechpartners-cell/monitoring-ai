@@ -63,12 +63,6 @@
       font-size: 18px;
       line-height: 1.9;
     }
-    .plan {
-      background: #f7fbff;
-      border-radius: 12px;
-      padding: 18px;
-      border: 1px solid #dfeef7;
-    }
     .cta-btn {
       width: 100%;
       height: 80px;
@@ -91,6 +85,56 @@
       text-decoration: none;
       margin: 0 10px;
     }
+    .price-box {
+      display: flex;
+      gap: 16px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .plan {
+      flex: 1 1 260px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #dfeef7;
+    }
+    .plan h3 {
+      margin: 0 0 8px 0;
+      color: #2a6f97;
+      font-size: 20px;
+    }
+    .price {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 6px;
+      color: #2a6f97;
+    }
+    .muted {
+      color: #666;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .small-cta {
+      display:block;
+      margin-top:12px;
+      padding:10px 12px;
+      background:#2a6f97;
+      color:#fff;
+      text-align:center;
+      border-radius:10px;
+      text-decoration:none;
+      font-size:16px;
+    }
+    .story {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 14px;
+      border: 1px solid #eef6fb;
+      font-size: 16px;
+      color: #333;
+      line-height: 1.9;
+    }
   </style>
 </head>
 
@@ -104,7 +148,7 @@
 
   <div class="powered">Powered by ケアテックパートナーズ</div>
 
-  <!-- 課題提起 -->
+  <!-- 課題 -->
   <div class="section">
     <div class="section-title">そのモニタリング記録、実地指導で見られても大丈夫ですか？</div>
     <div class="text">
@@ -119,8 +163,7 @@
   <div class="section">
     <div class="section-title">そのお悩み、すべて解決できます</div>
     <div class="text">
-      本ツールは、居宅ケアマネ様の実務を前提に、<br>
-      指導・監査で指摘されにくい文章構成を意識して設計した<br>
+      指導・監査で指摘されにくい文章構成を意識して設計した、<br>
       モニタリング記録作成サポートツールです。
     </div>
   </div>
@@ -129,56 +172,82 @@
   <div class="section">
     <div style="display:flex; gap:20px; flex-wrap:wrap; text-align:center;">
       <div style="flex:1; background:#fff4f6; border-radius:12px; padding:20px;">
-        <strong style="font-size:20px;">Before</strong>
-        <p>
-          表現に迷う／時間がかかる／<br>
-          実地指導での指摘が不安
-        </p>
+        <strong>Before</strong>
+        <p>表現に迷う／時間がかかる／実地指導が不安</p>
       </div>
       <div style="flex:1; background:#f7fbff; border-radius:12px; padding:20px;">
-        <strong style="font-size:20px;">After</strong>
-        <p>
-          記録構成が整理され／<br>
-          評価と根拠が明確に
-        </p>
+        <strong>After</strong>
+        <p>項目入力のみ／約3分で下書き／指摘されにくい構成</p>
       </div>
     </div>
   </div>
 
-  <!-- ★④ 業務工程図（主役） -->
+  <!-- ★④ 工程図 -->
   <div class="section">
     <div class="section-title">モニタリング記録作成の工程（実務・指導対応を意識）</div>
 
     <div class="plan" style="margin-bottom:14px;">
       <strong>① ケアマネが行う業務（判断・確認）</strong><br>
-      利用者の生活状況・身体状況・サービス利用状況を把握し、<br>
-      モニタリングとして必要な情報を整理します。
+      利用者の生活・身体・サービス利用状況を把握し、モニタリングとして必要な情報を整理します。
     </div>
 
     <div class="plan" style="margin-bottom:14px;">
       <strong>② AIが補助する工程（表現整理）</strong><br>
-      入力された内容をもとに、<br>
-      主観的・曖昧な表現を避け、<br>
-      実地指導を意識した記録表現へ整えます。
+      主観的・曖昧な表現を避け、実地指導を意識した記録表現へ整えます。
     </div>
 
     <div class="plan">
       <strong>③ 最終確認・完成（ケアマネ責任）</strong><br>
-      生成された下書きをケアマネが確認・修正し、<br>
-      評価・根拠・今後の方針が整理された記録として完成させます。
+      下書きを確認・修正し、評価・根拠・今後の方針が明確な記録として完成させます。
     </div>
 
     <div style="font-size:14px; color:#555; margin-top:10px;">
-      ※ 判断・評価の最終責任は、すべて担当ケアマネにあります。
+      ※ 判断・評価の最終責任はすべて担当ケアマネにあります。
     </div>
   </div>
 
-  <!-- メリット -->
+  <!-- ベネフィット -->
   <div class="section benefits">
-    ✅ 実地指導を想定した記録構成を補助<br>
-    ✅ 評価と根拠の一貫性を保ちやすい<br>
-    ✅ 記録内容を省略せず、表現整理を効率化<br>
-    ✅ 日常業務の流れを変えずに導入可能
+    ✅ 実地指導を想定した記録構成<br>
+    ✅ 主観・曖昧表現を回避<br>
+    ✅ 5項目構成を網羅<br>
+    ✅ 記録時間を大幅短縮
+  </div>
+
+  <!-- 料金 -->
+  <div class="section" id="pricing">
+    <div class="section-title">料金プラン</div>
+
+    <div class="price-box">
+      <div class="plan">
+        <h3>個人プラン</h3>
+        <div class="price">月額 1,980円（税込）</div>
+        <div class="muted">居宅ケアマネ1名向け</div>
+        <a class="small-cta" href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00">決済ページへ</a>
+        <div style="font-size:15px; text-align:center; margin-top:6px;">🎁 初回30日無料</div>
+      </div>
+
+      <div class="plan">
+        <h3>法人プラン（最大5名）</h3>
+        <div class="price">月額 7,800円（税込）</div>
+        <div class="muted">見積・請求書対応</div>
+        <a class="small-cta" href="form-corp.html">法人資料を請求</a>
+      </div>
+
+      <div class="plan">
+        <h3>法人追加アカウント</h3>
+        <div class="price">＋1名 月額 1,500円</div>
+        <a class="small-cta" href="form-corp.html">相談する</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF -->
+  <div class="section">
+    <a href="ご紹介資料_やさしいモニタリングAI.pdf" target="_blank"
+      style="display:block; padding:16px; background:#2a6f97; color:#fff; text-align:center; border-radius:14px; text-decoration:none; font-size:18px; font-weight:bold;">
+      📄 法人向けご紹介資料（PDF）
+    </a>
   </div>
 
   <!-- CTA -->
