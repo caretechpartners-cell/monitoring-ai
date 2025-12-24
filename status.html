@@ -66,8 +66,21 @@
     .item-title {
       font-size: 20px;
       color: #2a6f97;
-      margin-top: 20px;
+      margin-top: 22px;
       font-weight: bold;
+    }
+
+    .status-ok {
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .footer-note {
+      margin-top: 25px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
     }
 
     .footer-links {
@@ -98,7 +111,12 @@
     </div>
 
     <div class="info-box">
-      <div class="item-title">■ プラン名</div>
+      <!-- 利用ステータス -->
+      <div class="item-title">■ ご利用状況</div>
+      <div id="usageStatus" class="status-ok">🟢 ご利用中</div>
+
+      <!-- 契約情報 -->
+      <div class="item-title">■ ご契約プラン</div>
       <div id="planName">読み込み中...</div>
 
       <div
@@ -112,17 +130,20 @@
         読み込み中...
       </div>
 
+      <!-- アカウント情報 -->
       <div class="item-title">■ 登録名</div>
       <div id="userName">読み込み中...</div>
 
       <div class="item-title">■ 登録メールアドレス</div>
       <div id="userEmail">読み込み中...</div>
 
-      <div class="item-title">■ 最終ログイン</div>
-      <div id="lastLogin">読み込み中...</div>
-
+      <!-- 利用期間 -->
       <div class="item-title">■ 無料トライアル終了日</div>
       <div id="trialEndAt">読み込み中...</div>
+    </div>
+
+    <div class="footer-note">
+      ※ 本画面は、実地指導・監査時の説明資料としてもご利用いただけます。
     </div>
 
     <div class="footer-links">
@@ -134,64 +155,31 @@
 
   <script>
     const user_id = localStorage.getItem("auth_user_id");
-const token = localStorage.getItem("login_session_token");
+    const token = localStorage.getItem("login_session_token");
 
-if (!user_id || !token) {
-  location.href = "login.html";
-}
+    if (!user_id || !token) {
+      location.href = "login.html";
+    }
 
-
-    // Supabase から最新データ取得
     async function loadUserInfo() {
-  console.log("loadUserInfo start");
+      const email = localStorage.getItem("user_email");
+      if (!email) {
+        location.href = "login.html";
+        return;
+      }
 
-  const email = localStorage.getItem("user_email");
-  console.log("email:", email);
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get", email }),
+      });
 
-  if (!email) {
-    alert("user_email が localStorage にありません");
-    location.href = "login.html";
-    return;
-  }
+      const data = await res.json();
+      if (!data.success) return;
 
-  let res;
-  try {
-    res = await fetch("/api/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "get",
-        email
-      }),
-    });
-  } catch (e) {
-    console.error("fetch failed", e);
-    alert("API通信に失敗しました");
-    return;
-  }
+      const user = data.user;
 
-  console.log("api status:", res.status);
-
-  let data;
-  try {
-    data = await res.json();
-  } catch (e) {
-    console.error("json parse failed", e);
-    alert("JSONの解析に失敗しました");
-    return;
-  }
-
-  console.log("api response:", data);
-
-  if (!data.success) {
-    alert("ユーザー情報の取得に失敗しました");
-    return;
-  }
-
-  const user = data.user;
-  console.log("user:", user);
-
-      // プラン名
+      // プラン表示
       const planLabel =
         user.plan === "corp"
           ? "法人プラン"
@@ -201,7 +189,6 @@ if (!user_id || !token) {
 
       document.getElementById("planName").textContent = planLabel;
 
-      // 法人プランの場合は契約人数表示
       if (user.plan === "corp") {
         document.getElementById("corpCountTitle").style.display = "block";
         document.getElementById("corpCount").style.display = "block";
@@ -214,27 +201,10 @@ if (!user_id || !token) {
 
       document.getElementById("userEmail").textContent = user.email;
 
-      document.getElementById("lastLogin").textContent =
-        user.last_login_at
-          ? new Date(user.last_login_at).toLocaleString()
-          : "—";
-
       const trialEl = document.getElementById("trialEndAt");
-
-      if (!user.trial_end_at) {
-        trialEl.textContent = "—";
-      } else {
-        const trialEnd = new Date(user.trial_end_at);
-        const today = new Date();
-
-        if (trialEnd < today) {
-          trialEl.textContent = "⚠️ 無料トライアルは終了しています";
-          trialEl.style.color = "red";
-          trialEl.style.fontWeight = "bold";
-        } else {
-          trialEl.textContent = trialEnd.toLocaleDateString();
-        }
-      }
+      trialEl.textContent = user.trial_end_at
+        ? new Date(user.trial_end_at).toLocaleDateString()
+        : "—";
     }
 
     loadUserInfo();
