@@ -30,50 +30,40 @@
     .title-set {
       margin-bottom: 30px;
     }
-    input {
-      width: 100%;
-      font-size: 18px;
-      padding: 12px;
-      margin-top: 15px;
-      border-radius: 10px;
-      border: 2px solid #cfdfe8;
-    }
+    /* 共通 input */
+input {
+  width: 100%;
+  font-size: 18px;
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 10px;
+  border: 2px solid #cfdfe8;
+  box-sizing: border-box;
+}
 
-    /* パスワード入力＋目アイコン */
+/* パスワード専用 */
 .password-wrapper {
   position: relative;
   width: 100%;
   margin-top: 15px;
-  height: 52px;            /* ★追加 */
 }
 
 .password-wrapper input {
-  width: 100%;
-  height: 100%;            /* ★ wrapper と一致させる */
-  font-size: 18px;
-  padding: 0 48px 0 12px;
-  border-radius: 10px;
-  border: 2px solid #cfdfe8;
-  box-sizing: border-box;
-}
-
-  border-radius: 10px;
-  border: 2px solid #cfdfe8;
-  box-sizing: border-box;
+  padding-right: 48px; /* 目アイコン分 */
+  margin-top: 0;       /* ★ これが超重要 */
 }
 
 /* 目アイコン */
 .toggle-password {
   position: absolute;
-  right: 14px;          /* ← 右端中央に寄せる */
+  right: 14px;
   top: 50%;
-  transform: translateY(-45%);
+  transform: translateY(-50%);
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
   color: #777;
-  user-select: none;
-  line-height: 1;
 }
+
 
 .toggle-password:hover {
   color: #2a6f97;
