@@ -49,8 +49,10 @@
 .password-wrapper input {
   width: 100%;
   font-size: 18px;
-  padding: 12px;
-  padding-right: 48px; /* 目アイコン分の余白 */
+  height: 52px;              /* ★同じ */
+  padding: 0 48px 0 12px;    /* ★右だけ余白 */
+}
+
   border-radius: 10px;
   border: 2px solid #cfdfe8;
   box-sizing: border-box;
@@ -61,7 +63,7 @@
   position: absolute;
   right: 14px;          /* ← 右端中央に寄せる */
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-45%);
   cursor: pointer;
   font-size: 20px;
   color: #777;
