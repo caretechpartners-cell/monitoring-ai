@@ -121,9 +121,6 @@
       <div class="item-title">■ 最終ログイン</div>
       <div id="lastLogin">読み込み中...</div>
 
-      <div class="item-title">■ 登録日</div>
-      <div id="createdAt">読み込み中...</div>
-
       <div class="item-title">■ 無料トライアル終了日</div>
       <div id="trialEndAt">読み込み中...</div>
     </div>
@@ -217,11 +214,6 @@ const res = await fetch("/api/user", {
       document.getElementById("lastLogin").textContent =
         user.last_login_at
           ? new Date(user.last_login_at).toLocaleString()
-          : "—";
-
-      document.getElementById("createdAt").textContent =
-        user.created_at
-          ? new Date(user.created_at).toLocaleDateString()
           : "—";
 
       const trialEl = document.getElementById("trialEndAt");
