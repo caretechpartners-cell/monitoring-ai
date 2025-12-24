@@ -133,32 +133,13 @@
   </div>
 
   <script>
-    (async () => {
-      try {
-        const user_id = localStorage.getItem("auth_user_id");
-        const token = localStorage.getItem("login_session_token");
+    const user_id = localStorage.getItem("auth_user_id");
+const token = localStorage.getItem("login_session_token");
 
-        if (!user_id || !token) {
-          return location.href = "login.html";
-        }
+if (!user_id || !token) {
+  location.href = "login.html";
+}
 
-        const res = await fetch("/api/auth-guard", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id, token }),
-        });
-
-        const data = await res.json();
-
-        if (!data.valid) {
-          localStorage.removeItem("auth_user_id");
-          localStorage.removeItem("login_session_token");
-          location.href = "login.html";
-        }
-      } catch {
-        location.href = "login.html";
-      }
-    })();
 
     // Supabase から最新データ取得
     async function loadUserInfo() {
