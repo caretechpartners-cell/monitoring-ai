@@ -98,7 +98,7 @@ return res.json({
     trial_end_at: trialEndAt,
   },
 });
-
+}
 
     /* =====================================================
        💳 ② Stripe Customer Portal
