@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     // users 取得（email を必ず含める）
     const { data: user, error } = await supabase
       .from("users")
-      .select("login_session_token, stripe_subscription_status, email")
+      .select("login_session_token, stripe_subscription_status, email, stripe_customer_id")
       .eq("id", user_id)
       .single();
 
@@ -54,23 +54,20 @@ export default async function handler(req, res) {
     // -------------------------
     // Webhook 未反映（暫定）
     // -------------------------
-    if (!status) {
-      const { data: link } = await supabase
-        .from("stripe_links")
-        .select("subscription_status")
-        .eq("email", user.email)
-        .maybeSingle();
+    if (!status && user.stripe_customer_id) {
+  const { data: link } = await supabase
+    .from("stripe_links")
+    .select("subscription_status")
+    .eq("stripe_customer_id", user.stripe_customer_id)
+    .maybeSingle();
 
-      if (
-        link?.subscription_status === "trialing" ||
-        link?.subscription_status === "active"
-      ) {
-        return res.status(200).json({
-          valid: true,
-          allowed: true,
-          reason: null,
-        });
-      }
+  if (link?.subscription_status === "trialing" || link?.subscription_status === "active") {
+    return res.status(200).json({
+      valid: true,
+      allowed: true,
+      reason: null,
+    });
+  }
 
       return res.status(200).json({
         valid: true,
