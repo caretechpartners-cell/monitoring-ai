@@ -29,40 +29,32 @@
       line-height: 1.4;
       margin-bottom: 5px;
     }
-
-.main-title .subtitle {
-  display: block;
-  font-size: 22px;     /* 少しだけ小さく */
-  font-weight: 600;    /* ほぼ同じ太さ */
-  color: #2a6f97;
-  margin-top: 6px;
-}
-
-
-
+    .main-title .subtitle {
+      display: block;
+      font-size: 22px;
+      font-weight: 600;
+      color: #2a6f97;
+      margin-top: 6px;
+    }
     .powered {
       text-align: center;
       font-size: 16px;
       color: #777;
       margin-bottom: 20px;
     }
-
     .section {
       margin-top: 40px;
     }
-
     .section-title {
       font-size: 24px;
       color: #2a6f97;
       margin-bottom: 15px;
     }
-
     .text {
       font-size: 18px;
       line-height: 1.9;
       color: #444;
     }
-
     .benefits {
       background: #fff4f6;
       border: 2px dashed #f3a6b1;
@@ -71,7 +63,12 @@
       font-size: 18px;
       line-height: 1.9;
     }
-
+    .plan {
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #dfeef7;
+    }
     .cta-btn {
       width: 100%;
       height: 80px;
@@ -83,14 +80,6 @@
       background: #2a6f97;
       color: white;
     }
-
-    .soft {
-      color: #777;
-      font-size: 16px;
-      margin-top: 15px;
-      text-align: center;
-    }
-
     .legal-links {
       text-align: center;
       margin-top: 40px;
@@ -102,81 +91,20 @@
       text-decoration: none;
       margin: 0 10px;
     }
-    .legal-links a:hover {
-      text-decoration: underline;
-    }
-
-    .price-box {
-      display: flex;
-      gap: 16px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-    .plan {
-      flex: 1 1 260px;
-      background: #f7fbff;
-      border-radius: 12px;
-      padding: 18px;
-      border: 1px solid #dfeef7;
-    }
-    .plan h3 {
-      margin: 0 0 8px 0;
-      color: #2a6f97;
-      font-size: 20px;
-    }
-    .price {
-      font-size: 22px;
-      font-weight: bold;
-      margin-top: 6px;
-      color: #2a6f97;
-    }
-    .muted {
-      color: #666;
-      font-size: 14px;
-      margin-top: 8px;
-    }
-    .small-cta {
-      display:block;
-      margin-top:12px;
-      padding:10px 12px;
-      background:#2a6f97;
-      color:#fff;
-      text-align:center;
-      border-radius:10px;
-      text-decoration:none;
-      font-size:16px;
-    }
-
-    .story {
-      background: #fff;
-      border-radius: 10px;
-      padding: 14px;
-      margin-top: 14px;
-      border: 1px solid #eef6fb;
-      font-size: 16px;
-      color: #333;
-      line-height: 1.9;
-    }
-
-    .contact-note {
-      margin-top: 12px;
-      font-size: 15px;
-      color: #555;
-    }
   </style>
 </head>
-<body>
 
+<body>
 <div class="container">
+
   <h1 class="main-title">
-  やさしいモニタリングAI<br>
-  <span class="subtitle">
-    ～実地指導に強いモニタリング記録作成サポート～
-  </span>
+    やさしいモニタリングAI
+    <span class="subtitle">～実地指導に強いモニタリング記録作成サポート～</span>
   </h1>
 
   <div class="powered">Powered by ケアテックパートナーズ</div>
 
+  <!-- 課題提起 -->
   <div class="section">
     <div class="section-title">そのモニタリング記録、実地指導で見られても大丈夫ですか？</div>
     <div class="text">
@@ -187,299 +115,73 @@
     </div>
   </div>
 
+  <!-- 解決 -->
   <div class="section">
     <div class="section-title">そのお悩み、すべて解決できます</div>
     <div class="text">
-      このツールは、居宅ケアマネ様の実務を前提に、<br>
+      本ツールは、居宅ケアマネ様の実務を前提に、<br>
       指導・監査で指摘されにくい文章構成を意識して設計した<br>
       モニタリング記録作成サポートツールです。
     </div>
   </div>
 
-<!-- Before / After 図 -->
-<div class="section">
-  <div style="
-    display:flex;
-    gap:20px;
-    flex-wrap:wrap;
-    text-align:center;
-  ">
-    <div style="
-      flex:1;
-      background:#fff4f6;
-      border-radius:12px;
-      padding:20px;
-    ">
-      <strong style="font-size:20px;">Before</strong>
-      <p style="margin-top:10px; line-height:1.8;">
-        ・表現に迷う<br>
-        ・時間がかかる<br>
-        ・実地指導が不安
-      </p>
-    </div>
-
-    <div style="
-      flex:1;
-      background:#f7fbff;
-      border-radius:12px;
-      padding:20px;
-    ">
-      <strong style="font-size:20px;">After</strong>
-      <p style="margin-top:10px; line-height:1.8;">
-        ・項目に入力するだけ<br>
-        ・約3分で下書き完成（内容確認・修正は別途）<br>
-        ・指摘されにくい構成
-      </p>
+  <!-- Before / After -->
+  <div class="section">
+    <div style="display:flex; gap:20px; flex-wrap:wrap; text-align:center;">
+      <div style="flex:1; background:#fff4f6; border-radius:12px; padding:20px;">
+        <strong style="font-size:20px;">Before</strong>
+        <p>
+          表現に迷う／時間がかかる／<br>
+          実地指導での指摘が不安
+        </p>
+      </div>
+      <div style="flex:1; background:#f7fbff; border-radius:12px; padding:20px;">
+        <strong style="font-size:20px;">After</strong>
+        <p>
+          記録構成が整理され／<br>
+          評価と根拠が明確に
+        </p>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 3ステップ図 -->
-<div class="section">
-  <div class="section-title">モニタリング業務の流れに沿った、3ステップ</div>
+  <!-- ★④ 業務工程図（主役） -->
+  <div class="section">
+    <div class="section-title">モニタリング記録作成の工程（実務・指導対応を意識）</div>
 
-  <!-- ケアマネ語 3ステップ図 -->
-<div class="section">
-  <div style="
-    display:flex;
-    gap:16px;
-    flex-wrap:wrap;
-    text-align:center;
-  ">
-    <div class="plan">
-      <strong>① 状況を整理する</strong>
-      <p>
-        生活状況・身体状況・サービス利用状況などを<br>
-        普段のモニタリングと同じ感覚で入力
-      </p>
+    <div class="plan" style="margin-bottom:14px;">
+      <strong>① ケアマネが行う業務（判断・確認）</strong><br>
+      利用者の生活状況・身体状況・サービス利用状況を把握し、<br>
+      モニタリングとして必要な情報を整理します。
+    </div>
+
+    <div class="plan" style="margin-bottom:14px;">
+      <strong>② AIが補助する工程（表現整理）</strong><br>
+      入力された内容をもとに、<br>
+      主観的・曖昧な表現を避け、<br>
+      実地指導を意識した記録表現へ整えます。
     </div>
 
     <div class="plan">
-      <strong>② 記録用の文章に整える</strong>
-      <p>
-        主観表現を避け、<br>
-        実地指導を意識した表現に自動整理
-      </p>
+      <strong>③ 最終確認・完成（ケアマネ責任）</strong><br>
+      生成された下書きをケアマネが確認・修正し、<br>
+      評価・根拠・今後の方針が整理された記録として完成させます。
     </div>
 
-    <div class="plan">
-      <strong>③ モニタリング記録が完成</strong>
-      <p>
-        評価・根拠・今後の方針まで含めた<br>
-        記録のたたき台が完成
-      </p>
+    <div style="font-size:14px; color:#555; margin-top:10px;">
+      ※ 判断・評価の最終責任は、すべて担当ケアマネにあります。
     </div>
   </div>
-</div>
 
-
+  <!-- メリット -->
   <div class="section benefits">
-    ✅ 実地指導を想定した、記録ルールに沿った文章を自動生成<br>
-    ✅ 主観表現・曖昧表現を避けた表現に自動調整<br>
-    ✅ 身体・精神・生活面〜今後の方針まで、5項目構成を網羅<br>
-    ✅ 記録時間を大幅に短縮<br>
-    ✅ パソコン操作が苦手でも、項目に沿って入力するだけ
+    ✅ 実地指導を想定した記録構成を補助<br>
+    ✅ 評価と根拠の一貫性を保ちやすい<br>
+    ✅ 記録内容を省略せず、表現整理を効率化<br>
+    ✅ 日常業務の流れを変えずに導入可能
   </div>
 
-  <div class="section" id="pricing">
-    <div class="section-title">料金プラン</div>
-
-    <div class="price-box">
-      <div class="plan">
-        <h3>個人プラン（個人向け）</h3>
-        <div class="price">月額 1,980円（税込）</div>
-
-<div class="muted">
-  居宅ケアマネさん1名向け。<br>
-  履歴機能付きのシンプル設計です。
-</div>
-
-
-        <a class="small-cta" href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00">
-          決済ページへ進む（すぐに無制限利用可）
-        </a>
-        <div style="
-         margin-top:6px;
-         font-size:15px;
-         color:#2a6f97;
-         font-weight:600;
-         text-align:center;
-        ">
-  🎁 初回30日間は無料でお試しできます
-      </div>
-      </div>
-
-      <div class="plan">
-        <h3>法人プラン（事業所向け・最大5名）</h3>
-        <div class="price">月額 7,800円（税込）</div>
-        <div class="muted">最大5アカウントまで利用可能。部署内で共有して使えます。<br>
-                           見積書・請求書・領収書発行ご希望は以下へどうぞ。</div>
-        <a class="small-cta" href="form-corp.html">法人プランの資料を請求する</a>
-      </div>
-
-<div style="font-size:13px; color:#666; margin-top:4px;">
-  ※ 無料期間終了後は自動的に有料プラン（月額1,980円）に切り替わります。いつでも解約可能です。
-</div>
-
-      <div class="plan">
-        <h3>法人追加アカウント</h3>
-        <div class="price">＋1名につき 月額 1,500円</div>
-        <div class="muted">5名を超える場合はこちらで柔軟に対応します。まずはお問い合わせください。</div>
-        <a class="small-cta" href="form-corp.html">追加について相談する</a>
-      </div>
-    </div>
-
-    <div class="story" aria-live="polite">
-      <strong>法人のお問い合わせは簡単3ステップ：</strong>
-      <ol>
-        <li>上の「法人プランの資料を請求する」をクリック</li>
-        <li>お問い合わせフォームに必要事項を記載して送信</li>
-        <li>担当がメールにて導入のご案内をいたします</li>
-      </ol>
-
-      <div class="contact-note">
-        ※ お問い合わせで無理な営業は一切行いません。まずは資料・見積りのみでも歓迎いたします。
-      </div>
-    </div>
-
-  <!-- ★★★ ここに法人向けPDF資料ボタンを追加（既存UIは一切変更なし） ★★★ -->
-  <div class="section">
-    <a 
-      href="ご紹介資料_やさしいモニタリングAI.pdf" 
-      target="_blank"
-      style="
-        display:block;
-        padding:16px;
-        background:#2a6f97;
-        color:#fff;
-        text-align:center;
-        border-radius:14px;
-        text-decoration:none;
-        font-size:18px;
-        font-weight:bold;
-        margin-top:20px;
-      "
-    >
-      📄 法人向けご紹介資料（PDF）を閲覧する
-    </a>
-    <div style="font-size:14px; color:#555; margin-top:8px; text-align:center;">
-      ※ 導入検討の事業所様向けに、料金・効果・導入手順をまとめています。
-    </div>
-  </div>
-  <!-- ★★★ PDFボタン追加ここまで ★★★ -->
-
-<!-- 個人ケアマネ向け：業務時間削減ストーリー -->
-<div class="section">
-  <div class="section-title" style="font-size:26px; line-height:1.4;">
-  記録の質を保ったまま、<br>
-  <span style="color:#2a6f97;">作成時間を短縮</span>
-  </div>
-
-  <div class="story">
-  <strong>【時間短縮の考え方】</strong><br>
-  本ツールは、記録内容を省略するものではありません。<br>
-  評価・根拠・今後の方針といった<strong>記録に必要な要素は維持</strong>したまま、<br>
-  表現を整える工程をサポートすることで、<br>
-  モニタリング記録の作成時間を短縮します。
-</div>
-
-
-    <p>
-      やさしいモニタリングAIは、<br>
-      居宅ケアマネ様の実務を前提に、<br>
-      <strong>実地指導で指摘されにくい構成</strong>を意識して設計されています。
-    </p>
-
-<div class="story">
-  たとえば、<br>
-  月35件のモニタリングを行う場合、<br>
-  年間で<strong>約80時間前後</strong>の記録作成時間が<br>
-  「整理・表現」にかかる工程から削減されます。<br><br>
-
-  ※ 業務量や記録内容により個人差があります。
-　※ 本数値は記録作成工程の一部（整理・表現）に着目した目安です。
-</div>
-
-
-  これは、<br>
-  「何を書けばよいかを考える時間」<br>
-  「表現を整える時間」<br>
-  が減ることによるものです。
-</div>
-
-<div style="
-  margin:16px 0;
-  background:#f7fbff;
-  border-radius:10px;
-  padding:14px;
-  font-size:15px;
-">
-  <strong>記録作成工程にかかる時間（目安）</strong><br>
-  従来：■■■■■■■■■■■■  約9時間<br>
-  AI後：■■■                 約2時間
-</div>
-
-
-      <div style="
-       background:#f7fbff;
-       border-radius:10px;
-       padding:12px;
-       margin:12px 0;
-       font-size:15px;
-      ">
-  ✔ 平日の残業が1日減る<br>
-  ✔ 週末に記録を持ち帰らなくて済む<br>
-  ✔ 「今日は少し早く帰れた」と感じられる日が増える
-    </div>
-
-    <p style="font-size:15px; color:#555;">
-     すべてをAIに任せる必要はありません。<br>
-     たたき台を作って、最後はご自身で確認する。<br>
-     その使い方でも、記録の負担は大きく変わります。
-    </p>
-
-  </div>
-</div>
-
-  <!-- ✅ 対象 -->
-  <div class="section">
-    <div class="section-title">こんな方に使われています</div>
-    <div class="text">
-      ・居宅介護支援事業所のケアマネジャー様<br>
-      ・更新研修や実地指導を控えている方<br>
-      ・記録業務の負担を少しでも減らしたい方<br>
-      ・文章作成に苦手意識のある方
-    </div>
-  </div>
-
-<!-- 実地指導チェック -->
-<div class="section">
-  <div class="section-title">実地指導で見られるポイントを押さえています</div>
-
-  <div class="plan">
-    ☑ 利用者変化の具体性<br>
-    ☑ 評価と根拠の一貫性<br>
-    ☑ 今後の方針が明確
-  </div>
-</div>
-
-
-  <!-- ✅ 安心訴求 -->
-  <div class="section">
-    <div class="section-title">ご安心ください</div>
-    <div class="text">
-      ・医療行為や診断は一切行いません<br>
-      ・入力内容は第三者に使われません（ファイル出力のみ）<br>
-      ・モニタリング対象者の個人情報は不要です<br><br>
-    </div>
-  </div>
-
-  <div style="text-align:center; font-size:16px; color:#2a6f97; margin-bottom:10px; font-weight:600;">
-  🎁 個人プランの初回30日間は無料。合わなければ解約できます
-  </div>
-
-  <!-- ✅ CTA -->
-
+  <!-- CTA -->
   <button class="cta-btn" onclick="location.href='index.html'">
     無料で3回お試し（今すぐ使う）
   </button>
@@ -491,6 +193,5 @@
   </div>
 
 </div>
-
 </body>
 </html>
