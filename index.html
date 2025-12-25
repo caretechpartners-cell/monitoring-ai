@@ -161,9 +161,9 @@
   <div class="limit" id="limitText"></div>
 
   <div class="guide">
-    ✅ ①「利用者情報を入力（実地指導を想定）」<br>
-    ✅ ② 必要に応じて修正<br>
-    ✅ ③「AIでモニタリング文章生成」を押すだけ！
+    ✅ ① 利用者情報を入力（メモ書きレベルで構いません）<br>
+    ✅ ②「AIでモニタリング文章生成」を押す<br>
+    ✅ ③ 出力結果を必要に応じて修正し、完成！
   </div>
 
   <button class="btn sample-btn" onclick="insertSample()">サンプル利用者を入力</button>
@@ -319,7 +319,7 @@ async function generate() {
   let remain = Number(localStorage.getItem("remain"));
 
   if (remain <= 0) {
-    alert("ここまでお試しいただき、ありがとうございます 😊\n\nこの形式であれば、実地指導や監査でも説明しやすい記録としてご利用いただけます。\nよろしければ続きのご案内をご覧ください。");
+    alert("ここまでお試しいただき、ありがとうございます 😊\n\n本形式で、実地指導や監査でも説明しやすい記録としてご利用いただけます。\nよろしければ続きのご案内をご覧ください。");
 
     setTimeout(() => {
       location.href = "lp.html";
