@@ -136,6 +136,13 @@
       line-height: 1.9;
     }
 
+/* ★ AI工程：Beforeと同系の赤枠で強調 */
+.plan-ai {
+  border: 2px solid #f3a6b1;   /* Before枠と同系色 */
+  background: #fff4f6;        /* Beforeと同じ淡い赤背景 */
+}
+
+
 /* スマホ対応：画像を下に回す */
 @media (max-width: 768px) {
   .flex-row {
@@ -151,12 +158,6 @@
     margin-top: 16px;
   }
 }
-
-/* ★ AI強調表示（PC・スマホ共通） */
-.highlight-ai {
-  box-shadow: 0 0 0 1px #f3caca inset;
-}
-
 
   </style>
 </head>
@@ -248,13 +249,10 @@
       利用者の生活・身体・サービス利用状況を把握し、モニタリングとして必要な情報を整理します。
     </div>
 
-    <div class="plan" style="margin-bottom:14px;">
+    <div class="plan plan-ai" style="margin-bottom:14px;">
   <strong>② AIが補助する工程（表現整理）</strong><br>
-  <span class="highlight-ai">
-    主観的・曖昧な表現を避け、実地指導を意識した記録表現へ整えます。
-  </span>
+  主観的・曖昧な表現を避け、実地指導を意識した記録表現へ整えます。
 </div>
-
 
     <div class="plan">
       <strong>③ 最終確認・完成（ケアマネ責任）</strong><br>
