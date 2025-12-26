@@ -210,33 +210,39 @@
     /* -------------------------
        ★ 利用状況の表示（ここが重要）
     ------------------------- */
-    const usageEl = document.getElementById("usageStatus");
-    const status = user.stripe_subscription_status;
+const usageEl = document.getElementById("usageStatus");
+const status = user.stripe_subscription_status;
 
-    if (status === "active") {
-      usageEl.textContent = "🟢 ご利用中";
-      usageEl.className = "status-ok";
-    }
-    else if (status === "trialing") {
-      usageEl.textContent = "🟢 ご利用中（トライアル）";
-      usageEl.className = "status-ok";
-    }
-    else if (status === "canceled") {
-      usageEl.textContent = "🔴 利用停止中";
-      usageEl.style.color = "#c0392b";
-      usageEl.style.fontWeight = "bold";
-    }
-    else {
-      // status が null の場合（trial or 未同期）
-      if (user.trial_end_at && new Date(user.trial_end_at) > new Date()) {
-        usageEl.textContent = "🟢 ご利用中（トライアル）";
-        usageEl.className = "status-ok";
-      } else {
-        usageEl.textContent = "🔴 利用停止中";
-        usageEl.style.color = "#c0392b";
-        usageEl.style.fontWeight = "bold";
-      }
-    }
+// 🚨 最優先：解約
+if (status === "canceled") {
+  usageEl.textContent = "🔴 利用停止中";
+  usageEl.style.color = "#c0392b";
+  usageEl.style.fontWeight = "bold";
+}
+
+// 利用中（課金）
+else if (status === "active") {
+  usageEl.textContent = "🟢 ご利用中";
+  usageEl.className = "status-ok";
+}
+
+// トライアル中（Stripe管理）
+else if (status === "trialing") {
+  usageEl.textContent = "🟢 ご利用中（トライアル）";
+  usageEl.className = "status-ok";
+}
+
+// Stripe 未同期・未作成ユーザーのみ trial_end_at を見る
+else {
+  if (user.trial_end_at && new Date(user.trial_end_at) > new Date()) {
+    usageEl.textContent = "🟢 ご利用中（トライアル）";
+    usageEl.className = "status-ok";
+  } else {
+    usageEl.textContent = "🔴 利用停止中";
+    usageEl.style.color = "#c0392b";
+    usageEl.style.fontWeight = "bold";
+  }
+}
   }
 
   loadUserInfo();
