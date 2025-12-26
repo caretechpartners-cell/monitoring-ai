@@ -3,6 +3,8 @@ export const config = {
 };
 
 import { createClient } from "@supabase/supabase-js";
+import Stripe from "stripe";
+import bcrypt from "bcryptjs";
 
 /* ===============================
    初期化
@@ -12,6 +14,10 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
 
 /* ===============================
    共通ユーティリティ
@@ -42,77 +48,71 @@ export default async function handler(req, res) {
 
   try {
     /* =====================================================
-       👤 ① ユーザー情報取得（旧 get-user-info）
+       👤 ① ユーザー情報取得（status.html が使う）
     ===================================================== */
     if (action === "get") {
-  const { email } = req.body;
+      const { email } = req.body;
 
-  if (!email) {
-    return res.json({
-      success: false,
-      reason: "email_required",
-    });
-  }
+      if (!email) {
+        return res.json({
+          success: false,
+          reason: "email_required",
+        });
+      }
 
-  // ① users テーブル取得
-  const { data: user, error } = await supabase
-  .from("users")
-  .select(`
-    id,
-    email,
-    user_name,
-    plan,
-    corp_user_limit,
-    stripe_customer_id,
-    stripe_subscription_status
-  `)
-  .eq("email", email)
-  .single();
+      // ① users テーブル（基本情報だけ）
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .select(
+          `
+          id,
+          email,
+          user_name,
+          plan,
+          corp_user_limit,
+          stripe_customer_id
+        `
+        )
+        .eq("email", email)
+        .single();
 
-  if (error || !user) {
-    return res.json({
-      success: false,
-      reason: "user_not_found",
-    });
-  }
+      if (userError || !user) {
+        return res.json({
+          success: false,
+          reason: "user_not_found",
+          detail: userError?.message || null,
+        });
+      }
 
-// ② subscription_status / trial_end_at を正規化
-let subscriptionStatus = user.stripe_subscription_status;
-let trialEndAt = null;
+      // ② stripe_links から購読状態・trial_end_at を取得（ここが表示の根拠）
+      const { data: link, error: linkError } = await supabase
+        .from("stripe_links")
+        .select("stripe_subscription_status, trial_end_at")
+        .eq("email", user.email)
+        .maybeSingle();
 
-if (user.stripe_customer_id) {
-  const { data: link } = await supabase
-    .from("stripe_links")
-    .select("stripe_subscription_status, trial_end_at")
-    .eq("stripe_customer_id", user.stripe_customer_id)
-    .maybeSingle();
+      if (linkError) {
+        // ここで throw しない（= 500にしない）。表示はできるようにする
+        console.error("stripe_links fetch error:", linkError);
+      }
 
-  if (!subscriptionStatus && link?.stripe_subscription_status) {
-    subscriptionStatus = link.stripe_subscription_status;
-  }
-  if (link?.trial_end_at) {
-    trialEndAt = link.trial_end_at;
-  }
-}
+      const subscriptionStatus = link?.stripe_subscription_status || null;
+      const trialEndAt = link?.trial_end_at || null;
 
-return res.json({
-  success: true,
-  user: {
-    ...user,
-    stripe_subscription_status: subscriptionStatus,
-    trial_end_at: trialEndAt,
-  },
-});
-
+      return res.json({
+        success: true,
+        user: {
+          ...user,
+          stripe_subscription_status: subscriptionStatus,
+          trial_end_at: trialEndAt,
+        },
+      });
+    }
 
     /* =====================================================
        💳 ② Stripe Customer Portal
     ===================================================== */
-if (action === "portal") {
-  const Stripe = (await import("stripe")).default;
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-10-16",
-  });
+    if (action === "portal") {
       const { user_id } = req.body;
 
       const { data: user } = await supabase
@@ -144,9 +144,7 @@ if (action === "portal") {
       }
 
       const origin =
-        process.env.APP_URL ||
-        req.headers.origin ||
-        "https://YOUR_DOMAIN_HERE";
+        process.env.APP_URL || req.headers.origin || "https://YOUR_DOMAIN_HERE";
 
       const session = await stripe.billingPortal.sessions.create({
         customer: customerId,
@@ -160,7 +158,7 @@ if (action === "portal") {
     }
 
     /* =====================================================
-       📋 ③ ユーザー一覧（旧 list-users）
+       📋 ③ ユーザー一覧
     ===================================================== */
     if (action === "list") {
       if (!isAdmin(req)) {
@@ -186,109 +184,108 @@ if (action === "portal") {
     }
 
     /* =====================================================
-       🧑‍💼 ④ 管理者：ユーザー作成（旧 admin.js）
+       🧑‍💼 ④ 管理者：ユーザー作成
     ===================================================== */
-if (action === "create-user") {
-  if (!isAdmin(req)) {
-    return res.status(401).json({ error: "unauthorized_admin" });
-  }
+    if (action === "create-user") {
+      if (!isAdmin(req)) {
+        return res.status(401).json({
+          error: "unauthorized_admin",
+        });
+      }
 
-  const bcrypt = (await import("bcryptjs")).default;
+      const { email, plan, users, user_name, phone } = req.body;
 
-  const { email, plan, users, user_name } = req.body;
+      const rawPassword = generatePassword();
+      const password_hash = await bcrypt.hash(rawPassword, 10);
 
-  const rawPassword = generatePassword();
-  const password_hash = await bcrypt.hash(rawPassword, 10);
+      const { data: authData, error: authError } =
+        await supabase.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          password: rawPassword,
+        });
 
-  const { data: authData, error: authError } =
-    await supabase.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      password: rawPassword,
-    });
+      if (authError) {
+        return res.status(400).json({
+          error: authError.message,
+        });
+      }
 
-  if (authError) {
-    return res.status(400).json({ error: authError.message });
-  }
+      const userId = authData.user.id;
 
-  const userId = authData.user.id;
+      const { error: insertError } = await supabase.from("users").insert({
+        auth_user_id: userId,
+        email,
+        user_name,
+        plan,
+        corp_user_limit: Number(users),
+        password_hash,
+        phone,
+      });
 
-  const { error: insertError } = await supabase
-    .from("users")
-    .insert({
-      auth_user_id: userId,
-      email,
-      user_name,
-      plan,
-      corp_user_limit: Number(users),
-      password_hash,
-    });
+      if (insertError) {
+        console.error("users insert error:", insertError);
+        return res.status(500).json({
+          error: "users_insert_failed",
+          detail: insertError.message,
+        });
+      }
 
-  if (insertError) {
-    return res.status(500).json({
-      error: "users_insert_failed",
-      detail: insertError.message,
-    });
-  }
-
-  return res.json({
-    success: true,
-    email,
-    temporaryPassword: rawPassword,
-  });
-}
+      return res.json({
+        success: true,
+        email,
+        temporaryPassword: rawPassword,
+      });
+    }
 
     /* =====================================================
        🔑 ⑤ 管理者：パスワード再発行
     ===================================================== */
-if (action === "reset-password") {
-  if (!isAdmin(req)) {
-    return res.status(401).json({ error: "unauthorized_admin" });
-  }
+    if (action === "reset-password") {
+      if (!isAdmin(req)) {
+        return res.status(401).json({
+          error: "unauthorized_admin",
+        });
+      }
 
-  const bcrypt = (await import("bcryptjs")).default;
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "email_required" });
+      }
 
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "email_required" });
-  }
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("auth_user_id")
+        .eq("email", email)
+        .single();
 
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("auth_user_id")
-    .eq("email", email)
-    .single();
+      if (error || !user?.auth_user_id) {
+        return res.status(404).json({ error: "user_not_found" });
+      }
 
-  if (error || !user?.auth_user_id) {
-    return res.status(404).json({ error: "user_not_found" });
-  }
+      const user_id = user.auth_user_id;
+      const newPassword = generatePassword();
 
-  const user_id = user.auth_user_id;
-  const newPassword = generatePassword();
+      await supabase.auth.admin.updateUserById(user_id, {
+        password: newPassword,
+      });
 
-  await supabase.auth.admin.updateUserById(user_id, {
-    password: newPassword,
-  });
+      const password_hash = await bcrypt.hash(newPassword, 10);
 
-  const password_hash = await bcrypt.hash(newPassword, 10);
+      await supabase
+        .from("users")
+        .update({
+          password_hash,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("email", email);
 
-  await supabase
-    .from("users")
-    .update({
-      password_hash,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("email", email);
+      return res.json({
+        success: true,
+        temporaryPassword: newPassword,
+      });
+    }
 
-  return res.json({
-    success: true,
-    temporaryPassword: newPassword,
-  });
-}
-
-    /* =====================================================
-       ❌ 未対応
-    ===================================================== */
     return res.status(400).json({
       error: "unknown_action",
     });
@@ -296,6 +293,7 @@ if (action === "reset-password") {
     console.error("user.js error:", err);
     return res.status(500).json({
       error: "system_error",
+      detail: String(err?.message || err),
     });
   }
 }
