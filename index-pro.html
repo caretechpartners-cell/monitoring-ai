@@ -243,10 +243,45 @@
 
   <div id="result" class="result-box"></div>
 
+<!-- ▼▼ ここから追加 ▼▼ -->
+<div id="trialEndedBox" style="display:none; margin-top:30px;">
+  <h2 style="color:#c0392b; font-size:22px; margin-bottom:15px;">
+    トライアル期間が終了しました
+  </h2>
+
+  <p style="font-size:18px; line-height:1.7;">
+    これまでトライアルをご利用いただき、ありがとうございます。<br>
+    現在はトライアル期間終了のため、AIによるモニタリング文章生成はご利用いただけません。
+  </p>
+
+  <p style="font-size:18px; line-height:1.7; margin-top:10px;">
+    引き続きご利用いただく場合は、下記よりプランをお選びください。
+  </p>
+
+  <!-- ★ Stripe Payment Link（個人プラン例） -->
+  <a
+    href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00"
+    target="_blank"
+    class="btn"
+    style="background:#2a6f97; color:#fff; margin-top:20px; text-decoration:none; display:block; text-align:center;"
+  >
+    ▶ プランを選択して利用を続ける
+  </a>
+
+  <!-- 補助リンク（小さく） -->
+  <div style="margin-top:15px; font-size:14px; color:#666;">
+    <a href="lp.html" target="_blank" style="color:#777;">
+      料金やサービス内容をもう一度確認する
+    </a>
+  </div>
+</div>
+<!-- ▲▲ ここまで追加 ▲▲ -->
+
   <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
     📄 Word（docx）でダウンロード
   </button>
 </div>
+
 
 <div class="footer-links">
   <a href="privacy.html">プライバシーポリシー</a>｜
@@ -351,6 +386,9 @@ async function checkUsageAllowed() {
 
 async function generate() {
 
+  // ★ 念のため毎回隠す
+  document.getElementById("trialEndedBox").style.display = "none";
+
  // ⭐⭐⭐ usage-check を最初に実行 ⭐⭐⭐
   const usage = await checkUsageAllowed();
 
@@ -417,36 +455,22 @@ if (user_id) {
 }
 
 function handleUsageBlocked(reason) {
-  let message = "";
 
-  switch (reason) {
-    case "payment_required":
-  message =
-    "⚠️ お支払いが確認できていません。\n\n" +
-    "Stripeの決済状況をご確認ください。";
-  break;
-
-case "subscription_canceled":
-  message =
-    "⚠️ サブスクリプションが解約されています。\n\n" +
-    "再度ご利用いただくには、プランへのお申し込みが必要です。";
-  break;
-
-    case "system_error":
-      message =
-        "⚠️ 現在システムが混み合っています。\n\n" +
-       "時間をおいて再度お試しください。";
-    break;
-
-    default:
-      message =
-        "⚠️ 現在この機能を利用できません。\n\n" +
-        "時間をおいて再度お試しください。";
-  }
-
-  result.textContent = message;
+  result.textContent = "";
   copyGuide.style.display = "none";
   downloadBtn.style.display = "none";
+
+  if (reason === "payment_required" || reason === "subscription_canceled") {
+    document.getElementById("trialEndedBox").style.display = "block";
+    return;
+  }
+
+  let message =
+    reason === "system_error"
+      ? "⚠️ 現在システムが混み合っています。\n\n時間をおいて再度お試しください。"
+      : "⚠️ 現在この機能を利用できません。\n\n時間をおいて再度お試しください。";
+
+  result.textContent = message;
 }
 
 
