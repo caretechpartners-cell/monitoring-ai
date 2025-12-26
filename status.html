@@ -174,8 +174,14 @@
       body: JSON.stringify({ action: "get", email }),
     });
 
-    const data = await res.json();
-    if (!data.success) return;
+const data = await res.json();
+
+if (!data.success) {
+  document.getElementById("usageStatus").textContent = "🔴 情報取得エラー";
+  document.getElementById("usageStatus").style.color = "#c0392b";
+  console.error("user API error:", data);
+  return;
+}
 
     const user = data.user;
 
