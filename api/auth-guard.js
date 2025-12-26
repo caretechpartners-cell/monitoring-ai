@@ -51,17 +51,17 @@ export default async function handler(req, res) {
 
     const status = user.stripe_subscription_status;
 
-    // -------------------------
-    // Webhook 未反映（暫定）
-    // -------------------------
-    if (!status && user.stripe_customer_id) {
+// -------------------------
+// Webhook 未反映（暫定）
+// -------------------------
+if (!status) {
   const { data: link } = await supabase
     .from("stripe_links")
     .select("stripe_subscription_status")
-    .eq("stripe_customer_id", user.stripe_customer_id)
+    .eq("email", user.email)
     .maybeSingle();
 
-    if (
+  if (
     link?.stripe_subscription_status === "trialing" ||
     link?.stripe_subscription_status === "active"
   ) {
@@ -72,12 +72,12 @@ export default async function handler(req, res) {
     });
   }
 
-      return res.status(200).json({
-        valid: true,
-        allowed: false,
-        reason: "payment_required",
-      });
-    }
+  return res.status(200).json({
+    valid: true,
+    allowed: false,
+    reason: "payment_required",
+  });
+}
 
     // -------------------------
     // 通常判定
