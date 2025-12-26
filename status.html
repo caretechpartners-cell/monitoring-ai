@@ -180,6 +180,28 @@
     const user = data.user;
 
     /* -------------------------
+       ご利用状況
+    ------------------------- */
+    const usageEl = document.getElementById("usageStatus");
+    const status = user.stripe_subscription_status;
+
+    if (status === "active") {
+      usageEl.textContent = "🟢 ご利用中";
+      usageEl.className = "status-ok";
+    } else if (status === "trialing") {
+      usageEl.textContent = "🟢 ご利用中（トライアル）";
+      usageEl.className = "status-ok";
+    } else if (status === "canceled") {
+      usageEl.textContent = "🔴 利用停止中";
+      usageEl.style.color = "#c0392b";
+      usageEl.style.fontWeight = "bold";
+    } else {
+      usageEl.textContent = "🔴 利用停止中";
+      usageEl.style.color = "#c0392b";
+      usageEl.style.fontWeight = "bold";
+    }
+
+    /* -------------------------
        プラン表示
     ------------------------- */
     const planLabel =
@@ -187,7 +209,7 @@
         ? "法人プラン"
         : user.plan === "personal"
         ? "個人プラン"
-        : user.plan;
+        : user.plan || "—";
 
     document.getElementById("planName").textContent = planLabel;
 
@@ -198,65 +220,23 @@
         user.corp_user_limit || "—";
     }
 
+    /* -------------------------
+       ユーザー情報
+    ------------------------- */
     document.getElementById("userName").textContent =
       user.user_name || "未登録";
 
     document.getElementById("userEmail").textContent = user.email;
 
-    document.getElementById("trialEndAt").textContent = user.trial_end_at
-      ? new Date(user.trial_end_at).toLocaleDateString()
-      : "—";
-
-    /* -------------------------
-       ★ 利用状況の表示（ここが重要）
-    ------------------------- */
-// 利用状況判定（auth-guard と同じ思想）
-const usageEl = document.getElementById("usageStatus");
-
-// ① まず users の status
-let status = user.stripe_subscription_status;
-
-// ② なければ stripe_links を見る
-if (!status) {
-  const linkRes = await fetch("/api/stripe-status", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: user.email }),
-  });
-
-  const linkData = await linkRes.json();
-  status = linkData?.stripe_subscription_status || null;
-}
-
-// ③ 表示判定（最優先 canceled）
-if (status === "canceled") {
-  usageEl.textContent = "🔴 利用停止中";
-  usageEl.style.color = "#c0392b";
-  usageEl.style.fontWeight = "bold";
-}
-else if (status === "active") {
-  usageEl.textContent = "🟢 ご利用中";
-  usageEl.className = "status-ok";
-}
-else if (status === "trialing") {
-  usageEl.textContent = "🟢 ご利用中（トライアル）";
-  usageEl.className = "status-ok";
-}
-else {
-  // 最後の救済：trial_end_at
-  if (user.trial_end_at && new Date(user.trial_end_at) > new Date()) {
-    usageEl.textContent = "🟢 ご利用中（トライアル）";
-    usageEl.className = "status-ok";
-  } else {
-    usageEl.textContent = "🔴 利用停止中";
-    usageEl.style.color = "#c0392b";
-    usageEl.style.fontWeight = "bold";
-  }
-}
+    document.getElementById("trialEndAt").textContent =
+      user.trial_end_at
+        ? new Date(user.trial_end_at).toLocaleDateString()
+        : "—";
   }
 
   loadUserInfo();
 </script>
+
 
 </body>
 </html>
