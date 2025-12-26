@@ -82,22 +82,17 @@ export default async function handler(req, res) {
 let subscriptionStatus = user.stripe_subscription_status;
 let trialEndAt = null;
 
-// stripe_links から補完
-const { data: link, error: linkError } = await supabase
-  .from("stripe_links")
-  .select("stripe_subscription_status, trial_end_at")
-  .eq("email", user.email)
-  .maybeSingle();
+if (user.stripe_customer_id) {
+  const { data: link } = await supabase
+    .from("stripe_links")
+    .select("stripe_subscription_status, trial_end_at")
+    .eq("stripe_customer_id", user.stripe_customer_id)
+    .maybeSingle();
 
-if (linkError) {
-  console.error("stripe_links fetch error:", linkError);
-}
-
-if (link) {
-  if (!subscriptionStatus && link.stripe_subscription_status) {
+  if (!subscriptionStatus && link?.stripe_subscription_status) {
     subscriptionStatus = link.stripe_subscription_status;
   }
-  if (link.trial_end_at) {
+  if (link?.trial_end_at) {
     trialEndAt = link.trial_end_at;
   }
 }
