@@ -57,11 +57,14 @@ export default async function handler(req, res) {
     if (!status && user.stripe_customer_id) {
   const { data: link } = await supabase
     .from("stripe_links")
-    .select("subscription_status")
+    .select("stripe_subscription_status")
     .eq("stripe_customer_id", user.stripe_customer_id)
     .maybeSingle();
 
-  if (link?.subscription_status === "trialing" || link?.subscription_status === "active") {
+    if (
+    link?.stripe_subscription_status === "trialing" ||
+    link?.stripe_subscription_status === "active"
+  ) {
     return res.status(200).json({
       valid: true,
       allowed: true,

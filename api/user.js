@@ -214,6 +214,7 @@ return res.json({
   user_name,
   plan,
   corp_user_limit: Number(users),
+  password_hash,
 });
 
 if (insertError) {
