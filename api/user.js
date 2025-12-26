@@ -83,11 +83,15 @@ let subscriptionStatus = user.stripe_subscription_status;
 let trialEndAt = null;
 
 // stripe_links から補完
-const { data: link } = await supabase
+const { data: link, error: linkError } = await supabase
   .from("stripe_links")
   .select("stripe_subscription_status, trial_end_at")
   .eq("email", user.email)
   .maybeSingle();
+
+if (linkError) {
+  console.error("stripe_links fetch error:", linkError);
+}
 
 if (link) {
   if (!subscriptionStatus && link.stripe_subscription_status) {
