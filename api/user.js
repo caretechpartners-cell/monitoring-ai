@@ -78,27 +78,35 @@ export default async function handler(req, res) {
     });
   }
 
-  // ② trial_end_at 補完
-  let trialEndAt = null;
+// ② subscription_status / trial_end_at を正規化
+let subscriptionStatus = user.stripe_subscription_status;
+let trialEndAt = null;
 
+// stripe_links から補完
 const { data: link } = await supabase
   .from("stripe_links")
-  .select("trial_end_at")
+  .select("stripe_subscription_status, trial_end_at")
   .eq("email", user.email)
   .maybeSingle();
 
-if (link?.trial_end_at) {
-  trialEndAt = link.trial_end_at;
+if (link) {
+  if (!subscriptionStatus && link.stripe_subscription_status) {
+    subscriptionStatus = link.stripe_subscription_status;
+  }
+  if (link.trial_end_at) {
+    trialEndAt = link.trial_end_at;
+  }
 }
 
 return res.json({
   success: true,
   user: {
     ...user,
+    stripe_subscription_status: subscriptionStatus,
     trial_end_at: trialEndAt,
   },
 });
-}
+
 
     /* =====================================================
        💳 ② Stripe Customer Portal
