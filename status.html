@@ -154,90 +154,93 @@
   </div>
 
   <script>
-    const user_id = localStorage.getItem("auth_user_id");
-    const token = localStorage.getItem("login_session_token");
+  const user_id = localStorage.getItem("auth_user_id");
+  const token = localStorage.getItem("login_session_token");
 
-    if (!user_id || !token) {
-      location.href = "login.html";
-    }
-
-    async function loadUserInfo() {
-      const email = localStorage.getItem("user_email");
-      if (!email) {
-        location.href = "login.html";
-        return;
-      }
-
-      const res = await fetch("/api/user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get", email }),
-      });
-
-      const data = await res.json();
-      if (!data.success) return;
-
-      const user = data.user;
-
-      // プラン表示
-      const planLabel =
-        user.plan === "corp"
-          ? "法人プラン"
-          : user.plan === "personal"
-          ? "個人プラン"
-          : user.plan;
-
-      document.getElementById("planName").textContent = planLabel;
-
-      if (user.plan === "corp") {
-        document.getElementById("corpCountTitle").style.display = "block";
-        document.getElementById("corpCount").style.display = "block";
-        document.getElementById("corpCount").textContent =
-          user.corp_user_limit || "—";
-      }
-
-      document.getElementById("userName").textContent =
-        user.user_name || "未登録";
-
-      document.getElementById("userEmail").textContent = user.email;
-
-      const trialEl = document.getElementById("trialEndAt");
-      trialEl.textContent = user.trial_end_at
-        ? new Date(user.trial_end_at).toLocaleDateString()
-        : "—";
-    }
-      const usageEl = document.getElementById("usageStatus");
-
-const status = user.stripe_subscription_status;
-
-// 利用状況の表示切替
-if (status === "active") {
-  usageEl.textContent = "🟢 ご利用中";
-  usageEl.className = "status-ok";
-}
-else if (status === "trialing") {
-  usageEl.textContent = "🟢 ご利用中（トライアル）";
-  usageEl.className = "status-ok";
-}
-else if (status === "canceled") {
-  usageEl.textContent = "🔴 利用停止中";
-  usageEl.className = "";
-  usageEl.style.color = "#c0392b";
-  usageEl.style.fontWeight = "bold";
-}
-else {
-  // status が null の場合（trial判定）
-  if (user.trial_end_at && new Date(user.trial_end_at) > new Date()) {
-    usageEl.textContent = "🟢 ご利用中（トライアル）";
-    usageEl.className = "status-ok";
-  } else {
-    usageEl.textContent = "🔴 利用停止中";
-    usageEl.style.color = "#c0392b";
-    usageEl.style.fontWeight = "bold";
+  if (!user_id || !token) {
+    location.href = "login.html";
   }
-}
 
-    loadUserInfo();
-  </script>
+  async function loadUserInfo() {
+    const email = localStorage.getItem("user_email");
+    if (!email) {
+      location.href = "login.html";
+      return;
+    }
+
+    const res = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get", email }),
+    });
+
+    const data = await res.json();
+    if (!data.success) return;
+
+    const user = data.user;
+
+    /* -------------------------
+       プラン表示
+    ------------------------- */
+    const planLabel =
+      user.plan === "corp"
+        ? "法人プラン"
+        : user.plan === "personal"
+        ? "個人プラン"
+        : user.plan;
+
+    document.getElementById("planName").textContent = planLabel;
+
+    if (user.plan === "corp") {
+      document.getElementById("corpCountTitle").style.display = "block";
+      document.getElementById("corpCount").style.display = "block";
+      document.getElementById("corpCount").textContent =
+        user.corp_user_limit || "—";
+    }
+
+    document.getElementById("userName").textContent =
+      user.user_name || "未登録";
+
+    document.getElementById("userEmail").textContent = user.email;
+
+    document.getElementById("trialEndAt").textContent = user.trial_end_at
+      ? new Date(user.trial_end_at).toLocaleDateString()
+      : "—";
+
+    /* -------------------------
+       ★ 利用状況の表示（ここが重要）
+    ------------------------- */
+    const usageEl = document.getElementById("usageStatus");
+    const status = user.stripe_subscription_status;
+
+    if (status === "active") {
+      usageEl.textContent = "🟢 ご利用中";
+      usageEl.className = "status-ok";
+    }
+    else if (status === "trialing") {
+      usageEl.textContent = "🟢 ご利用中（トライアル）";
+      usageEl.className = "status-ok";
+    }
+    else if (status === "canceled") {
+      usageEl.textContent = "🔴 利用停止中";
+      usageEl.style.color = "#c0392b";
+      usageEl.style.fontWeight = "bold";
+    }
+    else {
+      // status が null の場合（trial or 未同期）
+      if (user.trial_end_at && new Date(user.trial_end_at) > new Date()) {
+        usageEl.textContent = "🟢 ご利用中（トライアル）";
+        usageEl.className = "status-ok";
+      } else {
+        usageEl.textContent = "🔴 利用停止中";
+        usageEl.style.color = "#c0392b";
+        usageEl.style.fontWeight = "bold";
+      }
+    }
+  }
+
+  loadUserInfo();
+</script>
+
 </body>
 </html>
