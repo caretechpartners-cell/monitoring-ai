@@ -58,6 +58,7 @@ console.log("LOGIN password_initialized =", user.password_initialized);
   success: true,
   user: {
     id: user.auth_user_id,
+    db_id: user.id,           // ★ 追加
     email: user.email,
     password_initialized: user.password_initialized, // ★ DBの値をそのまま返す
     login_session_token: token,

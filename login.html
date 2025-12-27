@@ -148,6 +148,7 @@ async function login() {
 
     if (data.success) {
       localStorage.setItem("auth_user_id", data.user.id);
+      localStorage.setItem("user_db_id", data.user.db_id);
       localStorage.setItem("login_session_token", data.user.login_session_token);
       localStorage.setItem("user_email", email);
 
