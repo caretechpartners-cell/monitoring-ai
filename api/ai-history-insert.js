@@ -54,12 +54,27 @@ export default async function handler(req, res) {
 
     console.log("🔍 INSERT START");
 
+// ★ auth_user_id → users.id を取得する
+const { data: user, error: userError } = await supabase
+  .from("users")
+  .select("id")
+  .eq("auth_user_id", user_id)
+  .single();
+
+if (userError || !user) {
+  return res.status(400).json({
+    success: false,
+    message: "user not found in users table",
+  });
+}
+
+
     // INSERT
     const { data, error } = await supabase
       .from("ai_history")
       .insert([
         {
-          user_id,
+      user_id: user.id, // ★ ここが唯一の正解
           seikatsu,
           shintai,
           fukuyaku,
