@@ -214,14 +214,16 @@ export default async function handler(req, res) {
       const userId = authData.user.id;
 
       const { error: insertError } = await supabase.from("users").insert({
-        auth_user_id: userId,
-        email,
-        user_name,
-        plan,
-        corp_user_limit: Number(users),
-        password_hash,
-        phone,
-      });
+  auth_user_id: userId,
+  email,
+  user_name,
+  plan,
+  corp_user_limit: Number(users),
+  password_hash,
+  phone,
+  password_initialized: false, // ★ 追加（超重要）
+});
+
 
       if (insertError) {
         console.error("users insert error:", insertError);
@@ -273,12 +275,14 @@ export default async function handler(req, res) {
       const password_hash = await bcrypt.hash(newPassword, 10);
 
       await supabase
-        .from("users")
-        .update({
-          password_hash,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("email", email);
+  .from("users")
+  .update({
+    password_hash,
+    password_initialized: false, // ★ 追加
+    updated_at: new Date().toISOString(),
+  })
+  .eq("auth_user_id", user_id); // ★ email → auth_user_id に変更
+
 
       return res.json({
         success: true,
