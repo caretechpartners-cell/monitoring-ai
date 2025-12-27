@@ -117,7 +117,7 @@ async function loadHistory() {
   const area = document.getElementById("historyArea"); // ★ これを追加
 
   // 🔒 ログイン確認（新方式）
-  const user_id = localStorage.getItem("auth_user_id");
+  const user_id = localStorage.getItem("user_db_id");
   if (!user_id) {
     location.href = "login.html";
     return;
