@@ -54,7 +54,7 @@ export default async function handler(req, res) {
 
     console.log("🔍 INSERT START");
 
-// ★ auth_user_id → users.id を取得する
+// auth_user_id → users.id を引き直す
 const { data: user, error: userError } = await supabase
   .from("users")
   .select("id")
@@ -68,22 +68,20 @@ if (userError || !user) {
   });
 }
 
-
-    // INSERT
-    const { data, error } = await supabase
-      .from("ai_history")
-      .insert([
-        {
-      user_id: user.id, // ★ ここが唯一の正解
-          seikatsu,
-          shintai,
-          fukuyaku,
-          service,
-          kibou,
-          free_text,
-          generated_text
-        }
-      ])
+const { data, error } = await supabase
+  .from("ai_history")
+  .insert([
+    {
+      user_id: user.id, // ★ ここだけが正解
+      seikatsu,
+      shintai,
+      fukuyaku,
+      service,
+      kibou,
+      free_text,
+      generated_text,
+    }
+  ])
       .select();
 
     console.log("INSERT RESULT:", data);
