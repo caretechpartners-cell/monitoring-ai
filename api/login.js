@@ -1,112 +1,64 @@
 import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto"; // ★ セッショントークン生成用
+import crypto from "crypto";
 
 export default async function handler(req, res) {
-
-  console.log("====== LOGIN API START ======");
-
   if (req.method !== "POST") {
-    console.log("❌ Method Not Allowed:", req.method);
-    return res.status(405).json({ success: false, message: "Method Not Allowed" });
+    return res.status(405).json({ success: false });
   }
 
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    console.log("REQ BODY:", req.body);
+  // 管理用（users更新）
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 
-    if (!email || !password) {
-      console.log("❌ Missing email or password");
-      return res.status(400).json({
-        success: false,
-        message: "メールアドレスとパスワードは必須です",
-      });
-    }
+  // 認証用（ログイン判定）
+  const supabaseAuth = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+  );
 
-    // Supabase クライアント
-    console.log("🔑 SUPABASE_URL:", process.env.SUPABASE_URL ? "OK" : "MISSING");
-    console.log("🔑 SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "MISSING");
+  // users テーブル取得
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
 
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+  if (!user) {
+    return res.status(401).json({ success: false });
+  }
 
-    // email で users テーブルから取得
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .single();
-
-    console.log("FIND USER:", user);
-    console.log("SUPABASE ERROR:", error);
-
-    if (error || !user) {
-      console.log("❌ User not found");
-      return res.status(401).json({
-        success: false,
-        message: "メールアドレスまたはパスワードが違います",
-      });
-    }
-
-// Supabase Auth でログイン検証
-const { data: authData, error: authError } =
-  await supabase.auth.admin.signInWithPassword({
+  // ✅ Authでログイン判定（ここが最重要）
+  const { error } = await supabaseAuth.auth.signInWithPassword({
     email,
     password,
   });
 
-if (authError) {
-  return res.status(401).json({
-    success: false,
-    message: "メールアドレスまたはパスワードが違います",
-  });
-}
-
-    // JST の現在時刻を生成
-    const nowJST = new Date(Date.now() + (9 * 60 * 60 * 1000))
-      .toISOString()
-      .replace("T", " ")
-      .replace("Z", "");
-
-    // ★ セッション用トークンを生成（同時ログイン防止）
-    const sessionToken = crypto.randomUUID();
-    console.log("NEW SESSION TOKEN:", sessionToken);
-
-    // last_login_at & login_session_token 同時更新
-    const { error: updateError } = await supabase
-  .from("users")
-  .update({
-    last_login_at: nowJST,
-    login_session_token: sessionToken,
-  })
-  .eq("auth_user_id", user.auth_user_id);
-
-    console.log("UPDATE LOGIN TIME ERROR:", updateError);
-
-    console.log("✅ Login success for:", user.email);
-
-    // 成功レスポンス
-    return res.status(200).json({
-      success: true,
-      message: "ログイン成功",
-      user: {
-  id: user.auth_user_id, // ★ ここが超重要
-  email: user.email,
-  plan: user.plan,
-  status: user.status,
-  password_initialized: user.password_initialized, // ★ 忘れず返す
-  login_session_token: sessionToken,
-},
-
-    });
-
-  } catch (err) {
-    console.error("❌ LOGIN EXCEPTION:", err);
-    return res.status(500).json({
-      success: false,
-      message: "サーバーエラー",
-    });
+  if (error) {
+    return res.status(401).json({ success: false });
   }
+
+  // セッション更新
+  const token = crypto.randomUUID();
+
+  await supabase
+    .from("users")
+    .update({
+      login_session_token: token,
+      last_login_at: new Date().toISOString(),
+    })
+    .eq("auth_user_id", user.auth_user_id);
+
+  return res.json({
+    success: true,
+    user: {
+      id: user.auth_user_id,
+      email: user.email,
+      password_initialized: user.password_initialized,
+      login_session_token: token,
+    },
+  });
 }
