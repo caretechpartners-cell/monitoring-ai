@@ -78,12 +78,12 @@ export default async function handler(req, res) {
 
     // last_login_at & login_session_token 同時更新
     const { error: updateError } = await supabase
-      .from("users")
-      .update({
-        last_login_at: nowJST,
-        login_session_token: sessionToken,  // ★ 追加
-      })
-      .eq("id", user.id);
+  .from("users")
+  .update({
+    last_login_at: nowJST,
+    login_session_token: sessionToken,
+  })
+  .eq("auth_user_id", user.auth_user_id);
 
     console.log("UPDATE LOGIN TIME ERROR:", updateError);
 
@@ -94,12 +94,14 @@ export default async function handler(req, res) {
       success: true,
       message: "ログイン成功",
       user: {
-        id: user.id,
-        email: user.email,
-        plan: user.plan,
-        status: user.status,
-        login_session_token: sessionToken, // ★ 追加
-      },
+  id: user.auth_user_id, // ★ ここが超重要
+  email: user.email,
+  plan: user.plan,
+  status: user.status,
+  password_initialized: user.password_initialized, // ★ 忘れず返す
+  login_session_token: sessionToken,
+},
+
     });
 
   } catch (err) {
