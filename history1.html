@@ -8,14 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.js"></script>
-
-  <script>
-    const _supabase = supabase.createClient(
-      "https://odwcrnqhppgyltaxgxtl.supabase.co",
-      "sb_publishable_P5ify2ZorNOYdoBY2tS0Uw_winpfKZV"
-    );
-  </script>
 
   <style>
     body {
@@ -122,6 +114,8 @@
 
 async function loadHistory() {
 
+  const area = document.getElementById("historyArea"); // ★ これを追加
+
   // 🔒 ログイン確認（新方式）
   const user_id = localStorage.getItem("auth_user_id");
   if (!user_id) {
@@ -130,18 +124,24 @@ async function loadHistory() {
   }
 
   // 🔎 データ取得
-  const { data, error } = await _supabase
-    .from("ai_history")
-    .select("*")
-    .eq("user_id", user_id)
-    .order("created_at", { ascending: false });
+  const res = await fetch("/api/user", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "get-history",
+    user_id
+  })
+});
 
-  const area = document.getElementById("historyArea");
+const result = await res.json();
 
-  if (error) {
-    area.innerHTML = `<p style="color:red;">読み込みエラー: ${error.message}</p>`;
-    return;
-  }
+if (!result.success) {
+  area.innerHTML = "読み込みに失敗しました";
+  return;
+}
+
+const data = result.data;
+
 
   if (!data || data.length === 0) {
     area.innerHTML = "まだ生成履歴がありません。";
