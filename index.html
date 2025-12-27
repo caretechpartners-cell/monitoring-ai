@@ -257,13 +257,23 @@ function startProgress() {
   result.textContent = "生成中… 0%";
 
   progressTimer = setInterval(() => {
-    if (progressValue < 90) {
-      progressValue += Math.floor(Math.random() * 5) + 3; // 3〜7%
-      if (progressValue > 90) progressValue = 90;
-      result.textContent = `生成中… ${progressValue}%`;
+    if (progressValue < 98) {
+      const add =
+        progressValue < 70 ? 5 :
+        progressValue < 90 ? 2 : 1;
+
+      progressValue += add;
+      if (progressValue > 98) progressValue = 98;
+
+      if (progressValue >= 90) {
+        result.textContent = "文章を整えています…";
+      } else {
+        result.textContent = `生成中… ${progressValue}%`;
+      }
     }
   }, 300);
 }
+
 
 function finishProgress() {
   if (progressTimer) {
