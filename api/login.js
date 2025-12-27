@@ -52,12 +52,14 @@ export default async function handler(req, res) {
     })
     .eq("auth_user_id", user.auth_user_id);
 
+console.log("LOGIN password_initialized =", user.password_initialized);
+
   return res.json({
   success: true,
   user: {
     id: user.auth_user_id,
     email: user.email,
-    password_initialized: true, // ★ 強制的に true を返す
+    password_initialized: user.password_initialized, // ★ DBの値をそのまま返す
     login_session_token: token,
   },
 });
