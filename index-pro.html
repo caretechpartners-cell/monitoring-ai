@@ -404,6 +404,13 @@ async function checkUsageAllowed() {
 
 async function generate() {
 
+if (!localStorage.getItem("auth_user_id")) {
+  alert("ログイン情報が失われました。再ログインしてください。");
+  location.href = "login.html";
+  return;
+}
+
+
   // ★ 念のため毎回隠す
   document.getElementById("trialEndedBox").style.display = "none";
 
@@ -450,20 +457,24 @@ async function generate() {
     // 履歴保存
 const user_id = localStorage.getItem("auth_user_id");
 if (user_id) {
-  await fetch("/api/ai-history-insert", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id,
-      seikatsu: life.value,
-      shintai: body.value,
-      fukuyaku: medicine.value,
-      service: service.value,
-      kibou: wish.value,
-      free_text: free.value,
-      generated_text: data.result,
-    })
-  });
+ const saveRes = await fetch("/api/ai-history-insert", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user_id,
+    seikatsu: life.value,
+    shintai: body.value,
+    fukuyaku: medicine.value,
+    service: service.value,
+    kibou: wish.value,
+    free_text: free.value,
+    generated_text: data.result,
+  })
+});
+
+const saveData = await saveRes.json();
+console.log("履歴保存結果:", saveData);
+
 }
 
   } catch (e) {
