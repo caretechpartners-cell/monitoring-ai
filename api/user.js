@@ -290,6 +290,36 @@ export default async function handler(req, res) {
       });
     }
 
+    /* =====================================================
+       📜 ⑥ 生成履歴取得（history1.html 用）
+    ===================================================== */
+    if (action === "get-history") {
+      const { user_id } = req.body;
+
+      if (!user_id) {
+        return res.status(400).json({ success: false });
+      }
+
+      const { data, error } = await supabase
+        .from("ai_history")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        return res.status(500).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      return res.json({
+        success: true,
+        data,
+      });
+    }
+
+
     return res.status(400).json({
       error: "unknown_action",
     });
