@@ -151,10 +151,11 @@ async function login() {
       localStorage.setItem("login_session_token", data.user.login_session_token);
       localStorage.setItem("user_email", email);
 
-      if (!data.user.password_initialized) {
-        location.href = "change-password.html";
-        return;
-      }
+      if (data.user.password_initialized === false) {
+  location.href = "change-password.html";
+  return;
+}
+
 
       location.href = "app.html";
     } else {
