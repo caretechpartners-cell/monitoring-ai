@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const { data: user, error } = await supabase
       .from("users")
       .select("login_session_token, stripe_subscription_status, email, stripe_customer_id")
-      .eq("id", user_id)
+      .eq("auth_user_id", user_id)
       .single();
 
     if (error || !user) {

@@ -118,7 +118,7 @@ export default async function handler(req, res) {
       const { data: user } = await supabase
         .from("users")
         .select("email, stripe_customer_id")
-        .eq("id", user_id)
+        .eq("auth_user_id", user_id)
         .single();
 
       let customerId = user?.stripe_customer_id;
