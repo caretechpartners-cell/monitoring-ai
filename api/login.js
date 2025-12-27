@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import bcrypt from "bcryptjs";
 import crypto from "crypto"; // ★ セッショントークン生成用
 
 export default async function handler(req, res) {
@@ -51,20 +50,19 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log("HASH (DB password_hash):", user.password_hash);
-    console.log("RAW PASSWORD (input):", password);
+// Supabase Auth でログイン検証
+const { data: authData, error: authError } =
+  await supabase.auth.admin.signInWithPassword({
+    email,
+    password,
+  });
 
-    // bcrypt 検証
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    console.log("COMPARE RESULT:", isMatch);
-
-    if (!isMatch) {
-      console.log("❌ Password mismatch");
-      return res.status(401).json({
-        success: false,
-        message: "メールアドレスまたはパスワードが違います",
-      });
-    }
+if (authError) {
+  return res.status(401).json({
+    success: false,
+    message: "メールアドレスまたはパスワードが違います",
+  });
+}
 
     // JST の現在時刻を生成
     const nowJST = new Date(Date.now() + (9 * 60 * 60 * 1000))
