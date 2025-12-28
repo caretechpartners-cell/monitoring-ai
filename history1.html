@@ -169,7 +169,8 @@ const data = result.data;
 
           <div class="item">
   <div class="item-label">■ 生成結果</div>
-  <div id="generated-${index}">${formattedGenerated}</div>
+  <div id="generated-${index}" data-created-at="${row.created_at}">
+  ${formattedGenerated}
 </div>
 
 <button
@@ -184,6 +185,7 @@ const data = result.data;
     cursor:pointer;
   "
   onclick="event.stopPropagation(); downloadHistoryDocx(${index})"
+
 >
   📄 Word（docx）で出力
 </button>
@@ -215,6 +217,8 @@ function downloadHistoryDocx(index) {
     return;
   }
 
+  const createdAt = target.dataset.createdAt;
+
   // <br> → 改行に戻す
   const text = target.innerHTML
     .replace(/<br\s*\/?>/gi, "\n")
@@ -240,15 +244,19 @@ function downloadHistoryDocx(index) {
   const a = document.createElement("a");
   a.href = url;
 
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mi = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
+  // created_at を Date に変換
+const date = new Date(createdAt);
 
-  const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
+const yyyy = date.getFullYear();
+const mm = String(date.getMonth() + 1).padStart(2, "0");
+const dd = String(date.getDate()).padStart(2, "0");
+const hh = String(date.getHours()).padStart(2, "0");
+const mi = String(date.getMinutes()).padStart(2, "0");
+const ss = String(date.getSeconds()).padStart(2, "0");
+
+// 表示上は「2025/12/28 08:45:15」
+// ファイル名では安全な形に
+const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
   a.download = `monitoring_${timestamp}.docx`;
 
   a.click();
