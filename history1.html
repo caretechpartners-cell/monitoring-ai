@@ -34,13 +34,24 @@
 
     /* ---------- アコーディオン用 ---------- */
     .history-card {
-      background: #f7fbff;
-      border-left: 6px solid #2a6f97;
-      border-radius: 12px;
-      margin-bottom: 25px;
-      cursor: pointer;
-      overflow: hidden;
-    }
+  position: relative; /* ★ 各履歴を基準にする */
+}
+
+/* 左側のカッコ装飾 */
+.history-card::before {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 20px;
+  bottom: 20px;
+  width: 10px;
+
+  border-left: 4px solid #2a6f97;
+  border-top: 4px solid #2a6f97;
+  border-bottom: 4px solid #2a6f97;
+  border-radius: 12px;
+}
+
     .history-header {
       padding: 20px;
     }
