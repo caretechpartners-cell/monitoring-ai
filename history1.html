@@ -32,23 +32,30 @@
       margin-bottom: 30px;
     }
 
-    /* ---------- アコーディオン用 ---------- */
+/* ---------- アコーディオン用 ---------- */
 .history-card {
-  position: relative;
-  margin-left: 28px;
+  background: #f7fbff;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;     /* ★カッコの基準 */
+  padding-left: 26px;     /* ★カッコ分の余白 */
 }
 
+/* 左側のカッコ装飾（1カードに1つ） */
 .history-card::before {
   content: "";
   position: absolute;
-  left: -18px;
-  top: 20px;
-  bottom: 20px;
-  width: 10px;
+  left: 10px;
+  top: 14px;
+  bottom: 14px;
+  width: 12px;
   border-left: 4px solid #2a6f97;
   border-top: 4px solid #2a6f97;
   border-bottom: 4px solid #2a6f97;
   border-radius: 12px;
+  pointer-events: none;  /* ★クリック邪魔しない */
 }
 
     .history-header {
@@ -181,6 +188,7 @@ const data = result.data;
   <div class="item-label">■ 生成結果</div>
   <div id="generated-${index}" data-created-at="${row.created_at}">
   ${formattedGenerated}
+</div>
 </div>
 
 <button
