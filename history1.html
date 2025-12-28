@@ -229,60 +229,104 @@ loadHistory();
 
 function downloadHistoryDocx(index) {
 
-  const target = document.getElementById(`generated-${index}`);
-  if (!target) {
+  // 対象の履歴ブロック
+  const body = document.getElementById(`body-${index}`);
+  if (!body) {
     alert("出力対象が見つかりません");
     return;
   }
 
-  const createdAt = target.dataset.createdAt;
-
-  // <br> → 改行に戻す
-  const text = target.innerHTML
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "");
+  // 生成日時（ファイル名用）
+  const generatedEl = body.querySelector(`#generated-${index}`);
+  const createdAt = generatedEl?.dataset.createdAt || null;
 
   const { Document, Packer, Paragraph, TextRun } = window.docx;
+  const paragraphs = [];
 
-  const lines = text.split("\n").filter(line => line.trim() !== "");
+  // ---------- 生成日時（Word冒頭に入れる） ----------
+  let filename = "monitoring.docx";
+  if (createdAt) {
+    const d = new Date(createdAt);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
 
-  const paragraphs = lines.map(line =>
-    new Paragraph({
-      children: [ new TextRun({ text: line, size: 24 }) ],
-      spacing: { after: 200 }
-    })
-  );
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `生成日時：${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`,
+            bold: true,
+            size: 24
+          })
+        ],
+        spacing: { after: 300 }
+      })
+    );
 
+    // ファイル名（※ 既存ロジックと完全一致）
+    const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
+    filename = `monitoring_${timestamp}.docx`;
+  }
+
+  // ---------- 入力項目＋生成結果（表示順そのまま） ----------
+  body.querySelectorAll(".item").forEach(item => {
+
+    const labelEl = item.querySelector(".item-label");
+    const valueEl = item.querySelector("div:not(.item-label)");
+
+    if (!labelEl || !valueEl) return;
+
+    const label = labelEl.innerText.trim();
+    const value = valueEl.innerText.trim();
+
+    if (!value) return;
+
+    // 見出し
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: label,
+            bold: true,
+            size: 24
+          })
+        ],
+        spacing: { after: 100 }
+      })
+    );
+
+    // 本文
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: value,
+            size: 24
+          })
+        ],
+        spacing: { after: 300 }
+      })
+    );
+  });
+
+  // ---------- Word生成 ----------
   const doc = new Document({
-    sections: [{ children: paragraphs }],
+    sections: [{ children: paragraphs }]
   });
 
   Packer.toBlob(doc).then(blob => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-
-  // created_at を Date に変換
-const date = new Date(createdAt);
-
-const yyyy = date.getFullYear();
-const mm = String(date.getMonth() + 1).padStart(2, "0");
-const dd = String(date.getDate()).padStart(2, "0");
-const hh = String(date.getHours()).padStart(2, "0");
-const mi = String(date.getMinutes()).padStart(2, "0");
-const ss = String(date.getSeconds()).padStart(2, "0");
-
-// 表示上は「2025/12/28 08:45:15」
-// ファイル名では安全な形に
-const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
-  a.download = `monitoring_${timestamp}.docx`;
-
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 }
-
 </script>
 
 </body>
