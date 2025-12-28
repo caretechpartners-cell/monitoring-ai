@@ -236,13 +236,25 @@ function downloadHistoryDocx(index) {
   });
 
   Packer.toBlob(doc).then(blob => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "monitoring_history.docx";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mi = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+
+  const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
+  a.download = `monitoring_${timestamp}.docx`;
+
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
 }
 
 </script>
