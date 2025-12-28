@@ -7,6 +7,8 @@
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
   <!-- Supabase JS -->
 
   <style>
@@ -166,12 +168,29 @@ const data = result.data;
           </div>
 
           <div class="item">
-            <div class="item-label">■ 生成結果</div>
-            <div>${formattedGenerated}</div>
-          </div>
-        </div>
+  <div class="item-label">■ 生成結果</div>
+  <div id="generated-${index}">${formattedGenerated}</div>
+</div>
+
+<button
+  style="
+    margin-top:15px;
+    padding:10px 16px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    background:#4caf50;
+    color:#fff;
+    cursor:pointer;
+  "
+  onclick="event.stopPropagation(); downloadHistoryDocx(${index})"
+>
+  📄 Word（docx）で出力
+</button>
+
 
       </div>
+     </div>
     `;
   });
 
@@ -187,6 +206,45 @@ function toggleCard(index) {
 }
 
 loadHistory();
+
+function downloadHistoryDocx(index) {
+
+  const target = document.getElementById(`generated-${index}`);
+  if (!target) {
+    alert("出力対象が見つかりません");
+    return;
+  }
+
+  // <br> → 改行に戻す
+  const text = target.innerHTML
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "");
+
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+  const lines = text.split("\n").filter(line => line.trim() !== "");
+
+  const paragraphs = lines.map(line =>
+    new Paragraph({
+      children: [ new TextRun({ text: line, size: 24 }) ],
+      spacing: { after: 200 }
+    })
+  );
+
+  const doc = new Document({
+    sections: [{ children: paragraphs }],
+  });
+
+  Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "monitoring_history.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
 </script>
 
 </body>
