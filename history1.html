@@ -229,21 +229,21 @@ loadHistory();
 
 function downloadHistoryDocx(index) {
 
-  // 対象の履歴ブロック
   const body = document.getElementById(`body-${index}`);
   if (!body) {
     alert("出力対象が見つかりません");
     return;
   }
 
-  // 生成日時（ファイル名用）
   const generatedEl = body.querySelector(`#generated-${index}`);
   const createdAt = generatedEl?.dataset.createdAt || null;
 
   const { Document, Packer, Paragraph, TextRun } = window.docx;
   const paragraphs = [];
 
-  // ---------- 生成日時（Word冒頭に入れる） ----------
+  /* ==============================
+     生成日時
+  ============================== */
   let filename = "monitoring.docx";
   if (createdAt) {
     const d = new Date(createdAt);
@@ -263,16 +263,16 @@ function downloadHistoryDocx(index) {
             size: 24
           })
         ],
-        spacing: { after: 300 }
+        spacing: { after: 400 }
       })
     );
 
-    // ファイル名（※ 既存ロジックと完全一致）
-    const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
-    filename = `monitoring_${timestamp}.docx`;
+    filename = `monitoring_${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}.docx`;
   }
 
-  // ---------- 入力項目＋生成結果（表示順そのまま） ----------
+  /* ==============================
+     入力項目（生活状況〜自由記載）
+  ============================== */
   body.querySelectorAll(".item").forEach(item => {
 
     const labelEl = item.querySelector(".item-label");
@@ -283,37 +283,69 @@ function downloadHistoryDocx(index) {
     const label = labelEl.innerText.trim();
     const value = valueEl.innerText.trim();
 
+    // 「生成結果」は後で改ページするので一旦スキップ
+    if (label.includes("生成結果")) return;
     if (!value) return;
 
-    // 見出し
     paragraphs.push(
       new Paragraph({
-        children: [
-          new TextRun({
-            text: label,
-            bold: true,
-            size: 24
-          })
-        ],
-        spacing: { after: 100 }
-      })
-    );
-
-    // 本文
-    paragraphs.push(
+        children: [ new TextRun({ text: label, bold: true, size: 24 }) ],
+        spacing: { after: 120 }
+      }),
       new Paragraph({
-        children: [
-          new TextRun({
-            text: value,
-            size: 24
-          })
-        ],
-        spacing: { after: 300 }
+        children: [ new TextRun({ text: value, size: 24 }) ],
+        spacing: { after: 360 }
       })
     );
   });
 
-  // ---------- Word生成 ----------
+  /* ==============================
+     改ページ（ここが重要）
+  ============================== */
+  paragraphs.push(
+    new Paragraph({
+      children: [],
+      pageBreakBefore: true
+    })
+  );
+
+  /* ==============================
+     生成結果（①〜⑤を分割）
+  ============================== */
+  if (generatedEl) {
+
+    const raw = generatedEl.innerText.trim();
+
+    // 【① ～】【② ～】…で分割
+    const sections = raw.split(/(?=【[①②③④⑤])/g);
+
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "■ 生成結果", bold: true, size: 24 })
+        ],
+        spacing: { after: 300 }
+      })
+    );
+
+    sections.forEach(text => {
+      const cleaned = text.trim();
+      if (!cleaned) return;
+
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: cleaned, size: 24 })
+          ],
+          spacing: { after: 400 }
+        })
+      );
+    });
+  }
+
+  /* ==============================
+     Word生成
+  ============================== */
   const doc = new Document({
     sections: [{ children: paragraphs }]
   });
@@ -327,6 +359,7 @@ function downloadHistoryDocx(index) {
     URL.revokeObjectURL(url);
   });
 }
+
 </script>
 
 </body>
