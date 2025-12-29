@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>やさしいサービス担当者会議録AI（会員版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ⭐ app.html からの遷移チェック -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") !== "app") {
+      location.href = "login.html";
+    }
+  </script>
+
+  <!-- ⭐ auth-guard（モニタリングAI製品版と同思想） -->
+  <script>
+  (async () => {
+    try {
+      const user_id = localStorage.getItem("auth_user_id");
+      const token = localStorage.getItem("login_session_token");
+
+      if (!user_id || !token) {
+        return location.href = "login.html";
+      }
+
+      const res = await fetch("/api/auth-guard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id, token }),
+      });
+
+      const data = await res.json();
+      if (!data.valid) {
+        localStorage.clear();
+        location.href = "login.html";
+      }
+    } catch {
+      location.href = "login.html";
+    }
+  })();
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 20px;
+      margin-top: 25px;
+      margin-bottom: 6px;
+      color: #2a6f97;
+    }
+    textarea {
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #cfdfe8;
+      min-height: 230px;
+      box-sizing: border-box;
+    }
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 25px;
+      cursor: pointer;
+    }
+    .generate-btn { background: #2a6f97; color: white; }
+    .download-btn {
+      background: #4caf50;
+      color: white;
+      margin-top: 15px;
+      display: none;
+    }
+    .sample-btn {
+      width: 100%;
+      height: 55px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      margin-top: 15px;
+      cursor: pointer;
+      background: #f3a6b1;
+      color: white;
+    }
+    .result-box {
+      margin-top: 30px;
+      font-size: 18px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+    .copy-guide {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      display: none;
+    }
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #cccccc;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+
+<body>
+
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
+
+<div class="container">
+  <h1>やさしいサービス担当者会議録AI（会員版）</h1>
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+
+  <button class="sample-btn" onclick="fillSample()">サンプルメモを入力する</button>
+
+  <label>■ 会議内容メモ</label>
+  <textarea id="memoElem" placeholder="会議中の走り書き・箇条書きで問題ありません"></textarea>
+
+  <button class="btn generate-btn" onclick="generate()">AIで議事録を生成する</button>
+
+  <div class="copy-guide" id="copyGuide">このままコピーして議事録に貼り付けできます。</div>
+
+  <div id="result" class="result-box"></div>
+
+  <button class="btn download-btn" id="xlsxBtn" onclick="exportXLSX()">
+    📊 Excel（議事録様式）で出力
+  </button>
+</div>
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
+</div>
+
+<script>
+function fillSample() {
+  memoElem.value =
+    "12/10 14:00-15:00 利用者宅にて\n" +
+    "山田太郎　要介2\n\n" +
+
+    "参加者：\n" +
+    "本人（利用者） 山田太郎\n" +
+    "株式会社あおぞら（訪問介護・ヘルパー） 鈴木花子\n" +
+    "さくら訪問看護ステーション（看護師） 田中一郎\n" +
+    "株式会社ケアサポート（福祉用具専門相談員） 佐藤健\n" +
+    "ひまわり居宅介護支援事業所（ケアマネジャー） 山本真由美\n" +
+    "家族（長男） 山田一朗 欠席（事前に電話）\n\n" +
+
+    "最近 転倒多い\n" +
+    "特に 夜 トイレ\n" +
+    "本人「夜は足元が見えにくく不安」\n" +
+    "ふらつき強いとのこと（訪問介護）\n" +
+    "夜間 見守り 手薄\n\n" +
+
+    "訪問看護：\n" +
+    "BP やや高め\n" +
+    "服薬 OK\n" +
+    "急変なし\n\n" +
+
+    "福祉用具：\n" +
+    "歩行器 高さ合ってないかも\n" +
+    "再調整 or 機種変更検討？\n\n" +
+
+    "話し合い：\n" +
+    "夜間転倒リスク高い\n" +
+    "現サービス量で足りているか\n" +
+    "環境調整必要（センサーライト等）\n\n" +
+
+    "結論：\n" +
+    "歩行器の再調整を優先\n" +
+    "夜間対応について事業所と調整\n" +
+    "センサーライト導入を検討\n\n" +
+
+    "残：\n" +
+    "家族支援の方法\n" +
+    "夜間見守りの限界\n" +
+    "次回まで転倒状況を共有\n\n" +
+
+    "次回 2026/2/1";
+}
+
+async function generate() {
+  try {
+    copyGuide.style.display = "none";
+    xlsxBtn.style.display = "none";
+    result.textContent = "生成中…";
+
+    const res = await fetch("/api/generate-conf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memo: memoElem.value })
+    });
+
+    const data = await res.json();
+    if (!data.result) throw new Error();
+
+    result.textContent = data.result;
+    copyGuide.style.display = "block";
+    xlsxBtn.style.display = "block";
+
+  } catch {
+    result.textContent = "議事録の生成に失敗しました。";
+  }
+}
+
+function exportXLSX() {
+  fetch("/api/export-excel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      memo: memoElem.value,
+      aiResult: result.textContent
+    })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Excel生成エラー");
+    return res.blob();
+  })
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    // ▼ 利用者名をメモから抽出
+    let userName = "利用者";
+
+    // ① 利用者：山田太郎 があれば最優先
+    const explicitMatch = memoElem.value.match(/利用者[:：]\s*([^\n　]+)/);
+    if (explicitMatch) {
+  userName = explicitMatch[1].trim();
+} else {
+  // ② 冒頭付近の日本人名っぽい行を拾う
+  const lines = memoElem.value
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (
+      /^[一-龥]{2,4}\s*[一-龥]{2,4}/.test(line) &&
+      !line.includes("参加") &&
+      !line.includes("場所")
+    ) {
+      userName = line.split(/\s+/)[0];
+      break;
+    }
+  }
+}
+
+
+    // ▼ 開催日をメモから抽出
+    const dateMatch = memoElem.value.match(/(\d{1,2})\/(\d{1,2})/);
+    const date = dateMatch
+    ? new Date().getFullYear() + "-" +
+    dateMatch[1].padStart(2, "0") + "-" +
+    dateMatch[2].padStart(2, "0")
+  : new Date().toISOString().split("T")[0];
+
+    a.download = userName + "_" + date + ".xlsx";
+    a.href = url;
+    a.click();
+    URL.revokeObjectURL(url);
+  })
+  .catch(err => {
+    alert("Excelの生成に失敗しました");
+    console.error(err);
+  });
+}
+</script>
+
+</body>
+</html>
