@@ -96,19 +96,24 @@
 async function loadHistory() {
   const area = document.getElementById("historyArea");
 
-  const user_id = localStorage.getItem("user_db_id");
-  if (!user_id) {
-    location.href = "login.html";
-    return;
-  }
+  const authUserId = localStorage.getItem("auth_user_id");
+if (!authUserId) {
+  location.href = "login.html";
+  return;
+}
 
   const res = await fetch("/api/conf-history", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id })
-  });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ auth_user_id: authUserId })
+});
 
-  const result = await res.json();
+if (!res.ok) {
+  area.innerHTML = "履歴APIが見つかりません";
+  return;
+}
+
+const result = await res.json();
   if (!result.success) {
     area.innerHTML = "読み込みに失敗しました";
     return;
