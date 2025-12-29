@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>生成履歴｜やさしいサービス担当者会議録AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+
+    .history-card {
+      background: #f7fbff;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      padding-left: 26px;
+    }
+
+    .history-card::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 14px;
+      bottom: 14px;
+      width: 12px;
+      border-left: 4px solid #2a6f97;
+      border-top: 4px solid #2a6f97;
+      border-bottom: 4px solid #2a6f97;
+      border-radius: 12px;
+    }
+
+    .history-header {
+      padding: 20px;
+    }
+    .date {
+      color: #2a6f97;
+      font-weight: bold;
+    }
+    .history-body {
+      padding: 0 20px 20px 20px;
+      display: none;
+    }
+
+    .item-label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #cccccc;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページ</button>
+
+<div class="container">
+  <h1>生成履歴一覧（会議録）</h1>
+  <div id="historyArea">読み込み中…</div>
+</div>
+
+<script>
+async function loadHistory() {
+  const area = document.getElementById("historyArea");
+
+  const user_id = localStorage.getItem("user_db_id");
+  if (!user_id) {
+    location.href = "login.html";
+    return;
+  }
+
+  const res = await fetch("/api/conf-history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id })
+  });
+
+  const result = await res.json();
+  if (!result.success) {
+    area.innerHTML = "読み込みに失敗しました";
+    return;
+  }
+
+  const data = result.data;
+  if (!data || data.length === 0) {
+    area.innerHTML = "まだ生成履歴がありません。";
+    return;
+  }
+
+  let html = "";
+
+  data.forEach((row, index) => {
+    html += `
+      <div class="history-card" onclick="toggleCard(${index})">
+        <div class="history-header">
+          <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
+        </div>
+
+        <div class="history-body" id="body-${index}">
+          <div class="item">
+            <div class="item-label">■ 会議メモ</div>
+            <div>${(row.memo || "").replace(/\n/g, "<br>")}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 生成結果</div>
+            <div id="generated-${index}" data-created-at="${row.created_at}">
+              ${(row.generated_text || "").replace(/\n/g, "<br>")}
+            </div>
+          </div>
+
+          <button
+            style="margin-top:15px;padding:10px 16px;font-size:16px;border:none;border-radius:10px;background:#4caf50;color:#fff;cursor:pointer;"
+            onclick="event.stopPropagation(); downloadExcel(${index})"
+          >
+            📊 Excel（議事録）で出力
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  area.innerHTML = html;
+}
+
+function toggleCard(index) {
+  const body = document.getElementById(`body-${index}`);
+  body.style.display =
+    body.style.display === "block" ? "none" : "block";
+}
+
+async function downloadExcel(index) {
+  const generatedEl = document.getElementById(`generated-${index}`);
+  if (!generatedEl) return;
+
+  const text = generatedEl.innerText;
+
+  const res = await fetch("/api/export-excel-conf-history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  if (!res.ok) {
+    alert("Excel生成に失敗しました");
+    return;
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  const d = new Date(generatedEl.dataset.createdAt);
+  const ts =
+    d.getFullYear() + "-" +
+    String(d.getMonth()+1).padStart(2,"0") + "-" +
+    String(d.getDate()).padStart(2,"0") + "_" +
+    String(d.getHours()).padStart(2,"0") +
+    String(d.getMinutes()).padStart(2,"0");
+
+  a.href = url;
+  a.download = `meeting_record_${ts}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>

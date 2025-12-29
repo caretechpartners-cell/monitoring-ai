@@ -289,6 +289,19 @@ async function generate() {
     if (!data.result) throw new Error();
 
     finishProgress();
+
+await fetch("/api/ai-history-insert", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    type: "conf", // ← 会議録AIであることを明示
+    user_id: localStorage.getItem("auth_user_id"),
+    memo: memoElem.value,
+    generated_text: data.result
+  })
+});
+
+
 setTimeout(() => {
   result.textContent = data.result;
   copyGuide.style.display = "block";
