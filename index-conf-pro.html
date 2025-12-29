@@ -236,11 +236,48 @@ function fillSample() {
     "次回 2026/2/1";
 }
 
+let progressTimer = null;
+let progressValue = 0;
+
+function startProgress() {
+  progressValue = 0;
+  result.textContent = "生成中… 0%";
+
+  progressTimer = setInterval(() => {
+    if (progressValue < 98) {
+      const add =
+        progressValue < 70 ? 4 :
+        progressValue < 90 ? 2 : 1;
+
+      progressValue += add;
+      if (progressValue > 98) progressValue = 98;
+
+      if (progressValue >= 90) {
+        result.textContent = "文章を整えています…";
+      } else {
+        result.textContent = `生成中… ${progressValue}%`;
+      }
+    }
+  }, 300);
+}
+
+function finishProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  result.textContent = "生成完了（100%）";
+}
+
+
+
 async function generate() {
   try {
     copyGuide.style.display = "none";
     xlsxBtn.style.display = "none";
     result.textContent = "生成中…";
+
+    startProgress();
 
     const res = await fetch("/api/generate-conf", {
       method: "POST",
@@ -251,11 +288,19 @@ async function generate() {
     const data = await res.json();
     if (!data.result) throw new Error();
 
-    result.textContent = data.result;
-    copyGuide.style.display = "block";
-    xlsxBtn.style.display = "block";
+    finishProgress();
+setTimeout(() => {
+  result.textContent = data.result;
+  copyGuide.style.display = "block";
+  xlsxBtn.style.display = "block";
+}, 300);
 
   } catch {
+
+    if (progressTimer) clearInterval(progressTimer);
+progressTimer = null;
+progressValue = 0;
+
     result.textContent = "議事録の生成に失敗しました。";
   }
 }
