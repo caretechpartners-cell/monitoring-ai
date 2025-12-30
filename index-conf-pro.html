@@ -294,13 +294,14 @@ await fetch("/api/history", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    type: "conf", // ← 会議録AIであることを明示
-    user_id: localStorage.getItem("auth_user_id"),
+    action: "insert",            // ★ 必須
+    type: "conference",          // ★ API仕様通り
+    auth_user_id: localStorage.getItem("auth_user_id"),
+
     memo: memoElem.value,
     generated_text: data.result
   })
 });
-
 
 setTimeout(() => {
   result.textContent = data.result;
