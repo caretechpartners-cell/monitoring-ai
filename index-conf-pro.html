@@ -290,7 +290,7 @@ async function generate() {
 
     finishProgress();
 
-await fetch("/api/history", {
+const saveRes = await fetch("/api/history", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -302,6 +302,10 @@ await fetch("/api/history", {
     generated_text: data.result
   })
 });
+
+const saveJson = await saveRes.json();
+console.log("conf history save:", saveJson);
+
 
 setTimeout(() => {
   result.textContent = data.result;
