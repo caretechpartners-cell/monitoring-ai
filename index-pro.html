@@ -461,15 +461,18 @@ if (user_id) {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    user_id,
-    seikatsu: life.value,
-    shintai: body.value,
-    fukuyaku: medicine.value,
-    service: service.value,
-    kibou: wish.value,
-    free_text: free.value,
-    generated_text: data.result,
-  })
+  action: "insert",
+  type: "monitoring",
+  auth_user_id: user_id,
+
+  seikatsu: life.value,
+  shintai: body.value,
+  fukuyaku: medicine.value,
+  service: service.value,
+  kibou: wish.value,
+  free_text: free.value,
+  generated_text: data.result,
+})
 });
 
 const saveData = await saveRes.json();
