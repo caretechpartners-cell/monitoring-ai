@@ -8,7 +8,10 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, message: "Method Not Allowed" });
+    return res.status(405).json({
+      ok: false,
+      reason: "method_not_allowed",
+    });
   }
 
   try {
@@ -22,7 +25,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // stripe_links を email × product_code で取得
+    // email × product_code で 1 レコード取得
     const { data, error } = await supabase
       .from("stripe_links")
       .select(
@@ -37,47 +40,58 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (error) {
-      console.error("product-guard lookup error:", error);
+      console.error("product-guard db error:", error);
       return res.status(500).json({
         ok: false,
         reason: "db_error",
       });
     }
 
-    // レコードが無い = 未購入
+    // レコードが存在しない = 一度も付与されていない
     if (!data) {
       return res.status(200).json({
         ok: false,
-        reason: "not_purchased",
+        reason: "not_granted",
       });
     }
 
     const now = new Date();
 
-    // trialing 判定
-    if (data.stripe_subscription_status === "trialing") {
-      if (!data.trial_end_at || new Date(data.trial_end_at) > now) {
-        return res.status(200).json({
-          ok: true,
-          status: "trialing",
-        });
-      }
+    /* =====================================================
+       ① trial_end_at が未来 → 無条件で使用OK
+       （トライアル中・解約後トライアル継続を含む）
+    ===================================================== */
+    if (data.trial_end_at && new Date(data.trial_end_at) >= now) {
+      return res.status(200).json({
+        ok: true,
+        mode: "trial",
+        trial_end_at: data.trial_end_at,
+      });
     }
 
-    // active 判定
+    /* =====================================================
+       ② 本契約中（active）
+       - current_period_end が未来 or 未設定
+    ===================================================== */
     if (data.stripe_subscription_status === "active") {
-      if (!data.current_period_end || new Date(data.current_period_end) > now) {
+      if (
+        !data.current_period_end ||
+        new Date(data.current_period_end) >= now
+      ) {
         return res.status(200).json({
           ok: true,
-          status: "active",
+          mode: "active",
         });
       }
     }
 
-    // それ以外（期限切れ・キャンセル）
+    /* =====================================================
+       ③ それ以外は使用不可
+       （trial終了・解約済み・期限切れ）
+    ===================================================== */
     return res.status(200).json({
       ok: false,
-      reason: "expired_or_canceled",
+      reason: "expired",
       status: data.stripe_subscription_status,
     });
   } catch (err) {
