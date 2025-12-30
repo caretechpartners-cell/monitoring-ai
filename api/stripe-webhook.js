@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
 });
@@ -60,9 +61,18 @@ export default async function handler(req, res) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
+console.log("SESSION METADATA", session.metadata);
+console.log("SESSION", JSON.stringify(session, null, 2));
+
       let email = session.customer_email || null;
       const customerId = session.customer || null;
       const subscriptionId = session.subscription || null;
+
+if (!subscriptionId) {
+  console.warn("checkout completed but subscription not yet created", {
+    session_id: session.id,
+  });
+}
 
       // Payment Link では email が取れないことがあるため補完
       if (!email && customerId) {
@@ -79,30 +89,42 @@ export default async function handler(req, res) {
       }
 
       // ★ product_code は metadata からのみ取得
-      const productCode = session.metadata?.product_code;
-      if (!productCode) {
-        console.error("❌ product_code missing in metadata", {
-          session_id: session.id,
-          metadata: session.metadata,
-        });
-        return res.status(200).json({ received: true });
-      }
+// Checkout Session を expand 付きで再取得
+const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+  expand: ["line_items.data.price"],
+});
+
+const productCode =
+  fullSession.metadata?.product_code ||
+  fullSession.subscription_details?.metadata?.product_code ||
+  fullSession.line_items?.data?.[0]?.price?.metadata?.product_code ||
+  null;
+
+if (!productCode) {
+  console.error("❌ product_code missing after expand", {
+    session_id: session.id,
+    metadata: fullSession.metadata,
+  });
+  return res.status(200).json({ received: true });
+}
+
 
       const { error } = await supabase
-        .from("stripe_links")
-        .upsert(
-          {
-            email,
-            product_code: productCode,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            stripe_subscription_status: "trialing", // 初期値
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "email,product_code", // ★ 複合 UNIQUE 前提
-          }
-        );
+  .from("stripe_links")
+  .upsert(
+    {
+      email,
+      product_code: productCode,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
+      stripe_subscription_status: subscriptionId ? "trialing" : "active",
+      updated_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "email,product_code",
+    }
+  );
+
 
       if (error) {
         console.error("❌ stripe_links upsert failed:", error);
