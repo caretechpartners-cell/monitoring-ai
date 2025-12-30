@@ -108,7 +108,7 @@ export default async function handler(req, res) {
 
       const { error } = await supabase
         .from("stripe_links")
-        .upsert(
+        .insert(
           {
             email,
             product_code: productCode,
@@ -117,9 +117,7 @@ export default async function handler(req, res) {
             // 初期値。後続の subscription.* で確定させる
             stripe_subscription_status: subscriptionId ? "trialing" : "active",
             updated_at: new Date().toISOString(),
-          },
-          { onConflict: "email,product_code" }
-        );
+          });
 
       if (error) {
         console.error("❌ stripe_links upsert failed:", {
