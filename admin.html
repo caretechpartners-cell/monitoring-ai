@@ -112,6 +112,24 @@
     <button onclick="copyPassword()">コピー</button>
   </div>
 
+<hr style="margin:30px 0" />
+
+<h2>購入済みプロダクト付与（Admin）</h2>
+
+<label>メールアドレス</label>
+<input id="grant_email" type="email" placeholder="user@example.com" />
+
+<label>付与するプロダクト</label>
+<select id="product_code">
+  <option value="monitoring">モニタリングAI</option>
+  <option value="conference">議事録AI</option>
+</select>
+
+<button onclick="grantProduct()">プロダクトを付与</button>
+
+<div id="grantResult" style="margin-top:15px;color:green;"></div>
+
+
 </div>
 
 <script>
@@ -198,6 +216,40 @@ function copyPassword() {
   document.execCommand("copy");
   alert("コピーしました");
 }
+
+async function grantProduct() {
+  const email = document.getElementById("grant_email").value;
+  const product_code = document.getElementById("product_code").value;
+
+  if (!email || !product_code) {
+    alert("email と product_code は必須です");
+    return;
+  }
+
+  const res = await fetch("/api/user", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-key": ADMIN_KEY
+    },
+    body: JSON.stringify({
+      action: "grant-product",
+      email,
+      product_code
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert("❌ エラー\n" + JSON.stringify(data, null, 2));
+    return;
+  }
+
+  document.getElementById("grantResult").textContent =
+    `✅ ${product_code} を ${email} に付与しました`;
+}
+
 </script>
 
 </body>

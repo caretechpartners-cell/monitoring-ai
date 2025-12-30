@@ -290,6 +290,51 @@ export default async function handler(req, res) {
       });
     }
 
+/* =====================================================
+   🧩 ⑦ 管理者：プロダクト付与
+===================================================== */
+if (action === "grant-product") {
+  if (!isAdmin(req)) {
+    return res.status(401).json({
+      error: "unauthorized_admin",
+    });
+  }
+
+  const { email, product_code } = req.body;
+
+  if (!email || !product_code) {
+    return res.status(400).json({
+      error: "email_and_product_code_required",
+    });
+  }
+
+  const { error } = await supabase
+    .from("stripe_links")
+    .upsert(
+      {
+        email,
+        product_code,
+        stripe_subscription_status: "active",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "email,product_code" } // ← 複合UNIQUE前提
+    );
+
+  if (error) {
+    console.error("grant-product error:", error);
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+
+  return res.json({
+    success: true,
+    email,
+    product_code,
+  });
+}
+
+
     /* =====================================================
        📜 ⑥ 生成履歴取得（history1.html 用）
     ===================================================== */
@@ -331,3 +376,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+
