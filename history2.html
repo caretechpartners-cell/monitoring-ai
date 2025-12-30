@@ -177,13 +177,13 @@ async function downloadExcel(index) {
   if (!generatedEl) return;
 
   const res = await fetch("/api/export-excel", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    memo: row.memo,                  // ← 履歴に保存されている会議メモ
-    aiResult: generatedEl.innerText  // ← 生成結果
-  })
-});
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      memo: "",                         // ← 空でOK（履歴からは使わない）
+      aiResult: generatedEl.innerText   // ← 生成結果のみ
+    })
+  });
 
   if (!res.ok) {
     alert("Excel生成に失敗しました");
