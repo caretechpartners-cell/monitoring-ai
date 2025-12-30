@@ -66,15 +66,19 @@ export default async function handler(req, res) {
       }
 
       // stripe_links に upsert（users がまだ無くてもOK）
-      const { error } = await supabase.from("stripe_links").upsert(
-        {
-          email,
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscriptionId,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "email" }
-      );
+ const productCode =
+  session.metadata?.product_code || "monitoring";
+     const { error } = await supabase.from("stripe_links").upsert(
+  {
+    email,
+    product_code: productCode,
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscriptionId,
+    updated_at: new Date().toISOString(),
+  },
+  { onConflict: "email,product_code" }
+);
+
 
       if (error) {
         console.error("❌ stripe_links upsert failed:", { email, error });
@@ -111,17 +115,19 @@ export default async function handler(req, res) {
       if (event.type === "customer.subscription.deleted") status = "canceled";
 
       const { error } = await supabase.from("stripe_links").upsert(
-        {
-          email,
-          stripe_customer_id: sub.customer,
-          stripe_subscription_id: sub.id,
-          stripe_subscription_status: status,
-          trial_end_at: toIsoOrNull(sub.trial_end),
-          current_period_end: toIsoOrNull(sub.current_period_end),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "email" }
-      );
+  {
+    email,
+    stripe_customer_id: sub.customer,
+    stripe_subscription_id: sub.id,
+    stripe_subscription_status: status,
+    trial_end_at: toIsoOrNull(sub.trial_end),
+    current_period_end: toIsoOrNull(sub.current_period_end),
+    updated_at: new Date().toISOString(),
+  },
+  { onConflict: "email" } // ← ここも戻す
+);
+
+
 
       if (error) {
         console.error("❌ stripe_links upsert failed:", { email, error });

@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   .from("users")
   .select("id")
   .eq("auth_user_id", auth_user_id)
-  .maybeSingle();
+  .single();
 
 if (userError) {
   console.error("user lookup error:", userError);
@@ -44,14 +44,6 @@ if (userError) {
     success: false,
     message: "user lookup failed",
     detail: userError.message,
-  });
-}
-
-if (!user) {
-  return res.status(400).json({
-    success: false,
-    message: "user not found",
-    auth_user_id,
   });
 }
 

@@ -381,46 +381,36 @@ function finishProgress() {
   result.textContent = "生成完了（100%）";
 }
 
-async function checkUsageAllowed() {
-  try {
-    const user_id = localStorage.getItem("auth_user_id");
-    const token = localStorage.getItem("login_session_token");
-
-    if (!user_id || !token) {
-      return { allowed: false, reason: "not_logged_in" };
-    }
-
-    const res = await fetch("/api/auth-guard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, token }),
-    });
-
-    return await res.json();
-  } catch (e) {
-    return { allowed: false, reason: "system_error" };
-  }
-}
-
 async function generate() {
 
-if (!localStorage.getItem("auth_user_id")) {
-  alert("ログイン情報が失われました。再ログインしてください。");
-  location.href = "login.html";
-  return;
-}
+  // ===== ① ログイン最低限チェック =====
+  const email = localStorage.getItem("login_email");
+  if (!email) {
+    alert("ログイン情報が失われました。再ログインしてください。");
+    location.href = "login.html";
+    return;
+  }
 
+  // ===== ② product-guard（monitoring）=====
+  const guardRes = await fetch("/api/product-guard", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      product_code: "monitoring",
+    }),
+  });
+
+  const guard = await guardRes.json();
+
+  if (!guard.ok) {
+    // UIは既存の trialEndedBox を流用できる
+    document.getElementById("trialEndedBox").style.display = "block";
+    return; // ← ここで完全に止める
+  }
 
   // ★ 念のため毎回隠す
   document.getElementById("trialEndedBox").style.display = "none";
-
- // ⭐⭐⭐ usage-check を最初に実行 ⭐⭐⭐
-  const usage = await checkUsageAllowed();
-
-  if (!usage.allowed) {
-    handleUsageBlocked(usage.reason);
-    return; // ← ここで完全に止める
-  }
 
   const text = `
 【生活状況】${life.value}
@@ -484,25 +474,6 @@ console.log("履歴保存結果:", saveData);
     if (progressTimer) clearInterval(progressTimer);
     result.textContent = "通信エラーが発生しました。時間をおいて再度お試しください。";
   }
-}
-
-function handleUsageBlocked(reason) {
-
-  result.textContent = "";
-  copyGuide.style.display = "none";
-  downloadBtn.style.display = "none";
-
-  if (reason === "payment_required" || reason === "subscription_canceled") {
-    document.getElementById("trialEndedBox").style.display = "block";
-    return;
-  }
-
-  let message =
-    reason === "system_error"
-      ? "⚠️ 現在システムが混み合っています。\n\n時間をおいて再度お試しください。"
-      : "⚠️ 現在この機能を利用できません。\n\n時間をおいて再度お試しください。";
-
-  result.textContent = message;
 }
 
 

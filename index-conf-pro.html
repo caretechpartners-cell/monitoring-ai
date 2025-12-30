@@ -277,15 +277,43 @@ async function generate() {
     xlsxBtn.style.display = "none";
     result.textContent = "生成中…";
 
+    // ============================
+    // ① product-guard（最優先）
+    // ============================
+    const email = localStorage.getItem("login_email");
+    if (!email) {
+      alert("ログイン情報が見つかりません");
+      location.href = "login.html";
+      return;
+    }
+
+    const guardRes = await fetch("/api/product-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        product_code: "conference",
+      }),
+    });
+
+    const guard = await guardRes.json();
+
+    if (!guard.ok) {
+      alert("議事録AIは未登録です。購入ページへ移動します。");
+      location.href = "/lp-conf.html"; // または Stripe Payment Link
+      return;
+    }
+
+
     startProgress();
 
-    const res = await fetch("/api/generate-conf", {
+    const genres = await fetch("/api/generate-conf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ memo: memoElem.value })
     });
 
-    const data = await res.json();
+    const data = await genres.json();
     if (!data.result) throw new Error();
 
     finishProgress();
