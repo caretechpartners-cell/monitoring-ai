@@ -32,18 +32,29 @@ export default async function handler(req, res) {
       });
     }
 
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("auth_user_id", auth_user_id)
-      .single();
+   const { data: user, error: userError } = await supabase
+  .from("users")
+  .select("id")
+  .eq("auth_user_id", auth_user_id)
+  .maybeSingle();
 
-    if (userError || !user) {
-      return res.status(400).json({
-        success: false,
-        message: "user not found",
-      });
-    }
+if (userError) {
+  console.error("user lookup error:", userError);
+  return res.status(500).json({
+    success: false,
+    message: "user lookup failed",
+    detail: userError.message,
+  });
+}
+
+if (!user) {
+  return res.status(400).json({
+    success: false,
+    message: "user not found",
+    auth_user_id,
+  });
+}
+
 
     const user_db_id = user.id;
 
@@ -102,7 +113,7 @@ export default async function handler(req, res) {
         }
 
         const { data, error } = await supabase
-          .from("conf_history")
+          .from("conf_ai_history")
           .insert([
             {
               user_id: user_db_id,
@@ -137,7 +148,7 @@ export default async function handler(req, res) {
 
       if (type === "conference") {
         const { data, error } = await supabase
-          .from("conf_history")
+          .from("conf_ai_history")
           .select("*")
           .eq("user_id", user_db_id)
           .order("created_at", { ascending: false });
