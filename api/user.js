@@ -85,26 +85,16 @@ export default async function handler(req, res) {
       }
 
       // ② stripe_links から購読状態・trial_end_at を取得（ここが表示の根拠）
-      const { data: link, error: linkError } = await supabase
-        .from("stripe_links")
-        .select("stripe_subscription_status, trial_end_at")
-        .eq("email", user.email)
-        .maybeSingle();
-
-      if (linkError) {
-        // ここで throw しない（= 500にしない）。表示はできるようにする
-        console.error("stripe_links fetch error:", linkError);
-      }
-
-      const subscriptionStatus = link?.stripe_subscription_status || null;
-      const trialEndAt = link?.trial_end_at || null;
+      const { data: links } = await supabase
+  .from("stripe_links")
+  .select("product_code, stripe_subscription_status, trial_end_at")
+  .eq("email", user.email);
 
       return res.json({
         success: true,
         user: {
           ...user,
-          stripe_subscription_status: subscriptionStatus,
-          trial_end_at: trialEndAt,
+          products: links || [], // ← 重要
         },
       });
     }
@@ -295,9 +285,7 @@ export default async function handler(req, res) {
 ===================================================== */
 if (action === "grant-product") {
   if (!isAdmin(req)) {
-    return res.status(401).json({
-      error: "unauthorized_admin",
-    });
+    return res.status(401).json({ error: "unauthorized_admin" });
   }
 
   const { email, product_code } = req.body;
@@ -308,29 +296,35 @@ if (action === "grant-product") {
     });
   }
 
+  const now = new Date();
+  const trialEnd =
+    product_code === "conference"
+      ? new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+      : null;
+
   const { error } = await supabase
     .from("stripe_links")
     .upsert(
       {
         email,
         product_code,
-        stripe_subscription_status: "active",
+        stripe_subscription_status: trialEnd ? "trialing" : "active",
+        trial_end_at: trialEnd ? trialEnd.toISOString() : null,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "email,product_code" } // ← 複合UNIQUE前提
+      { onConflict: "email,product_code" }
     );
 
   if (error) {
     console.error("grant-product error:", error);
-    return res.status(500).json({
-      error: error.message,
-    });
+    return res.status(500).json({ error: error.message });
   }
 
   return res.json({
     success: true,
     email,
     product_code,
+    trial_end_at: trialEnd,
   });
 }
 
