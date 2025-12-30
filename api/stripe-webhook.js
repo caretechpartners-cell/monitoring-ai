@@ -49,7 +49,7 @@ export default async function handler(req, res) {
   try {
     /* =====================================================
        ① checkout.session.completed
-       → product ごとの行を作る（email × product_code）
+       → email × product_code の行を作る
     ===================================================== */
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
@@ -66,13 +66,18 @@ export default async function handler(req, res) {
       if (!email) {
         console.warn("checkout.session.completed: missing email", {
           session_id: session.id,
-          customer: customerId,
         });
         return res.status(200).json({ received: true });
       }
 
-      const productCode =
-        session.metadata?.product_code || "monitoring";
+      const productCode = session.metadata?.product_code;
+      if (!productCode) {
+        console.error("❌ product_code missing in metadata", {
+          session_id: session.id,
+          metadata: session.metadata,
+        });
+        return res.status(200).json({ received: true });
+      }
 
       const { error } = await supabase
         .from("stripe_links")
@@ -96,7 +101,7 @@ export default async function handler(req, res) {
 
     /* =====================================================
        ② subscription.* 系
-       → 既存行を subscription_id で更新するだけ
+       → subscription_id で既存行を更新
     ===================================================== */
     if (
       event.type === "customer.subscription.created" ||
@@ -110,7 +115,7 @@ export default async function handler(req, res) {
         status = "canceled";
       }
 
-      const { error, count } = await supabase
+      const { count, error } = await supabase
         .from("stripe_links")
         .update({
           stripe_subscription_status: status,
@@ -126,19 +131,14 @@ export default async function handler(req, res) {
       }
 
       if (count === 0) {
-        console.warn(
-          "⚠️ subscription event arrived before checkout row existed",
-          {
-            subscription_id: sub.id,
-            status,
-          }
-        );
+        console.warn("⚠️ subscription update before checkout row", {
+          subscription_id: sub.id,
+        });
       }
 
       return res.status(200).json({ received: true });
     }
 
-    // その他イベントは無視
     return res.status(200).json({ received: true });
   } catch (err) {
     console.error("❌ Webhook handler error:", err);
