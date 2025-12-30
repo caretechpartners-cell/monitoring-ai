@@ -147,9 +147,14 @@ const result = await res.json();
 
           <div class="item">
             <div class="item-label">■ 生成結果</div>
-            <div id="generated-${index}" data-created-at="${row.created_at}">
-              ${(row.generated_text || "").replace(/\n/g, "<br>")}
-            </div>
+            <div
+  id="generated-${index}"
+  data-created-at="${row.created_at}"
+  data-memo="${(row.memo || "").replace(/"/g, "&quot;")}"
+>
+  ${(row.generated_text || "").replace(/\n/g, "<br>")}
+</div>
+
           </div>
 
           <button
@@ -176,12 +181,14 @@ async function downloadExcel(index) {
   const generatedEl = document.getElementById(`generated-${index}`);
   if (!generatedEl) return;
 
+  const memo = generatedEl.dataset.memo || "";
+
   const res = await fetch("/api/export-excel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      memo: "",                         // ← 空でOK（履歴からは使わない）
-      aiResult: generatedEl.innerText   // ← 生成結果のみ
+      memo,                              // ← 保存済みメモを渡す
+      aiResult: generatedEl.innerText
     })
   });
 
