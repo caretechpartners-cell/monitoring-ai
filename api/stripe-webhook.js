@@ -79,107 +79,88 @@ export default async function handler(req, res) {
        ① checkout.session.completed
        → email × product_code の行を作る
     ========================================== */
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+if (event.type === "checkout.session.completed") {
+  const session = event.data.object;
 
-      const email = await resolveEmailFromSession(session);
-      const customerId = session.customer || null;
-      const subscriptionId = session.subscription || null;
+  const email = await resolveEmailFromSession(session);
+  const customerId = session.customer || null;
+  const subscriptionId = session.subscription || null;
+  const productCode = session.metadata?.product_code || null;
 
-      const productCode = session.metadata?.product_code || null;
+  if (!email || !productCode) {
+    console.error("missing email or product_code", {
+      email,
+      productCode,
+      session_id: session.id,
+    });
+    return res.status(200).json({ received: true });
+  }
 
-      if (!email) {
-        console.error("❌ email missing (session)", {
-          session_id: session.id,
-          customer: customerId,
-          customer_email: session.customer_email,
-          customer_details: session.customer_details,
-        });
-        return res.status(200).json({ received: true });
-      }
+  const { error } = await supabase
+    .from("stripe_links")
+    .upsert(
+      {
+        email,
+        product_code: productCode,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        stripe_subscription_status: subscriptionId ? "trialing" : "active",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "email,product_code" }
+    );
 
-      if (!productCode) {
-        console.error("❌ product_code missing in session.metadata", {
-          session_id: session.id,
-          metadata: session.metadata,
-        });
-        return res.status(200).json({ received: true });
-      }
+  if (error) {
+    console.error("❌ stripe_links upsert failed", error);
+  } else {
+    console.log("✅ stripe_links row created", {
+      email,
+      productCode,
+      subscriptionId,
+    });
+  }
 
-      const { error } = await supabase
-        .from("stripe_links")
-        .insert(
-          {
-            email,
-            product_code: productCode,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            // 初期値。後続の subscription.* で確定させる
-            stripe_subscription_status: subscriptionId ? "trialing" : "active",
-            updated_at: new Date().toISOString(),
-          });
-
-      if (error) {
-        console.error("❌ stripe_links upsert failed:", {
-          email,
-          productCode,
-          error,
-        });
-      } else {
-        console.log("✅ stripe_links upsert ok:", {
-          email,
-          productCode,
-          subscriptionId,
-        });
-      }
-
-      return res.status(200).json({ received: true });
-    }
+  return res.status(200).json({ received: true });
+}
 
     /* ==========================================
        ② subscription.* 系
        → subscription_id で既存行を更新
     ========================================== */
-    if (
-      event.type === "customer.subscription.created" ||
-      event.type === "customer.subscription.updated" ||
-      event.type === "customer.subscription.deleted"
-    ) {
-      const sub = event.data.object;
+if (
+  event.type === "customer.subscription.created" ||
+  event.type === "customer.subscription.updated" ||
+  event.type === "customer.subscription.deleted"
+) {
+  const sub = event.data.object;
 
-      let status = sub.status;
-      if (event.type === "customer.subscription.deleted") status = "canceled";
+  let status = sub.status;
+  if (event.type === "customer.subscription.deleted") {
+    status = "canceled";
+  }
 
-      const { count, error } = await supabase
-        .from("stripe_links")
-        .update({
-          stripe_subscription_status: status,
-          trial_end_at: toIsoOrNull(sub.trial_end),
-          current_period_end: toIsoOrNull(sub.current_period_end),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("stripe_subscription_id", sub.id)
-        .select("id", { count: "exact" });
+  const { error } = await supabase
+    .from("stripe_links")
+    .update({
+      stripe_subscription_status: status,
+      trial_end_at: toIsoOrNull(sub.trial_end),
+      current_period_end: toIsoOrNull(sub.current_period_end),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("stripe_subscription_id", sub.id);
 
-      if (error) {
-        console.error("❌ stripe_links update failed:", { sub_id: sub.id, error });
-      }
+  if (error) {
+    console.error("❌ stripe_links update failed", error);
+  } else {
+    console.log("✅ stripe_links updated", {
+      subscription_id: sub.id,
+      status,
+    });
+  }
 
-      if (!count) {
-        // checkout行が作れなかった/順序が逆だった等
-        console.warn("⚠️ stripe_links row not found for subscription_id", {
-          subscription_id: sub.id,
-          status,
-        });
-      } else {
-        console.log("✅ stripe_links updated:", {
-          subscription_id: sub.id,
-          status,
-        });
-      }
+  return res.status(200).json({ received: true });
+}
 
-      return res.status(200).json({ received: true });
-    }
 
     return res.status(200).json({ received: true });
   } catch (err) {
