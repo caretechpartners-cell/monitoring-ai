@@ -27,7 +27,9 @@ function toIsoOrNull(unixSec) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+  if (req.method !== "POST") {
+    return res.status(405).send("Method Not Allowed");
+  }
 
   const sig = req.headers["stripe-signature"];
   let event;
@@ -45,10 +47,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ============================
-    // ① checkout.session.completed
-    // （Payment Link の入口）
-    // ============================
+    /* =====================================================
+       ① checkout.session.completed
+       → product ごとの行を作る（email × product_code）
+    ===================================================== */
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
@@ -56,41 +58,40 @@ export default async function handler(req, res) {
       const customerId = session.customer || null;
       const subscriptionId = session.subscription || null;
 
-      // email が取れないと紐付けできないのでログ出して終了
       if (!email) {
         console.warn("checkout.session.completed: missing email", {
-          id: session.id,
-          customer: customerId,
+          session_id: session.id,
         });
         return res.status(200).json({ received: true });
       }
 
-      // stripe_links に upsert（users がまだ無くてもOK）
- const productCode =
-  session.metadata?.product_code || "monitoring";
-     const { error } = await supabase.from("stripe_links").upsert(
-  {
-    email,
-    product_code: productCode,
-    stripe_customer_id: customerId,
-    stripe_subscription_id: subscriptionId,
-    updated_at: new Date().toISOString(),
-  },
-  { onConflict: "email,product_code" }
-);
+      const productCode =
+        session.metadata?.product_code || "monitoring";
 
+      const { error } = await supabase
+        .from("stripe_links")
+        .upsert(
+          {
+            email,
+            product_code: productCode,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "email,product_code" }
+        );
 
       if (error) {
-        console.error("❌ stripe_links upsert failed:", { email, error });
+        console.error("❌ stripe_links upsert failed:", error);
       }
 
       return res.status(200).json({ received: true });
     }
 
-    // ============================
-    // ② subscription.* 系
-    // （trialing/active/canceled を確定させる）
-    // ============================
+    /* =====================================================
+       ② subscription.* 系
+       → 既存行を subscription_id で更新するだけ
+    ===================================================== */
     if (
       event.type === "customer.subscription.created" ||
       event.type === "customer.subscription.updated" ||
@@ -98,39 +99,23 @@ export default async function handler(req, res) {
     ) {
       const sub = event.data.object;
 
-      // customer から email を取る（subscription には email が入ってないため）
-      const customer = await stripe.customers.retrieve(sub.customer);
-      const email = customer?.email || null;
-
-      if (!email) {
-        console.warn("subscription event: missing customer.email", {
-          customer: sub.customer,
-          sub: sub.id,
-          type: event.type,
-        });
-        return res.status(200).json({ received: true });
+      let status = sub.status;
+      if (event.type === "customer.subscription.deleted") {
+        status = "canceled";
       }
 
-      let status = sub.status;
-      if (event.type === "customer.subscription.deleted") status = "canceled";
-
-      const { error } = await supabase.from("stripe_links").upsert(
-  {
-    email,
-    stripe_customer_id: sub.customer,
-    stripe_subscription_id: sub.id,
-    stripe_subscription_status: status,
-    trial_end_at: toIsoOrNull(sub.trial_end),
-    current_period_end: toIsoOrNull(sub.current_period_end),
-    updated_at: new Date().toISOString(),
-  },
-  { onConflict: "email" } // ← ここも戻す
-);
-
-
+      const { error } = await supabase
+        .from("stripe_links")
+        .update({
+          stripe_subscription_status: status,
+          trial_end_at: toIsoOrNull(sub.trial_end),
+          current_period_end: toIsoOrNull(sub.current_period_end),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("stripe_subscription_id", sub.id);
 
       if (error) {
-        console.error("❌ stripe_links upsert failed:", { email, error });
+        console.error("❌ stripe_links update failed:", error);
       }
 
       return res.status(200).json({ received: true });
@@ -140,7 +125,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true });
   } catch (err) {
     console.error("❌ Webhook handler error:", err);
-    // Stripe は 500 だと再送し続けるので、原則 200 で返す
     return res.status(200).json({ received: true });
   }
 }
