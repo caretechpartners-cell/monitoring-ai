@@ -102,11 +102,16 @@ if (!authUserId) {
   return;
 }
 
-  const res = await fetch("/api/conf-history", {
+const res = await fetch("/api/history", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ auth_user_id: authUserId })
+  body: JSON.stringify({
+    action: "get",
+    type: "conference",
+    auth_user_id: authUserId
+  })
 });
+
 
 if (!res.ok) {
   area.innerHTML = "履歴APIが見つかりません";
@@ -171,13 +176,14 @@ async function downloadExcel(index) {
   const generatedEl = document.getElementById(`generated-${index}`);
   if (!generatedEl) return;
 
-  const text = generatedEl.innerText;
-
-  const res = await fetch("/api/export-excel-conf-history", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
+  const res = await fetch("/api/export-excel", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    memo: row.memo,                  // ← 履歴に保存されている会議メモ
+    aiResult: generatedEl.innerText  // ← 生成結果
+  })
+});
 
   if (!res.ok) {
     alert("Excel生成に失敗しました");

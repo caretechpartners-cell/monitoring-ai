@@ -107,19 +107,21 @@ async function loadHistory() {
   const area = document.getElementById("historyArea"); // ★ これを追加
 
   // 🔒 ログイン確認（新方式）
-  const user_id = localStorage.getItem("user_db_id");
-  if (!user_id) {
-    location.href = "login.html";
-    return;
-  }
+  const authUserId = localStorage.getItem("auth_user_id");
+if (!authUserId) {
+  location.href = "login.html";
+  return;
+}
+
 
   // 🔎 データ取得
-  const res = await fetch("/api/user", {
+  const res = await fetch("/api/history", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    action: "get-history",
-    user_id
+    action: "get",
+    type: "monitoring",
+    auth_user_id: authUserId
   })
 });
 

@@ -457,7 +457,7 @@ if (!localStorage.getItem("auth_user_id")) {
     // 履歴保存
 const user_id = localStorage.getItem("auth_user_id");
 if (user_id) {
- const saveRes = await fetch("/api/ai-history-insert", {
+ const saveRes = await fetch("/api/history", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
