@@ -54,13 +54,19 @@ export default async function handler(req, res) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      const email = session.customer_email || null;
+      let email = session.customer_email || null;
       const customerId = session.customer || null;
       const subscriptionId = session.subscription || null;
+
+      if (!email && customerId) {
+        const customer = await stripe.customers.retrieve(customerId);
+        email = customer?.email || null;
+      }
 
       if (!email) {
         console.warn("checkout.session.completed: missing email", {
           session_id: session.id,
+          customer: customerId,
         });
         return res.status(200).json({ received: true });
       }
@@ -104,7 +110,7 @@ export default async function handler(req, res) {
         status = "canceled";
       }
 
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from("stripe_links")
         .update({
           stripe_subscription_status: status,
@@ -112,10 +118,21 @@ export default async function handler(req, res) {
           current_period_end: toIsoOrNull(sub.current_period_end),
           updated_at: new Date().toISOString(),
         })
-        .eq("stripe_subscription_id", sub.id);
+        .eq("stripe_subscription_id", sub.id)
+        .select("id", { count: "exact" });
 
       if (error) {
         console.error("❌ stripe_links update failed:", error);
+      }
+
+      if (count === 0) {
+        console.warn(
+          "⚠️ subscription event arrived before checkout row existed",
+          {
+            subscription_id: sub.id,
+            status,
+          }
+        );
       }
 
       return res.status(200).json({ received: true });
