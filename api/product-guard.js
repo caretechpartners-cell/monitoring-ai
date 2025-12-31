@@ -69,6 +69,20 @@ export default async function handler(req, res) {
       });
     }
 
+/* =====================================================
+   ①-0 trialing かつ trial_end_at 未設定
+   （trial開始直後の正常状態）
+===================================================== */
+if (
+  data.stripe_subscription_status === "trialing" &&
+  !data.trial_end_at
+) {
+  return res.status(200).json({
+    ok: true,
+    mode: "trial",
+  });
+}
+
     /* =====================================================
        ② 本契約中（active）
        - current_period_end が未来 or 未設定
