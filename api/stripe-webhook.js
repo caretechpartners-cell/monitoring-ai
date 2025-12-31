@@ -62,16 +62,30 @@ export default async function handler(req, res) {
   const sig = req.headers["stripe-signature"];
   let event;
 
+  const rawBody = await getRawBody(req);
+
   try {
-    const rawBody = await getRawBody(req);
+    // ① まず本番 Webhook secret で検証
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_SECRET_LIVE
     );
-  } catch (err) {
-    console.error("❌ Signature verification failed:", err.message);
-    return res.status(400).send("Webhook Error");
+  } catch (errLive) {
+    try {
+      // ② ダメならテスト Webhook secret で検証
+      event = stripe.webhooks.constructEvent(
+        rawBody,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET_TEST
+      );
+    } catch (errTest) {
+      console.error("❌ Signature verification failed (live & test)", {
+        liveError: errLive?.message,
+        testError: errTest?.message,
+      });
+      return res.status(400).send("Webhook Error");
+    }
   }
 
   try {
@@ -123,10 +137,10 @@ if (event.type === "checkout.session.completed") {
   return res.status(200).json({ received: true });
 }
 
-    /* ==========================================
-       ② subscription.* 系
-       → subscription_id で既存行を更新
-    ========================================== */
+/* ==========================================
+   ② subscription.* 系
+   → created / updated の両方で trial_end を保存
+========================================== */
 if (
   event.type === "customer.subscription.created" ||
   event.type === "customer.subscription.updated" ||
@@ -139,22 +153,35 @@ if (
     status = "canceled";
   }
 
+  const updatePayload = {
+    stripe_subscription_status: status,
+    updated_at: new Date().toISOString(),
+  };
+
+  // ✅ trial_end が入っていれば created / updated どちらでも保存
+  if (sub.trial_end) {
+    updatePayload.trial_end_at = toIsoOrNull(sub.trial_end);
+  }
+
+  if (sub.current_period_end) {
+    updatePayload.current_period_end = toIsoOrNull(sub.current_period_end);
+  }
+
   const { error } = await supabase
     .from("stripe_links")
-    .update({
-      stripe_subscription_status: status,
-      trial_end_at: toIsoOrNull(sub.trial_end),
-      current_period_end: toIsoOrNull(sub.current_period_end),
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("stripe_subscription_id", sub.id);
 
   if (error) {
-    console.error("❌ stripe_links update failed", error);
+    console.error("❌ stripe_links update failed", {
+      subscription_id: sub.id,
+      error,
+    });
   } else {
     console.log("✅ stripe_links updated", {
       subscription_id: sub.id,
       status,
+      trial_end: sub.trial_end,
     });
   }
 
