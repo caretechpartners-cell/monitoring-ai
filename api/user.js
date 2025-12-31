@@ -47,57 +47,86 @@ export default async function handler(req, res) {
   const { action = "get" } = req.body;
 
   try {
-    /* =====================================================
-       👤 ① ユーザー情報取得（status.html が使う）
-    ===================================================== */
-    if (action === "get") {
-      const { email } = req.body;
+/* =====================================================
+   👤 ① ユーザー情報取得（status.html が使う）
+===================================================== */
+if (action === "get") {
+  const { email, user_id } = req.body;
 
-      if (!email) {
-        return res.json({
-          success: false,
-          reason: "email_required",
-        });
-      }
+  let user;
 
-      // ① users テーブル（基本情報だけ）
-      const { data: user, error: userError } = await supabase
-        .from("users")
-        .select(
-          `
-          id,
-          email,
-          user_name,
-          plan,
-          corp_user_limit,
-          stripe_customer_id
-        `
-        )
-        .eq("email", email)
-        .single();
+  // ✅ auth_user_id 優先
+  if (user_id) {
+    const { data, error } = await supabase
+      .from("users")
+      .select(`
+        id,
+        auth_user_id,
+        email,
+        user_name,
+        plan,
+        corp_user_limit,
+        stripe_customer_id
+      `)
+      .eq("auth_user_id", user_id)
+      .single();
 
-      if (userError || !user) {
-        return res.json({
-          success: false,
-          reason: "user_not_found",
-          detail: userError?.message || null,
-        });
-      }
-
-      // ② stripe_links から購読状態・trial_end_at を取得（ここが表示の根拠）
-      const { data: links } = await supabase
-  .from("stripe_links")
-  .select("product_code, stripe_subscription_status, trial_end_at")
-  .eq("email", user.email);
-
+    if (error || !data) {
       return res.json({
-        success: true,
-        user: {
-          ...user,
-          products: links || [], // ← 重要
-        },
+        success: false,
+        reason: "user_not_found",
+        detail: error?.message || null,
       });
     }
+
+    user = data;
+  }
+  // ✅ 後方互換：email
+  else if (email) {
+    const { data, error } = await supabase
+      .from("users")
+      .select(`
+        id,
+        auth_user_id,
+        email,
+        user_name,
+        plan,
+        corp_user_limit,
+        stripe_customer_id
+      `)
+      .eq("email", email)
+      .single();
+
+    if (error || !data) {
+      return res.json({
+        success: false,
+        reason: "user_not_found",
+        detail: error?.message || null,
+      });
+    }
+
+    user = data;
+  } else {
+    return res.json({
+      success: false,
+      reason: "email_or_user_id_required",
+    });
+  }
+
+  // ✅ stripe_links は email で取得（これが正解）
+  const { data: links } = await supabase
+    .from("stripe_links")
+    .select("product_code, stripe_subscription_status, trial_end_at")
+    .eq("email", user.email);
+
+  return res.json({
+    success: true,
+    user: {
+      ...user,
+      products: links || [],
+    },
+  });
+}
 
     /* =====================================================
        💳 ② Stripe Customer Portal
