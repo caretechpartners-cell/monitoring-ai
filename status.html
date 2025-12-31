@@ -28,7 +28,6 @@
       font-size: 16px;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 1000;
     }
 
     .container {
@@ -54,6 +53,28 @@
       margin-bottom: 30px;
     }
 
+    /* タブ */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      background: #e0edf6;
+      color: #2a6f97;
+      font-weight: bold;
+    }
+
+    .tab.active {
+      background: #2a6f97;
+      color: white;
+    }
+
     .info-box {
       background: #f7fbff;
       border-radius: 14px;
@@ -72,6 +93,12 @@
 
     .status-ok {
       color: #2e7d32;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .status-ng {
+      color: #c0392b;
       font-weight: bold;
       font-size: 20px;
     }
@@ -105,41 +132,29 @@
 
   <div class="container">
     <h1>利用状況の確認</h1>
+    <div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div>
 
-    <div class="powered">
-      やさしいAIシリーズ｜ケアテックパートナーズ
+    <!-- タブ -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchProduct('monitoring')">モニタリングAI</div>
+      <div class="tab" onclick="switchProduct('conference')">議事録AI</div>
     </div>
 
     <div class="info-box">
-      <!-- 利用ステータス -->
       <div class="item-title">■ ご利用状況</div>
       <div id="usageStatus">読み込み中...</div>
 
-      <!-- 契約情報 -->
+      <div class="item-title">■ トライアル終了日</div>
+      <div id="trialEndAt">—</div>
+
       <div class="item-title">■ ご契約プラン</div>
-      <div id="planName">読み込み中...</div>
+      <div id="planName">—</div>
 
-      <div
-        class="item-title"
-        id="corpCountTitle"
-        style="display:none;"
-      >
-        ■ 契約ユーザー数（法人）
-      </div>
-      <div id="corpCount" style="display:none;">
-        読み込み中...
-      </div>
-
-      <!-- アカウント情報 -->
       <div class="item-title">■ 登録名</div>
-      <div id="userName">読み込み中...</div>
+      <div id="userName">—</div>
 
       <div class="item-title">■ 登録メールアドレス</div>
-      <div id="userEmail">読み込み中...</div>
-
-      <!-- 利用期間 -->
-      <div class="item-title">■ 無料トライアル終了日</div>
-      <div id="trialEndAt">読み込み中...</div>
+      <div id="userEmail">—</div>
     </div>
 
     <div class="footer-note">
@@ -153,96 +168,76 @@
     </div>
   </div>
 
-  <script>
-  const user_id = localStorage.getItem("auth_user_id");
-  const token = localStorage.getItem("login_session_token");
+<script>
+let userData = null;
+let currentProduct = "monitoring";
 
-  if (!user_id || !token) {
+async function loadUserInfo() {
+  const email = localStorage.getItem("user_email");
+  if (!email) {
     location.href = "login.html";
+    return;
   }
 
-  async function loadUserInfo() {
-    const email = localStorage.getItem("user_email");
-    if (!email) {
-      location.href = "login.html";
-      return;
-    }
+  const res = await fetch("/api/user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "get", email }),
+  });
 
-    const res = await fetch("/api/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "get", email }),
-    });
+  const data = await res.json();
+  if (!data.success) {
+    document.getElementById("usageStatus").textContent = "情報取得エラー";
+    return;
+  }
 
-const data = await res.json();
-
-if (!data.success) {
-  document.getElementById("usageStatus").textContent = "🔴 情報取得エラー";
-  document.getElementById("usageStatus").style.color = "#c0392b";
-  console.error("user API error:", data);
-  return;
+  userData = data.user;
+  render();
 }
 
-    const user = data.user;
+function switchProduct(product) {
+  currentProduct = product;
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+  document.querySelector(`.tab[onclick="switchProduct('${product}')"]`).classList.add("active");
+  render();
+}
 
-    /* -------------------------
-       ご利用状況
-    ------------------------- */
-    const usageEl = document.getElementById("usageStatus");
-    const status = user.stripe_subscription_status;
+function render() {
+  const product = userData.products.find(p => p.product_code === currentProduct);
 
-    if (status === "active") {
-      usageEl.textContent = "🟢 ご利用中";
-      usageEl.className = "status-ok";
-    } else if (status === "trialing") {
-      usageEl.textContent = "🟢 ご利用中（トライアル）";
-      usageEl.className = "status-ok";
-    } else if (status === "canceled") {
-      usageEl.textContent = "🔴 利用停止中";
-      usageEl.style.color = "#c0392b";
-      usageEl.style.fontWeight = "bold";
-    } else {
-      usageEl.textContent = "🔴 利用停止中";
-      usageEl.style.color = "#c0392b";
-      usageEl.style.fontWeight = "bold";
-    }
+  // 利用状況
+  const usageEl = document.getElementById("usageStatus");
 
-    /* -------------------------
-       プラン表示
-    ------------------------- */
-    const planLabel =
-      user.plan === "corp"
-        ? "法人プラン"
-        : user.plan === "personal"
-        ? "個人プラン"
-        : user.plan || "—";
-
-    document.getElementById("planName").textContent = planLabel;
-
-    if (user.plan === "corp") {
-      document.getElementById("corpCountTitle").style.display = "block";
-      document.getElementById("corpCount").style.display = "block";
-      document.getElementById("corpCount").textContent =
-        user.corp_user_limit || "—";
-    }
-
-    /* -------------------------
-       ユーザー情報
-    ------------------------- */
-    document.getElementById("userName").textContent =
-      user.user_name || "未登録";
-
-    document.getElementById("userEmail").textContent = user.email;
-
-    document.getElementById("trialEndAt").textContent =
-      user.trial_end_at
-        ? new Date(user.trial_end_at).toLocaleDateString()
-        : "—";
+  if (!product) {
+    usageEl.textContent = "未契約";
+    usageEl.className = "status-ng";
+  } else if (product.stripe_subscription_status === "canceled") {
+    usageEl.textContent = "🔴 利用停止中";
+    usageEl.className = "status-ng";
+  } else if (product.stripe_subscription_status === "trialing") {
+    usageEl.textContent = "🟢 ご利用中（トライアル）";
+    usageEl.className = "status-ok";
+  } else {
+    usageEl.textContent = "🟢 ご利用中";
+    usageEl.className = "status-ok";
   }
 
-  loadUserInfo();
-</script>
+  // trial_end
+  document.getElementById("trialEndAt").textContent =
+    product?.trial_end_at
+      ? new Date(product.trial_end_at).toLocaleDateString()
+      : "—";
 
+  // 共通情報
+  document.getElementById("planName").textContent =
+    userData.plan === "corp" ? "法人プラン" : "個人プラン";
+
+  document.getElementById("userName").textContent = userData.user_name || "—";
+  document.getElementById("userEmail").textContent = userData.email;
+}
+
+loadUserInfo();
+</script>
 
 </body>
 </html>
