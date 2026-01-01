@@ -50,6 +50,12 @@ export default async function handler(req, res) {
 /* =====================================================
    👤 ① ユーザー情報取得（status.html が使う）
 ===================================================== */
+const { data: debug } = await supabase
+  .from("stripe_links")
+  .select("*");
+
+console.log("🔥 stripe_links ALL:", debug);
+
 console.log("🔥 USER API HIT VERSION 2026-01-01");
 console.log("🔥 user.js get called", new Date().toISOString());
 if (action === "get") {
