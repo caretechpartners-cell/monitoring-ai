@@ -265,16 +265,22 @@ function render() {
   }
 
   // ▼▼▼ 残り日数ロジックはここ ▼▼▼
-  const trialEl = document.getElementById("trialEndAt");
-  const remaining = getRemainingTrialDays(product);
+const trialEl = document.getElementById("trialEndAt");
 
-  if (remaining !== null && remaining > 0) {
-    trialEl.textContent = `残り ${remaining} 日`;
-  } else if (product?.stripe_subscription_status === "trialing") {
-    trialEl.textContent = "トライアル中";
-  } else {
-    trialEl.textContent = "—";
-  }
+if (!product) {
+  trialEl.textContent = "—";
+  return;
+}
+
+const remaining = getRemainingTrialDays(product);
+
+if (remaining !== null && remaining > 0) {
+  trialEl.textContent = `残り ${remaining} 日`;
+} else if (product.stripe_subscription_status === "trialing") {
+  trialEl.textContent = "トライアル中";
+} else {
+  trialEl.textContent = "—";
+}
 
   document.getElementById("planName").textContent =
     userData.plan === "corp" ? "法人プラン" : "個人プラン";
@@ -286,23 +292,22 @@ function render() {
 
 
 function getRemainingTrialDays(product) {
-  // ① trial_end_at があればそれを最優先
+  if (!product) return null; // ★ これを必ず入れる
+
   if (product.trial_end_at) {
     const end = new Date(product.trial_end_at);
     const now = new Date();
     return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
   }
 
-  // ② trialing だが trial_end_at が未確定の場合
   if (product.stripe_subscription_status === "trialing") {
     const trialDays = TRIAL_DAYS_BY_PRODUCT[product.product_code];
     if (!trialDays || !product.created_at) return null;
 
     const start = new Date(product.created_at);
-    const end = new Date(start.getTime() + trialDays * 24 * 60 * 60 * 1000);
+    const end = new Date(start.getTime() + trialDays * 86400000);
     const now = new Date();
-
-    return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    return Math.ceil((end - now) / 86400000);
   }
 
   return null;
