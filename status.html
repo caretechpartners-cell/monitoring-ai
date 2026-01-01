@@ -245,8 +245,8 @@ function render() {
   if (!userData) return;
 
   const product = userData.products.find(
-    p => p.product_code === currentProduct
-  );
+  p => normalizeProduct(p.product_code) === currentProduct
+);
 
   const usageEl = document.getElementById("usageStatus");
 
@@ -301,7 +301,8 @@ function getRemainingTrialDays(product) {
   }
 
   if (product.stripe_subscription_status === "trialing") {
-    const trialDays = TRIAL_DAYS_BY_PRODUCT[product.product_code];
+const trialDays =
+  TRIAL_DAYS_BY_PRODUCT[normalizeProduct(product.product_code)];
     if (!trialDays || !product.created_at) return null;
 
     const start = new Date(product.created_at);
@@ -311,6 +312,12 @@ function getRemainingTrialDays(product) {
   }
 
   return null;
+}
+
+function normalizeProduct(code) {
+  if (code.startsWith("monitoring")) return "monitoring";
+  if (code.startsWith("conference")) return "conference";
+  return code;
 }
 
 
