@@ -30,28 +30,45 @@ function toIsoOrNull(unixSec) {
 }
 
 async function resolveEmailFromSession(session) {
-  // ✅ 最優先：今回あなたのイベントで実際に入っていた場所
   let email =
     session.customer_details?.email ||
     session.customer_email ||
-    session.metadata?.email || // 念のため
+    session.metadata?.email ||
     null;
 
-  // 保険：customer から引く（入ってない場合もある）
   if (!email && session.customer) {
     try {
       const customer = await stripe.customers.retrieve(session.customer);
       email = customer?.email || null;
     } catch (e) {
-      console.warn("customer retrieve failed", {
-        customer: session.customer,
-        error: String(e?.message || e),
-      });
+      console.warn("customer retrieve failed", e);
     }
   }
 
   return email;
 }
+
+async function resolveProductCode(session) {
+  try {
+    const lineItems = await stripe.checkout.sessions.listLineItems(
+      session.id,
+      { expand: ["data.price.product"] }
+    );
+
+    const product =
+      lineItems.data[0]?.price?.product;
+
+    return (
+      session.metadata?.product_code ||
+      product?.metadata?.product_code ||
+      null
+    );
+  } catch (e) {
+    console.error("line_items resolve failed", e);
+    return null;
+  }
+}
+
 
 /* =========================
    handler
@@ -99,7 +116,7 @@ if (event.type === "checkout.session.completed") {
   const email = await resolveEmailFromSession(session);
   const customerId = session.customer || null;
   const subscriptionId = session.subscription || null;
-  const productCode = session.metadata?.product_code || null;
+  const productCode = await resolveProductCode(session);
 
   if (!email || !productCode) {
     console.error("missing email or product_code", {
@@ -110,19 +127,20 @@ if (event.type === "checkout.session.completed") {
     return res.status(200).json({ received: true });
   }
 
-  const { error } = await supabase
-    .from("stripe_links")
-    .upsert(
-      {
-        email,
-        product_code: productCode,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscriptionId,
-        stripe_subscription_status: subscriptionId ? "trialing" : "active",
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "email,product_code" }
-    );
+ const { error } = await supabase
+  .from("stripe_links")
+  .upsert(
+    {
+      email,
+      product_code: productCode,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
+      stripe_subscription_status: subscriptionId ? "trialing" : "active",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "email,product_code" }
+  );
+
 
   if (error) {
     console.error("❌ stripe_links upsert failed", error);
