@@ -131,57 +131,75 @@ if (action === "get") {
     /* =====================================================
        💳 ② Stripe Customer Portal
     ===================================================== */
-    if (action === "portal") {
-      const { user_id } = req.body;
+if (action === "portal") {
+  const { user_id, product_code } = req.body;
 
-      const { data: user } = await supabase
-        .from("users")
-        .select("email, stripe_customer_id")
-        .eq("auth_user_id", user_id)
-        .single();
+  if (!product_code) {
+    return res.json({
+      success: false,
+      reason: "product_code_required",
+    });
+  }
 
-      let customerId = user?.stripe_customer_id;
+  const { data: user } = await supabase
+    .from("users")
+    .select("email, stripe_customer_id")
+    .eq("auth_user_id", user_id)
+    .single();
 
-// 保険：stripe_links から補完（複数行前提）
-if (!customerId && user?.email) {
-  const { data: links, error } = await supabase
+  if (!user?.email) {
+    return res.json({
+      success: false,
+      reason: "user_not_found",
+    });
+  }
+
+  // ★ product ごとの subscription を取得
+  const { data: link, error } = await supabase
     .from("stripe_links")
-    .select("stripe_customer_id")
+    .select("stripe_customer_id, stripe_subscription_id")
     .eq("email", user.email)
-    .not("stripe_customer_id", "is", null)
-    .limit(1);
+    .eq("product_code", product_code)
+    .single();
 
-  if (error) {
-    console.error("stripe_links lookup error:", error);
+  if (error || !link?.stripe_subscription_id) {
+    return res.json({
+      success: false,
+      reason: "subscription_not_found",
+    });
   }
 
-  if (links && links.length > 0) {
-    customerId = links[0].stripe_customer_id;
+  const customerId =
+    user.stripe_customer_id || link.stripe_customer_id;
+
+  if (!customerId) {
+    return res.json({
+      success: false,
+      reason: "stripe_customer_not_found",
+    });
   }
+
+  const origin =
+    process.env.APP_URL ||
+    req.headers.origin ||
+    "https://YOUR_DOMAIN_HERE";
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: customerId,
+    return_url: `${origin}/app.html`,
+    flow_data: {
+      type: "subscription_cancel",
+      subscription_cancel: {
+        subscription: link.stripe_subscription_id,
+      },
+    },
+  });
+
+  return res.json({
+    success: true,
+    url: session.url,
+  });
 }
-
-      if (!customerId) {
-        return res.json({
-          success: false,
-          reason: "stripe_customer_not_found",
-        });
-      }
-
-      const origin =
-        process.env.APP_URL ||
-        req.headers.origin ||
-        "https://YOUR_DOMAIN_HERE";
-
-      const session = await stripe.billingPortal.sessions.create({
-        customer: customerId,
-        return_url: `${origin}/app.html`,
-      });
-
-      return res.json({
-        success: true,
-        url: session.url,
-      });
-    }
 
     /* =====================================================
        📋 ③ ユーザー一覧
