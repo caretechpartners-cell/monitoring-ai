@@ -1,5 +1,3 @@
-console.log("🔥 SUPABASE_URL =", process.env.SUPABASE_URL);
-console.log("🔥🔥🔥 USER.JS FORCE REDEPLOY 2026-01-01 16:40");
 export const config = {
   runtime: "nodejs",
 };
@@ -52,14 +50,6 @@ export default async function handler(req, res) {
 /* =====================================================
    👤 ① ユーザー情報取得（status.html が使う）
 ===================================================== */
-const { data: debug } = await supabase
-  .from("stripe_links")
-  .select("*");
-
-console.log("🔥 stripe_links ALL:", debug);
-
-console.log("🔥 USER API HIT VERSION 2026-01-01");
-console.log("🔥 user.js get called", new Date().toISOString());
 if (action === "get") {
   const { email, user_id } = req.body;
 
@@ -123,17 +113,11 @@ if (action === "get") {
     });
   }
 
-const { data: links } = await supabase
-  .from("stripe_links")
-  .select(`
-    product_code,
-    stripe_subscription_status,
-    trial_end_at,
-    created_at
-  `)
-  .eq("email", user.email)
-  .neq("stripe_subscription_status", "canceled")
-  .not("stripe_subscription_status", "is", null);
+  // ✅ stripe_links は email で取得（これが正解）
+  const { data: links } = await supabase
+    .from("stripe_links")
+    .select("product_code, stripe_subscription_status, trial_end_at")
+    .eq("email", user.email);
 
   return res.json({
     success: true,
@@ -143,7 +127,6 @@ const { data: links } = await supabase
     },
   });
 }
-
 
     /* =====================================================
        💳 ② Stripe Customer Portal
@@ -180,7 +163,9 @@ const { data: links } = await supabase
       }
 
       const origin =
-        process.env.APP_URL || req.headers.origin || "https://YOUR_DOMAIN_HERE";
+        process.env.APP_URL ||
+        req.headers.origin ||
+        "https://YOUR_DOMAIN_HERE";
 
       const session = await stripe.billingPortal.sessions.create({
         customer: customerId,
@@ -214,9 +199,7 @@ const { data: links } = await supabase
         });
       }
 
-      return res.json({
-        users: data,
-      });
+      return res.json({ users: data });
     }
 
     /* =====================================================
@@ -249,20 +232,20 @@ const { data: links } = await supabase
 
       const userId = authData.user.id;
 
-      const { error: insertError } = await supabase.from("users").insert({
-  auth_user_id: userId,
-  email,
-  user_name,
-  plan,
-  corp_user_limit: Number(users),
-  password_hash,
-  phone,
-  password_initialized: false, // ★ 追加（超重要）
-});
-
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert({
+          auth_user_id: userId,
+          email,
+          user_name,
+          plan,
+          corp_user_limit: Number(users),
+          password_hash,
+          phone,
+          password_initialized: false,
+        });
 
       if (insertError) {
-        console.error("users insert error:", insertError);
         return res.status(500).json({
           error: "users_insert_failed",
           detail: insertError.message,
@@ -287,19 +270,12 @@ const { data: links } = await supabase
       }
 
       const { email } = req.body;
-      if (!email) {
-        return res.status(400).json({ error: "email_required" });
-      }
 
-      const { data: user, error } = await supabase
+      const { data: user } = await supabase
         .from("users")
         .select("auth_user_id")
         .eq("email", email)
         .single();
-
-      if (error || !user?.auth_user_id) {
-        return res.status(404).json({ error: "user_not_found" });
-      }
 
       const user_id = user.auth_user_id;
       const newPassword = generatePassword();
@@ -311,14 +287,13 @@ const { data: links } = await supabase
       const password_hash = await bcrypt.hash(newPassword, 10);
 
       await supabase
-  .from("users")
-  .update({
-    password_hash,
-    password_initialized: false, // ★ 追加
-    updated_at: new Date().toISOString(),
-  })
-  .eq("auth_user_id", user_id); // ★ email → auth_user_id に変更
-
+        .from("users")
+        .update({
+          password_hash,
+          password_initialized: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("auth_user_id", user_id);
 
       return res.json({
         success: true,
@@ -326,77 +301,54 @@ const { data: links } = await supabase
       });
     }
 
-/* =====================================================
-   🧩 ⑦ 管理者：プロダクト付与
-===================================================== */
-if (action === "grant-product") {
-  if (!isAdmin(req)) {
-    return res.status(401).json({ error: "unauthorized_admin" });
-  }
+    /* =====================================================
+       🧩 ⑦ 管理者：プロダクト付与
+    ===================================================== */
+    if (action === "grant-product") {
+      if (!isAdmin(req)) {
+        return res.status(401).json({ error: "unauthorized_admin" });
+      }
 
-  const { email, product_code } = req.body;
+      const { email, product_code } = req.body;
 
-  if (!email || !product_code) {
-    return res.status(400).json({
-      error: "email_and_product_code_required",
-    });
-  }
+      const now = new Date();
+      const trialEnd =
+        product_code === "conference"
+          ? new Date(now.getTime() + 14 * 86400000)
+          : null;
 
-  const now = new Date();
-  const trialEnd =
-    product_code === "conference"
-      ? new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
-      : null;
+      await supabase
+        .from("stripe_links")
+        .upsert(
+          {
+            email,
+            product_code,
+            stripe_subscription_status: trialEnd ? "trialing" : "active",
+            trial_end_at: trialEnd ? trialEnd.toISOString() : null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "email,product_code" }
+        );
 
-  const { error } = await supabase
-    .from("stripe_links")
-    .upsert(
-      {
+      return res.json({
+        success: true,
         email,
         product_code,
-        stripe_subscription_status: trialEnd ? "trialing" : "active",
-        trial_end_at: trialEnd ? trialEnd.toISOString() : null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "email,product_code" }
-    );
-
-  if (error) {
-    console.error("grant-product error:", error);
-    return res.status(500).json({ error: error.message });
-  }
-
-  return res.json({
-    success: true,
-    email,
-    product_code,
-    trial_end_at: trialEnd,
-  });
-}
-
+        trial_end_at: trialEnd,
+      });
+    }
 
     /* =====================================================
-       📜 ⑥ 生成履歴取得（history1.html 用）
+       📜 ⑥ 生成履歴取得
     ===================================================== */
     if (action === "get-history") {
       const { user_id } = req.body;
 
-      if (!user_id) {
-        return res.status(400).json({ success: false });
-      }
-
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("ai_history")
         .select("*")
         .eq("user_id", user_id)
         .order("created_at", { ascending: false });
-
-      if (error) {
-        return res.status(500).json({
-          success: false,
-          error: error.message,
-        });
-      }
 
       return res.json({
         success: true,
@@ -404,17 +356,11 @@ if (action === "grant-product") {
       });
     }
 
-
-    return res.status(400).json({
-      error: "unknown_action",
-    });
+    return res.status(400).json({ error: "unknown_action" });
   } catch (err) {
-    console.error("user.js error:", err);
     return res.status(500).json({
       error: "system_error",
       detail: String(err?.message || err),
     });
   }
 }
-
-

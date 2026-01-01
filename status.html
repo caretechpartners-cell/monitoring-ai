@@ -123,11 +123,10 @@
       margin: 0 10px;
     }
 
-/* 初期状態ではタブを非表示 */
-.tabs .tab {
-  display: none;
-}
-
+    /* 初期状態ではタブを非表示 */
+    .tabs .tab {
+      display: none;
+    }
   </style>
 </head>
 
@@ -152,7 +151,6 @@
     議事録AI
   </div>
 </div>
-
 
     <div class="info-box">
       <div class="item-title">■ ご利用状況</div>
@@ -182,161 +180,103 @@
     </div>
   </div>
 
-<script>
-// 🔒 現在販売しているプロダクト
-const ENABLED_PRODUCTS = ["monitoring"];
+  <script>
+    // 🔒 現在販売しているプロダクト
+    const ENABLED_PRODUCTS = ["monitoring"];
 
-const TRIAL_DAYS_BY_PRODUCT = {
-  monitoring: 30,
-  conference: 14,
-};
+    let userData = null;
+    let currentProduct = "monitoring";
 
-let userData = null;
-let currentProduct = "monitoring";
+    async function loadUserInfo() {
+      const user_id = localStorage.getItem("auth_user_id");
+      if (!user_id) {
+        location.href = "login.html";
+        return;
+      }
 
-async function loadUserInfo() {
-  const user_id = localStorage.getItem("auth_user_id");
-  if (!user_id) {
-    location.href = "login.html";
-    return;
-  }
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "get",
+          user_id
+        }),
+      });
 
-  const res = await fetch("/api/user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "get",
-      user_id
-    }),
-  });
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById("usageStatus").textContent = "情報取得エラー";
+        return;
+      }
 
-  const data = await res.json();
-  if (!data.success) {
-    document.getElementById("usageStatus").textContent = "情報取得エラー";
-    return;
-  }
-
-  userData = data.user;
-
-console.log("products:", userData.products);
-
-
-  applyProductVisibility();
-  currentProduct = ENABLED_PRODUCTS[0];
-  render();
-}
+      userData = data.user;
+      applyProductVisibility();
+      render();
+    }
 
 function applyProductVisibility() {
   document.querySelectorAll(".tab").forEach(tab => {
-    tab.classList.remove("active"); // ★ 追加
     const product = tab.dataset.product;
-
     if (ENABLED_PRODUCTS.includes(product)) {
       tab.style.display = "block";
-      if (product === currentProduct) {
-        tab.classList.add("active");
-      }
     }
   });
 }
 
-function switchProduct(product) {
-  currentProduct = product;
-  document.querySelectorAll(".tab").forEach(tab =>
-    tab.classList.remove("active")
-  );
-  document.querySelector(`.tab[data-product="${product}"]`)
-    ?.classList.add("active");
-  render();
-}
+    function switchProduct(product) {
+      currentProduct = product;
+      document.querySelectorAll(".tab").forEach(tab =>
+        tab.classList.remove("active")
+      );
+      document
+        .querySelector(`.tab[data-product="${product}"]`)
+        ?.classList.add("active");
+      render();
+    }
 
-function render() {
-  if (!userData || !Array.isArray(userData.products)) return;
+    function render() {
+      if (!userData) return;
 
-  if (userData.products.length === 0) {
-    document.getElementById("usageStatus").textContent = "未契約";
-    return;
-  }
-  const product = userData.products.find(
-  p => p.product_code === currentProduct
-);
+      const product = userData.products.find(
+        p => p.product_code === currentProduct
+      );
 
-  const usageEl = document.getElementById("usageStatus");
+      const usageEl = document.getElementById("usageStatus");
 
-  if (!product) {
-    usageEl.textContent = "未契約";
-    usageEl.className = "status-ng";
-  } else if (product.stripe_subscription_status === "canceled") {
-    usageEl.textContent = "🔴 利用停止中";
-    usageEl.className = "status-ng";
-  } else if (product.stripe_subscription_status === "trialing") {
-    usageEl.textContent = "🟢 ご利用中（トライアル）";
-    usageEl.className = "status-ok";
-  } else {
-    usageEl.textContent = "🟢 ご利用中";
-    usageEl.className = "status-ok";
-  }
+      if (!product) {
+        usageEl.textContent = "未契約";
+        usageEl.className = "status-ng";
+      } else if (product.stripe_subscription_status === "canceled") {
+        usageEl.textContent = "🔴 利用停止中";
+        usageEl.className = "status-ng";
+      } else if (product.stripe_subscription_status === "trialing") {
+        usageEl.textContent = "🟢 ご利用中（トライアル）";
+        usageEl.className = "status-ok";
+      } else {
+        usageEl.textContent = "🟢 ご利用中";
+        usageEl.className = "status-ok";
+      }
 
-  // ▼▼▼ 残り日数ロジックはここ ▼▼▼
-const trialEl = document.getElementById("trialEndAt");
+      const trialEl = document.getElementById("trialEndAt");
+      if (product?.trial_end_at) {
+        trialEl.textContent =
+          new Date(product.trial_end_at).toLocaleDateString();
+      } else if (product?.stripe_subscription_status === "trialing") {
+        trialEl.textContent = "トライアル中（終了日確定後に表示）";
+      } else {
+        trialEl.textContent = "—";
+      }
 
-if (!product) {
-  trialEl.textContent = "—";
-  return;
-}
+      document.getElementById("planName").textContent =
+        userData.plan === "corp" ? "法人プラン" : "個人プラン";
+      document.getElementById("userName").textContent =
+        userData.user_name || "—";
+      document.getElementById("userEmail").textContent =
+        userData.email;
+    }
 
-const remaining = getRemainingTrialDays(product);
-
-if (remaining !== null && remaining > 0) {
-  trialEl.textContent = `残り ${remaining} 日`;
-} else if (product.stripe_subscription_status === "trialing") {
-  trialEl.textContent = "トライアル中";
-} else {
-  trialEl.textContent = "—";
-}
-
-  document.getElementById("planName").textContent =
-    userData.plan === "corp" ? "法人プラン" : "個人プラン";
-  document.getElementById("userName").textContent =
-    userData.user_name || "—";
-  document.getElementById("userEmail").textContent =
-    userData.email;
-}
-
-
-function getRemainingTrialDays(product) {
-  if (!product) return null; // ★ これを必ず入れる
-
-  if (product.trial_end_at) {
-    const end = new Date(product.trial_end_at);
-    const now = new Date();
-    return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-  }
-
-  if (product.stripe_subscription_status === "trialing") {
-const trialDays =
-  TRIAL_DAYS_BY_PRODUCT[normalizeProduct(product.product_code)];
-    if (!trialDays || !product.created_at) return null;
-
-    const start = new Date(product.created_at);
-    const end = new Date(start.getTime() + trialDays * 86400000);
-    const now = new Date();
-    return Math.ceil((end - now) / 86400000);
-  }
-
-  return null;
-}
-
-function normalizeProduct(code) {
-  if (code.startsWith("monitoring")) return "monitoring";
-  if (code.startsWith("conference")) return "conference";
-  return code;
-}
-
-
-// 初期起動
-loadUserInfo();
-</script>
-
+    // 初期起動
+    loadUserInfo();
+  </script>
 </body>
 </html>
