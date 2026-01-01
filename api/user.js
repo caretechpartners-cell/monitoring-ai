@@ -130,7 +130,9 @@ const { data: links } = await supabase
     trial_end_at,
     created_at
   `)
-  .eq("email", user.email);
+  .eq("email", user.email)
+  .not("stripe_subscription_status", "is", null);
+
 
   return res.json({
     success: true,
