@@ -206,7 +206,9 @@ function switchProduct(product) {
 }
 
 function render() {
-  const product = userData.products.find(p => p.product_code === currentProduct);
+  const product = userData.products.find(
+    p => p.product_code === currentProduct
+  );
 
   // 利用状況
   const usageEl = document.getElementById("usageStatus");
@@ -225,21 +227,30 @@ function render() {
     usageEl.className = "status-ok";
   }
 
-  // trial_end
-  document.getElementById("trialEndAt").textContent =
-    product?.trial_end_at
-      ? new Date(product.trial_end_at).toLocaleDateString()
-      : "—";
+  // ▼▼▼ ここが今回の本命 ▼▼▼
+  const trialEl = document.getElementById("trialEndAt");
+
+  if (product?.trial_end_at) {
+    trialEl.textContent =
+      new Date(product.trial_end_at).toLocaleDateString();
+  } else if (product?.stripe_subscription_status === "trialing") {
+    trialEl.textContent = "トライアル中（終了日確定後に表示）";
+  } else {
+    trialEl.textContent = "—";
+  }
 
   // 共通情報
   document.getElementById("planName").textContent =
     userData.plan === "corp" ? "法人プラン" : "個人プラン";
 
-  document.getElementById("userName").textContent = userData.user_name || "—";
-  document.getElementById("userEmail").textContent = userData.email;
+  document.getElementById("userName").textContent =
+    userData.user_name || "—";
+  document.getElementById("userEmail").textContent =
+    userData.email;
 }
 
 loadUserInfo();
+
 </script>
 
 </body>
