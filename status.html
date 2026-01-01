@@ -227,9 +227,14 @@ console.log("products:", userData.products);
 
 function applyProductVisibility() {
   document.querySelectorAll(".tab").forEach(tab => {
+    tab.classList.remove("active"); // ★ 追加
     const product = tab.dataset.product;
+
     if (ENABLED_PRODUCTS.includes(product)) {
       tab.style.display = "block";
+      if (product === currentProduct) {
+        tab.classList.add("active");
+      }
     }
   });
 }
@@ -245,10 +250,14 @@ function switchProduct(product) {
 }
 
 function render() {
-  if (!userData) return;
+  if (!userData || !Array.isArray(userData.products)) return;
 
+  if (userData.products.length === 0) {
+    document.getElementById("usageStatus").textContent = "未契約";
+    return;
+  }
   const product = userData.products.find(
-  p => normalizeProduct(p.product_code) === currentProduct
+  p => p.product_code === currentProduct
 );
 
   const usageEl = document.getElementById("usageStatus");
