@@ -50,6 +50,7 @@ export default async function handler(req, res) {
 /* =====================================================
    👤 ① ユーザー情報取得（status.html が使う）
 ===================================================== */
+console.log("🔥 USER API HIT VERSION 2026-01-01");
 console.log("🔥 user.js get called", new Date().toISOString());
 if (action === "get") {
   const { email, user_id } = req.body;
