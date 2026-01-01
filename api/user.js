@@ -132,8 +132,8 @@ const { data: links } = await supabase
     created_at
   `)
   .eq("email", user.email)
+  .neq("stripe_subscription_status", "canceled")
   .not("stripe_subscription_status", "is", null);
-
 
   return res.json({
     success: true,
