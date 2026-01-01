@@ -142,18 +142,23 @@ if (action === "get") {
 
       let customerId = user?.stripe_customer_id;
 
-      // 保険：stripe_links から補完
-      if (!customerId && user?.email) {
-        const { data: link } = await supabase
-          .from("stripe_links")
-          .select("stripe_customer_id")
-          .eq("email", user.email)
-          .single();
+// 保険：stripe_links から補完（複数行前提）
+if (!customerId && user?.email) {
+  const { data: links, error } = await supabase
+    .from("stripe_links")
+    .select("stripe_customer_id")
+    .eq("email", user.email)
+    .not("stripe_customer_id", "is", null)
+    .limit(1);
 
-        if (link?.stripe_customer_id) {
-          customerId = link.stripe_customer_id;
-        }
-      }
+  if (error) {
+    console.error("stripe_links lookup error:", error);
+  }
+
+  if (links && links.length > 0) {
+    customerId = links[0].stripe_customer_id;
+  }
+}
 
       if (!customerId) {
         return res.json({
