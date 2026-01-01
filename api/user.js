@@ -1,3 +1,4 @@
+console.log("🔥 SUPABASE_URL =", process.env.SUPABASE_URL);
 console.log("🔥🔥🔥 USER.JS FORCE REDEPLOY 2026-01-01 16:40");
 export const config = {
   runtime: "nodejs",
