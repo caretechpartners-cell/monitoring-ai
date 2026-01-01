@@ -115,9 +115,15 @@ if (action === "get") {
 
   // ✅ stripe_links は email で取得（これが正解）
   const { data: links } = await supabase
-    .from("stripe_links")
-    .select("product_code, stripe_subscription_status, trial_end_at")
-    .eq("email", user.email);
+  .from("stripe_links")
+  .select(`
+    product_code,
+    stripe_subscription_status,
+    trial_end_at,
+    created_at
+  `)
+  .eq("email", user.email);
+
 
   return res.json({
     success: true,
