@@ -98,13 +98,14 @@
       利用プランの変更（フォーム入力へ）
     </button>
 
-    <button class="btn portal-btn" onclick="openPortal()">
-      モニタリングAIの解約・再契約
-    </button>
+   <button class="btn portal-btn" onclick="openPortal('monitoring')">
+  モニタリングAIの解約・再契約
+</button>
 
-<button class="btn portal-btn" onclick="openPortal()">
+<button class="btn portal-btn" onclick="openPortal('conference')">
   サービス担当者会議録AIの解約・再契約
 </button>
+
 
 
     <div id="portalErr" style="color:red; margin-top:12px;"></div>
@@ -127,7 +128,7 @@
     // ================================
     // 💳 Stripe Customer Portal を開く
     // ================================
-    async function openPortal() {
+    async function openPortal(product_code) {
       const user_id = localStorage.getItem("auth_user_id");
       const token = localStorage.getItem("login_session_token");
       const errEl = document.getElementById("portalErr");
@@ -156,9 +157,11 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id,
-            action: "portal",
-          }),
+  user_id,
+  action: "portal",
+  product_code, // ← これを追加
+}),
+
         });
 
         const data = await res.json();
