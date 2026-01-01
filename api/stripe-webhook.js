@@ -141,6 +141,12 @@ if (event.type === "checkout.session.completed") {
     { onConflict: "email,product_code" }
   );
 
+// checkout.session.completed 内
+await supabase
+  .from("users")
+  .update({ stripe_customer_id: customerId })
+  .eq("email", email);
+
 
   if (error) {
     console.error("❌ stripe_links upsert failed", error);

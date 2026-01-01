@@ -113,8 +113,7 @@ if (action === "get") {
     });
   }
 
-  // ✅ stripe_links は email で取得（これが正解）
-  const { data: links } = await supabase
+const { data: links } = await supabase
   .from("stripe_links")
   .select(`
     product_code,
@@ -124,7 +123,6 @@ if (action === "get") {
   `)
   .eq("email", user.email);
 
-
   return res.json({
     success: true,
     user: {
@@ -133,6 +131,7 @@ if (action === "get") {
     },
   });
 }
+
 
     /* =====================================================
        💳 ② Stripe Customer Portal
