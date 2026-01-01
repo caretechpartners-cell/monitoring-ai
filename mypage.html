@@ -98,8 +98,24 @@
       利用プランの変更（フォーム入力へ）
     </button>
 
-   <button class="btn portal-btn" onclick="openPortal('monitoring')">
+<!-- 解約ボタン -->
+<button
+  id="cancelMonitoringBtn"
+  class="btn portal-btn"
+  onclick="openPortal('monitoring')"
+  style="display:none;"
+>
   モニタリングAIの解約
+</button>
+
+<!-- 再契約ボタン -->
+<button
+  id="resumeMonitoringBtn"
+  class="btn plan-btn"
+  onclick="goMonitoringPurchase()"
+  style="display:none;"
+>
+  モニタリングAIを再契約する
 </button>
 
 <button class="btn portal-btn" onclick="openPortal('conference')"style="display:none;">
@@ -112,6 +128,8 @@
   </div>
 
   <script>
+let userData = null;
+
     // 🔒 app.html からの遷移チェック
     if (!sessionStorage.getItem("fromApp")) {
       location.href = "login.html";
@@ -124,6 +142,49 @@
     function goPlan() {
       location.href = "form-corp.html";
     }
+
+async function loadMyPage() {
+  const user_id = localStorage.getItem("auth_user_id");
+
+  const res = await fetch("/api/user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "get",
+      user_id
+    }),
+  });
+
+  const data = await res.json();
+  if (!data.success) return;
+
+  userData = data.user;
+renderMonitoringButtons(userData.products);
+
+}
+
+loadMyPage();
+
+function renderMonitoringButtons(products) {
+  const cancelBtn = document.getElementById("cancelMonitoringBtn");
+  const resumeBtn = document.getElementById("resumeMonitoringBtn");
+
+  const monitoring = products.find(
+    p => p.product_code === "monitoring"
+  );
+
+  // 未契約 or 解約済み
+  if (!monitoring || monitoring.stripe_subscription_status === "canceled") {
+    resumeBtn.style.display = "block";
+    cancelBtn.style.display = "none";
+    return;
+  }
+
+  // 利用中
+  resumeBtn.style.display = "none";
+  cancelBtn.style.display = "block";
+}
+
 
     // ================================
     // 💳 Stripe Customer Portal を開く
@@ -178,6 +239,7 @@
           return;
         }
 
+
         // ③ Stripe Customer Portal を開く（別タブ）
         window.open(data.url, "_blank");
       } catch (e) {
@@ -185,6 +247,10 @@
         errEl.textContent = "通信エラーが発生しました。";
       }
     }
+// 👇 追加
+function goMonitoringPurchase() {
+  location.href = "lp.html"; // モニタリングAIの購入LP
+}
   </script>
 </body>
 </html>
