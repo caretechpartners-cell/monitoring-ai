@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>やさしいモニタリングAI（会員版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ⭐ 追加：app.html からの遷移チェック -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get("from");
+
+    if (from !== "app") {
+      window.location.href = "login.html";
+    }
+  </script>
+
+<script>
+(async () => {
+  try {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
+
+    if (!user_id || !token) {
+      return location.href = "login.html";
+    }
+
+    const res = await fetch("/api/auth-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, token }),
+    });
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      localStorage.setItem(
+        "forced_logout_reason",
+        "他の端末でログインされたためログアウトしました"
+      );
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
+    }
+  } catch {
+    location.href = "login.html";
+  }
+})();
+</script>
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .guide {
+      background: #fff4f6;
+      border: 2px dashed #f3a6b1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    .self-input-guide {
+      text-align: center;
+      font-size: 16px;
+      color: #666;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .sample-text {
+      color: #aaa; /* 薄いグレー */
+    }
+
+    label {
+      display: block;
+      font-size: 20px;
+      margin-top: 25px;
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #cfdfe8;
+    }
+
+    textarea::placeholder {
+      color: #999;
+      font-size: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 25px;
+      cursor: pointer;
+    }
+    .sample-btn { background: #f3a6b1; color: white; }
+    .generate-btn { background: #2a6f97; color: white; }
+
+    .download-btn {
+      background: #4caf50;
+      color: white;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .result-box {
+      margin-top: 30px;
+      font-size: 18px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+
+    .copy-guide {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      display: none;
+    }
+
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    /* ⭐右上固定配置の戻るボタン */
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #cccccc;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページへ戻る</button>
+
+<div class="container">
+
+  <h1>やさしいモニタリングAI（会員版）</h1>
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+
+  <div class="guide">
+    ✅ ① 利用者情報を入力（メモ書きレベルで構いません）<br>
+    ✅ ②「AIでモニタリング文章生成」を押す<br>
+    ✅ ③ 出力結果を必要に応じて修正し、完成！
+  </div>
+
+  <button class="btn sample-btn" onclick="insertSample()">サンプル利用者を入力</button>
+
+  <div class="self-input-guide">
+    ↓ ご自身でもご入力いただけます ↓
+  </div>
+
+  <label>■ 生活状況</label>
+  <textarea id="life" class="sample-text"></textarea>
+
+  <label>■ 身体状況</label>
+  <textarea id="body" class="sample-text"></textarea>
+
+  <label>■ 服薬状況</label>
+  <textarea id="medicine" class="sample-text"></textarea>
+
+  <label>■ サービス利用状況</label>
+  <textarea id="service" class="sample-text"></textarea>
+
+  <label>■ 本人・家族の希望</label>
+  <textarea id="wish" class="sample-text"></textarea>
+
+  <label>■ 自由記載</label>
+  <textarea id="free" class="sample-text"></textarea>
+
+  <button class="btn generate-btn" onclick="generate()">AIでモニタリング文章生成</button>
+
+  <div class="copy-guide" id="copyGuide">
+    このままコピーして、モニタリング総括の参考としてください。
+  </div>
+
+  <div id="result" class="result-box"></div>
+
+<!-- ▼▼ ここから追加 ▼▼ -->
+<div id="trialEndedBox" style="display:none; margin-top:30px;">
+  <h2 style="color:#c0392b; font-size:22px; margin-bottom:15px;">
+    トライアル期間が終了しました
+  </h2>
+
+  <p style="font-size:18px; line-height:1.7;">
+    これまでトライアルをご利用いただき、ありがとうございます。<br>
+    現在はトライアル期間終了のため、AIによるモニタリング文章生成はご利用いただけません。
+  </p>
+
+  <p style="font-size:18px; line-height:1.7; margin-top:10px;">
+    引き続きご利用いただく場合は、下記よりプランをお選びください。
+  </p>
+
+  <!-- ★ Stripe Payment Link（個人プラン例） -->
+  <a
+  href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00"
+  target="_blank"
+  class="btn"
+  style="
+    background:#2a6f97;
+    color:#fff;
+    margin-top:20px;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  "
+>
+  ▶ プランを選択して利用を続ける
+</a>
+
+  <!-- 補助リンク（小さく） -->
+  <div style="margin-top:15px; font-size:14px; color:#666;">
+    <a href="lp.html" target="_blank" style="color:#777;">
+      料金やサービス内容をもう一度確認する
+    </a>
+  </div>
+</div>
+<!-- ▲▲ ここまで追加 ▲▲ -->
+
+  <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
+    📄 Word（docx）でダウンロード
+  </button>
+</div>
+
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
+</div>
+
+<script>
+
+// --------------------------
+// サンプル入力
+// --------------------------
+
+const sampleTexts = {
+  life: "自宅にて長男夫婦と同居。日中は居室内で過ごすことが多い。",
+  body: "屋内歩行は自立しているが、屋外移動時は家族の声かけが必要な場面がある。転倒歴はない。",
+  medicine: "内服薬は家族の確認のもと管理されている。",
+  service: "週2回訪問介護を利用し、生活援助を受けている。",
+  wish: "本人は自宅での生活継続を希望。家族は安全面を重視し、必要な支援を受けながら生活を続けたい意向。",
+  free: "簡単な会話は成立しているが、時折確認を要する場面がみられる。次回モニタリングは2026年4月5日を予定。"
+};
+
+function insertSample() {
+  Object.keys(sampleTexts).forEach(id => {
+    const el = document.getElementById(id);
+    el.value = sampleTexts[id];
+    el.classList.remove("sample-text"); // ★重要
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  Object.keys(sampleTexts).forEach(id => {
+    const el = document.getElementById(id);
+    el.value = sampleTexts[id];
+    el.classList.add("sample-text");
+
+    // フォーカス時：消す
+    el.addEventListener("focus", () => {
+      if (el.classList.contains("sample-text")) {
+        el.value = "";
+        el.classList.remove("sample-text");
+      }
+    });
+
+    // フォーカスアウト時：空なら戻す
+    el.addEventListener("blur", () => {
+      if (el.value.trim() === "") {
+        el.value = sampleTexts[id];
+        el.classList.add("sample-text");
+      }
+    });
+  });
+});
+
+
+// --------------------------
+// AI生成処理
+// --------------------------
+let progressTimer = null;
+let progressValue = 0;
+function startProgress() {
+  progressValue = 0;
+  result.textContent = "生成中… 0%";
+
+  progressTimer = setInterval(() => {
+    if (progressValue < 98) {
+      const add =
+        progressValue < 70 ? 4 :
+        progressValue < 90 ? 2 : 1;
+
+      progressValue += add;
+      if (progressValue > 98) progressValue = 98;
+
+      if (progressValue >= 90) {
+        result.textContent = "文章を整えています…";
+      } else {
+        result.textContent = `生成中… ${progressValue}%`;
+      }
+    }
+  }, 300);
+}
+
+function finishProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  result.textContent = "生成完了（100%）";
+}
+
+async function generate() {
+
+  // ===== ① ログイン最低限チェック =====
+  const email = localStorage.getItem("login_email");
+  if (!email) {
+    alert("ログイン情報が失われました。再ログインしてください。");
+    location.href = "login.html";
+    return;
+  }
+
+  // ===== ② product-guard（monitoring）=====
+  const guardRes = await fetch("/api/product-guard", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      product_code: "monitoring",
+    }),
+  });
+
+  const guard = await guardRes.json();
+
+  if (!guard.ok) {
+    // UIは既存の trialEndedBox を流用できる
+    document.getElementById("trialEndedBox").style.display = "block";
+    return; // ← ここで完全に止める
+  }
+
+  // ★ 念のため毎回隠す
+  document.getElementById("trialEndedBox").style.display = "none";
+
+  const text = `
+【生活状況】${life.value}
+【身体状況】${body.value}
+【服薬状況】${medicine.value}
+【サービス利用】${service.value}
+【本人・家族の希望】${wish.value}
+【自由記載】${free.value}
+  `;
+
+  copyGuide.style.display = "none";
+  downloadBtn.style.display = "none";
+
+  try {
+    startProgress();
+
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await res.json();
+    if (!data.result) throw new Error();
+
+    finishProgress();
+    setTimeout(() => {
+      result.textContent = data.result;
+    }, 300);
+
+    copyGuide.style.display = "block";
+    downloadBtn.style.display = "block";
+
+    // 履歴保存
+const user_id = localStorage.getItem("auth_user_id");
+if (user_id) {
+ const saveRes = await fetch("/api/history", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+  action: "insert",
+  type: "monitoring",
+  auth_user_id: user_id,
+
+  seikatsu: life.value,
+  shintai: body.value,
+  fukuyaku: medicine.value,
+  service: service.value,
+  kibou: wish.value,
+  free_text: free.value,
+  generated_text: data.result,
+})
+});
+
+const saveData = await saveRes.json();
+console.log("履歴保存結果:", saveData);
+
+}
+
+  } catch (e) {
+    if (progressTimer) clearInterval(progressTimer);
+    result.textContent = "通信エラーが発生しました。時間をおいて再度お試しください。";
+  }
+}
+
+
+// --------------------------
+// Word ダウンロード
+// --------------------------
+function downloadDocx() {
+  const text = result.textContent;
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+  const lines = text.split("\n").filter(line => line.trim() !== "");
+
+  const paragraphs = lines.map(line =>
+    new Paragraph({
+      children: [ new TextRun({ text: line, size: 24 }) ],
+      spacing: { after: 200 }
+    })
+  );
+
+  const doc = new Document({
+    sections: [{ children: paragraphs }],
+  });
+
+  Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "monitoring.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+</script>
+
+</body>
+</html>

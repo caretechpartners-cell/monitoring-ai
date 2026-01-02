@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>生成履歴｜やさしいモニタリングAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+  <!-- Supabase JS -->
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+
+/* ---------- アコーディオン用 ---------- */
+.history-card {
+  background: #f7fbff;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;     /* ★カッコの基準 */
+  padding-left: 26px;     /* ★カッコ分の余白 */
+}
+
+/* 左側のカッコ装飾（1カードに1つ） */
+.history-card::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 14px;
+  bottom: 14px;
+  width: 12px;
+  border-left: 4px solid #2a6f97;
+  border-top: 4px solid #2a6f97;
+  border-bottom: 4px solid #2a6f97;
+  border-radius: 12px;
+  pointer-events: none;  /* ★クリック邪魔しない */
+}
+
+    .history-header {
+      padding: 20px;
+    }
+    .date {
+      color: #2a6f97;
+      font-weight: bold;
+    }
+    .history-body {
+      padding: 0 20px 20px 20px;
+      display: none; /* ← 初期状態閉じる */
+    }
+    .item-label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    /* -------------------------------------- */
+
+    .back-fixed {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #cccccc;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+
+<button class="back-fixed" onclick="location.href='app.html'">← 会員専用ページ</button>
+
+<div class="container">
+  <h1>生成履歴一覧</h1>
+  <div id="historyArea">読み込み中…</div>
+</div>
+
+<script>
+
+async function loadHistory() {
+
+  const area = document.getElementById("historyArea"); // ★ これを追加
+
+  // 🔒 ログイン確認（新方式）
+  const authUserId = localStorage.getItem("auth_user_id");
+if (!authUserId) {
+  location.href = "login.html";
+  return;
+}
+
+
+  // 🔎 データ取得
+  const res = await fetch("/api/history", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "get",
+    type: "monitoring",
+    auth_user_id: authUserId
+  })
+});
+
+const result = await res.json();
+
+if (!result.success) {
+  area.innerHTML = "読み込みに失敗しました";
+  return;
+}
+
+const data = result.data;
+
+
+  if (!data || data.length === 0) {
+    area.innerHTML = "まだ生成履歴がありません。";
+    return;
+  }
+
+  // 📝 表示生成
+  let html = "";
+
+  data.forEach((row, index) => {
+
+    // generated_text の改行整形
+    const formattedGenerated = (row.generated_text || "").replace(/\n/g, "<br>");
+
+    html += `
+      <div class="history-card" onclick="toggleCard(${index})">
+
+        <div class="history-header">
+          <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
+        </div>
+
+        <div class="history-body" id="body-${index}">
+          <div class="item">
+            <div class="item-label">■ 生活状況</div>
+            <div>${row.seikatsu || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 身体状況</div>
+            <div>${row.shintai || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 服薬状況</div>
+            <div>${row.fukuyaku || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ サービス利用状況</div>
+            <div>${row.service || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 本人家族の希望</div>
+            <div>${row.kibou || ""}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-label">■ 自由記載</div>
+            <div>${row.free_text || ""}</div>
+          </div>
+
+          <div class="item">
+  <div class="item-label">■ 生成結果</div>
+  <div id="generated-${index}" data-created-at="${row.created_at}">
+  ${formattedGenerated}
+</div>
+</div>
+
+<button
+  style="
+    margin-top:15px;
+    padding:10px 16px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    background:#4caf50;
+    color:#fff;
+    cursor:pointer;
+  "
+  onclick="event.stopPropagation(); downloadHistoryDocx(${index})"
+
+>
+  📄 Word（docx）で出力
+</button>
+
+
+      </div>
+     </div>
+    `;
+  });
+
+  area.innerHTML = html;
+}
+
+/* 👇 アコーディオン開閉処理（追加） */
+function toggleCard(index) {
+  const body = document.getElementById(`body-${index}`);
+  body.style.display = (body.style.display === "none" || body.style.display === "") 
+    ? "block"
+    : "none";
+}
+
+loadHistory();
+
+function downloadHistoryDocx(index) {
+
+  const body = document.getElementById(`body-${index}`);
+  if (!body) {
+    alert("出力対象が見つかりません");
+    return;
+  }
+
+  const generatedEl = body.querySelector(`#generated-${index}`);
+  const createdAt = generatedEl?.dataset.createdAt || null;
+
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+  const paragraphs = [];
+
+  /* ==============================
+     生成日時
+  ============================== */
+  let filename = "monitoring.docx";
+  if (createdAt) {
+    const d = new Date(createdAt);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `生成日時：${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`,
+            bold: true,
+            size: 24
+          })
+        ],
+        spacing: { after: 400 }
+      })
+    );
+
+    filename = `monitoring_${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}.docx`;
+  }
+
+  /* ==============================
+     入力項目（生活状況〜自由記載）
+  ============================== */
+  body.querySelectorAll(".item").forEach(item => {
+
+    const labelEl = item.querySelector(".item-label");
+    const valueEl = item.querySelector("div:not(.item-label)");
+
+    if (!labelEl || !valueEl) return;
+
+    const label = labelEl.innerText.trim();
+    const value = valueEl.innerText.trim();
+
+    // 「生成結果」は後で改ページするので一旦スキップ
+    if (label.includes("生成結果")) return;
+    if (!value) return;
+
+    paragraphs.push(
+      new Paragraph({
+        children: [ new TextRun({ text: label, bold: true, size: 24 }) ],
+        spacing: { after: 120 }
+      }),
+      new Paragraph({
+        children: [ new TextRun({ text: value, size: 24 }) ],
+        spacing: { after: 360 }
+      })
+    );
+  });
+
+  /* ==============================
+     改ページ（ここが重要）
+  ============================== */
+  paragraphs.push(
+    new Paragraph({
+      children: [],
+      pageBreakBefore: true
+    })
+  );
+
+  /* ==============================
+     生成結果（①〜⑤を分割）
+  ============================== */
+  if (generatedEl) {
+
+    const raw = generatedEl.innerText.trim();
+
+    // 【① ～】【② ～】…で分割
+    const sections = raw.split(/(?=【[①②③④⑤])/g);
+
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "■ 生成結果", bold: true, size: 24 })
+        ],
+        spacing: { after: 300 }
+      })
+    );
+
+    sections.forEach(text => {
+      const cleaned = text.trim();
+      if (!cleaned) return;
+
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: cleaned, size: 24 })
+          ],
+          spacing: { after: 400 }
+        })
+      );
+    });
+  }
+
+  /* ==============================
+     Word生成
+  ============================== */
+  const doc = new Document({
+    sections: [{ children: paragraphs }]
+  });
+
+  Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+</script>
+
+</body>
+</html>

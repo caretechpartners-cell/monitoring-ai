@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>利用状況｜やさしいAIシリーズ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2a6f97;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 30px;
+    }
+
+    /* タブ */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      background: #e0edf6;
+      color: #2a6f97;
+      font-weight: bold;
+    }
+
+    .tab.active {
+      background: #2a6f97;
+      color: white;
+    }
+
+    .info-box {
+      background: #f7fbff;
+      border-radius: 14px;
+      padding: 25px;
+      border: 1px solid #dfeef7;
+      font-size: 18px;
+      line-height: 1.9;
+    }
+
+    .item-title {
+      font-size: 20px;
+      color: #2a6f97;
+      margin-top: 22px;
+      font-weight: bold;
+    }
+
+    .status-ok {
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .status-ng {
+      color: #c0392b;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .footer-note {
+      margin-top: 25px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+
+    .footer-links {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #777;
+    }
+
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    /* 初期状態ではタブを非表示 */
+    .tabs .tab {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="back-btn" onclick="location.href='app.html'">
+    ← 戻る
+  </div>
+
+  <div class="container">
+    <h1>利用状況の確認</h1>
+    <div class="powered">やさしいAIシリーズ｜ケアテックパートナーズ</div>
+
+<!-- タブ -->
+<div class="tabs">
+  <div class="tab" data-product="monitoring"
+       onclick="switchProduct('monitoring')">
+    モニタリングAI
+  </div>
+
+  <div class="tab" data-product="conference"
+       onclick="switchProduct('conference')">
+    議事録AI
+  </div>
+</div>
+
+    <div class="info-box">
+      <div class="item-title">■ ご利用状況</div>
+      <div id="usageStatus">読み込み中...</div>
+
+      <div class="item-title">■ トライアル終了日</div>
+      <div id="trialEndAt">—</div>
+
+      <div class="item-title">■ ご契約プラン</div>
+      <div id="planName">—</div>
+
+      <div class="item-title">■ 登録名</div>
+      <div id="userName">—</div>
+
+      <div class="item-title">■ 登録メールアドレス</div>
+      <div id="userEmail">—</div>
+    </div>
+
+    <div class="footer-note">
+      ※ 本画面は、実地指導・監査時の説明資料としてもご利用いただけます。
+    </div>
+
+    <div class="footer-links">
+      <a href="privacy.html">プライバシーポリシー</a>
+      <a href="terms.html">利用規約</a>
+      <a href="tokusho.html">特定商取引法表記</a>
+    </div>
+  </div>
+
+  <script>
+    // 🔒 現在販売しているプロダクト
+    const ENABLED_PRODUCTS = ["monitoring"];
+
+    let userData = null;
+    let currentProduct = "monitoring";
+
+    async function loadUserInfo() {
+      const user_id = localStorage.getItem("auth_user_id");
+      if (!user_id) {
+        location.href = "login.html";
+        return;
+      }
+
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "get",
+          user_id
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById("usageStatus").textContent = "情報取得エラー";
+        return;
+      }
+
+      userData = data.user;
+      applyProductVisibility();
+      render();
+    }
+
+function applyProductVisibility() {
+  document.querySelectorAll(".tab").forEach(tab => {
+    const product = tab.dataset.product;
+    if (ENABLED_PRODUCTS.includes(product)) {
+      tab.style.display = "block";
+    }
+  });
+}
+
+    function switchProduct(product) {
+      currentProduct = product;
+      document.querySelectorAll(".tab").forEach(tab =>
+        tab.classList.remove("active")
+      );
+      document
+        .querySelector(`.tab[data-product="${product}"]`)
+        ?.classList.add("active");
+      render();
+    }
+
+    function render() {
+      if (!userData) return;
+
+      const product = userData.products.find(
+        p => p.product_code === currentProduct
+      );
+
+      const usageEl = document.getElementById("usageStatus");
+
+      if (!product) {
+        usageEl.textContent = "未契約";
+        usageEl.className = "status-ng";
+      } else if (product.stripe_subscription_status === "canceled") {
+        usageEl.textContent = "🔴 利用停止中";
+        usageEl.className = "status-ng";
+      } else if (product.stripe_subscription_status === "trialing") {
+        usageEl.textContent = "🟢 ご利用中（トライアル）";
+        usageEl.className = "status-ok";
+      } else {
+        usageEl.textContent = "🟢 ご利用中";
+        usageEl.className = "status-ok";
+      }
+
+      const trialEl = document.getElementById("trialEndAt");
+      if (product?.trial_end_at) {
+        trialEl.textContent =
+          new Date(product.trial_end_at).toLocaleDateString();
+      } else if (product?.stripe_subscription_status === "trialing") {
+        trialEl.textContent = "トライアル中（終了日確定後に表示）";
+      } else {
+        trialEl.textContent = "—";
+      }
+
+      document.getElementById("planName").textContent =
+        userData.plan === "corp" ? "法人プラン" : "個人プラン";
+      document.getElementById("userName").textContent =
+        userData.user_name || "—";
+      document.getElementById("userEmail").textContent =
+        userData.email;
+    }
+
+    // 初期起動
+    loadUserInfo();
+  </script>
+</body>
+</html>

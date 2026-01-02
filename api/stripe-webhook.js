@@ -67,6 +67,7 @@ async function resolveEmailFromSession(session) {
 /* =========================
    handler
 ========================= */
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).send("Method Not Allowed");
@@ -101,17 +102,6 @@ export default async function handler(req, res) {
     }
   }
 
-const { data: exists } = await supabase
-  .from("stripe_events")
-  .select("event_id")
-  .eq("event_id", event.id)
-  .maybeSingle();
-
-if (exists) {
-  return res.status(200).json({ received: true });
-}
-
-
   try {
     /* ==========================================
        ① checkout.session.completed
@@ -131,6 +121,7 @@ if (exists) {
           productCode,
           session_id: session.id,
         });
+        return res.status(200).json({ received: true });
       }
 
       const { error } = await supabase
@@ -141,9 +132,9 @@ if (exists) {
             product_code: productCode,
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
-            stripe_subscription_status: session.subscription
-  ? (session.subscription?.trial_end ? "trialing" : "active")
-  : "active",
+            stripe_subscription_status: subscriptionId
+              ? "trialing"
+              : "active",
             updated_at: new Date().toISOString(),
           },
           { onConflict: "email,product_code" }
@@ -158,6 +149,8 @@ if (exists) {
           subscriptionId,
         });
       }
+
+      return res.status(200).json({ received: true });
     }
 
     /* ==========================================
@@ -209,13 +202,11 @@ if (exists) {
           trial_end: sub.trial_end,
         });
       }
-}
-  await supabase
-    .from("stripe_events")
-    .insert({ event_id: event.id });
 
-return res.status(200).json({ received: true });
+      return res.status(200).json({ received: true });
+    }
 
+    return res.status(200).json({ received: true });
   } catch (err) {
     console.error("❌ Webhook handler fatal error:", err);
     return res.status(200).json({ received: true });
