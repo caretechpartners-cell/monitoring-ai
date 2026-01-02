@@ -125,11 +125,6 @@
       location.href = "form-corp.html";
     }
 
-const RE_PURCHASE_LINKS = {
-  monitoring: "https://buy.stripe.com/3cIeV65wve8X4ly40XeME00",
-  conference: "https://buy.stripe.com/cNi3cocYXc0P8BO0OLeME05",
-};
-
 
     // ================================
     // 💳 Stripe Customer Portal を開く
@@ -179,19 +174,14 @@ if (!data.success || !data.url) {
     return;
   }
 
-  const link = RE_PURCHASE_LINKS[product_code];
-
-  errEl.innerHTML = `
-    既に解約済みです。<br>
-    ${
-      link
-        ? `<a href="${link}" target="_blank" style="color:#2a6f97; font-weight:bold;">
-             ▶ 再契約はこちら
-           </a>`
-        : "再契約リンクは現在準備中です。"
-    }
-  `;
-  return;
+errEl.innerHTML = `
+  既に解約済みです。<br>
+  <a href="https://monitoring-ai-sepia.vercel.app/form-corp.html"
+     style="color:#2a6f97; font-weight:bold;">
+    ▶ トライアル終了後の購入のご相談はこちら
+  </a>
+`;
+return;
 }
 
         // ③ Stripe Customer Portal を開く（別タブ）
