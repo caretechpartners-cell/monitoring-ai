@@ -284,13 +284,14 @@
         <h3>個人プラン</h3>
         <div class="price">月額 1,980円（税込）</div>
         <div class="muted">居宅ケアマネさん1名向け</div>
-
-<a class="small-cta" href="javascript:void(0)" onclick="startCheckout()">
-  個人プランを始める
-</a>
-
+        <a class="small-cta" href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00">決済ページへ</a>
         <div style="font-size:15px; text-align:center; margin-top:6px;">🎁 初回30日間無料、いつでも解約可</div>
       </div>
+
+  <div style="font-size:13px; text-align:center; margin-top:4px; color:#666;">
+    ※ 無料トライアルは、初回利用の方を対象としています。
+  </div>
+</div>
 
       <div class="plan">
         <h3>法人プラン（最大5名）</h3>
@@ -360,9 +361,9 @@
 
 
   <!-- CTA -->
-<button class="cta-btn" onclick="startCheckout()">
-  個人プランを始める
-</button>
+  <button class="cta-btn" onclick="location.href='https://buy.stripe.com/3cIeV65wve8X4ly40XeME00'">
+    個人プランを始める
+  </button>
 
   <div class="legal-links">
     <a href="privacy.html">プライバシーポリシー</a>
@@ -370,56 +371,5 @@
     <a href="tokusho.html">特定商取引法表記</a>
  </div>
 </div>
-
-<script>
-async function startCheckout() {
-  const user_id = localStorage.getItem("user_id");
-  const token = localStorage.getItem("login_session_token");
-
-  // 未ログイン
-  if (!user_id || !token) {
-    location.href = "/login.html";
-    return;
-  }
-
-  // auth-guard でセッション確認
-  const guardRes = await fetch("/api/auth-guard", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id, token })
-  });
-
-  const guard = await guardRes.json();
-
-  if (!guard.valid) {
-    location.href = "/login.html";
-    return;
-  }
-
-  if (!guard.allowed) {
-    // 利用不可だがログイン済み（＝未購入 or 解約）
-    // → checkout へ
-  }
-
-  // checkout.js 呼び出し
-  const res = await fetch("/api/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      product_code: "monitoring",
-      user_id,
-      token
-    })
-  });
-
-  const data = await res.json();
-  if (data.url) {
-    location.href = data.url;
-  } else {
-    alert("決済処理に失敗しました");
-  }
-}
-</script>
-
 </body>
 </html>
