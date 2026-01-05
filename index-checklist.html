@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>やさしい実地指導チェックリストAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .main-title {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      color: #2a6f97;
+    }
+    .subtitle {
+      display: block;
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .limit {
+      text-align: center;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+    .guide {
+      background: #fff4f6;
+      border: 2px dashed #f3a6b1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    .section-title {
+      font-size: 22px;
+      color: #2a6f97;
+      margin-top: 35px;
+      margin-bottom: 15px;
+    }
+    .question {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .choices {
+      margin-top: 8px;
+    }
+    .choices label {
+      margin-right: 18px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 30px;
+      cursor: pointer;
+      background: #2a6f97;
+      color: white;
+    }
+    .result-box {
+      margin-top: 30px;
+      font-size: 18px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1 class="main-title">
+    やさしい実地指導チェックリストAI
+    <span class="subtitle">～指摘されやすいポイントを、事前にやさしく確認～</span>
+  </h1>
+
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+  <div class="limit" id="limitText"></div>
+
+  <div class="guide">
+    ✅ 気になる項目に、直感でお答えください<br>
+    ✅ 「わからない」も正直な大切な回答です<br>
+    ✅ 実地指導前の“セルフ点検”としてお使いください
+  </div>
+
+  <!-- ▼ 質問エリア -->
+  <div id="questions"></div>
+
+  <button class="btn" onclick="runChecklist()">AIでチェックする</button>
+
+  <div id="result" class="result-box"></div>
+
+</div>
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
+</div>
+
+<script type="module">
+import { CHECKLIST_QUESTIONS, evaluateChecklist } from "./generate-checklist.js";
+
+const LIMIT = 3;
+
+function initLimit() {
+  if (!localStorage.getItem("checklist_remain")) {
+    localStorage.setItem("checklist_remain", LIMIT);
+  }
+  updateLimit();
+}
+
+function updateLimit() {
+  const remain = Number(localStorage.getItem("checklist_remain"));
+  const limitText = document.getElementById("limitText");
+
+  if (remain > 0) {
+    limitText.textContent = `🌷 無料であと「${remain}回」ご利用いただけます`;
+  } else {
+    limitText.textContent = "無料チェック分は終了しました。";
+  }
+}
+
+initLimit();
+
+// 質問描画
+const qWrap = document.getElementById("questions");
+
+CHECKLIST_QUESTIONS.forEach(section => {
+  const sec = document.createElement("div");
+  sec.innerHTML = `<div class="section-title">${section.section}</div>`;
+
+  section.questions.forEach(q => {
+    const div = document.createElement("div");
+    div.className = "question";
+    div.innerHTML = `
+      ${q.text}
+      <div class="choices">
+        <label><input type="radio" name="${q.id}" value="yes"> はい</label>
+        <label><input type="radio" name="${q.id}" value="no"> いいえ</label>
+        <label><input type="radio" name="${q.id}" value="unknown"> わからない</label>
+      </div>
+    `;
+    sec.appendChild(div);
+  });
+
+  qWrap.appendChild(sec);
+});
+
+window.runChecklist = function() {
+  let remain = Number(localStorage.getItem("checklist_remain"));
+
+  if (remain <= 0) {
+    alert("ここまでお試しいただき、ありがとうございます 😊\n\n続きのご案内をご覧ください。");
+    location.href = "lp-checklist.html";
+    return;
+  }
+
+  const answers = {};
+  CHECKLIST_QUESTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+      answers[q.id] = checked ? checked.value : "unknown";
+    });
+  });
+
+  const results = evaluateChecklist(answers);
+
+  let text = "【チェック結果】\n\n";
+  results.forEach(r => {
+    text += `■ ${r.section}\n`;
+    text += `・判定：${r.riskLevel}\n`;
+    text += `・コメント：${r.comment}\n\n`;
+  });
+
+  document.getElementById("result").textContent = text;
+
+  remain--;
+  localStorage.setItem("checklist_remain", remain);
+  updateLimit();
+};
+</script>
+
+</body>
+</html>
