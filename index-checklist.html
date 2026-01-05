@@ -140,9 +140,8 @@
   <a href="tokusho.html">特定商取引法に基づく表記</a>
 </div>
 
-<script type="module">
-import { CHECKLIST_QUESTIONS, evaluateChecklist } from "./generate-checklist.js";
-
+<script src="/api/generate-checklist.js"></script>
+<script>
 const LIMIT = 3;
 
 function initLimit() {
@@ -165,7 +164,7 @@ function updateLimit() {
 
 initLimit();
 
-// 質問描画
+/* 質問描画 */
 const qWrap = document.getElementById("questions");
 
 CHECKLIST_QUESTIONS.forEach(section => {
@@ -189,7 +188,7 @@ CHECKLIST_QUESTIONS.forEach(section => {
   qWrap.appendChild(sec);
 });
 
-window.runChecklist = function() {
+function runChecklist() {
   let remain = Number(localStorage.getItem("checklist_remain"));
 
   if (remain <= 0) {
@@ -220,7 +219,7 @@ window.runChecklist = function() {
   remain--;
   localStorage.setItem("checklist_remain", remain);
   updateLimit();
-};
+}
 </script>
 
 </body>

@@ -6,34 +6,27 @@
 // --------------------------------
 // 質問セット定義
 // --------------------------------
-export const CHECKLIST_QUESTIONS = [
-  // ========= SECTION 1：第27条の2（虐待防止） =========
+window.CHECKLIST_QUESTIONS = [
   {
     section: "第27条の2（虐待防止）",
-    critical: true, // ← 最重要条文
+    critical: true,
     questions: [
-      { id: "27_2_01", text: "虐待防止のための対策を検討する委員会を設置していますか？" },
-      { id: "27_2_02", text: "虐待防止委員会は定期的（年1回以上）に開催していますか？" },
-      { id: "27_2_03", text: "虐待防止委員会の開催記録（議事録）は保存されていますか？" },
-      { id: "27_2_04", text: "虐待防止のための指針（文書）は整備されていますか？" },
-      { id: "27_2_05", text: "虐待防止に関する研修を定期的に実施していますか？" },
-      { id: "27_2_06", text: "虐待防止の取組を実施する担当者は明確に定められていますか？" }
+      { id: "abuse_policy", text: "虐待防止のための指針を整備していますか？" },
+      { id: "abuse_training", text: "虐待防止に関する研修を定期的に実施していますか？" },
+      { id: "abuse_committee", text: "虐待防止委員会を設置し、定期的に開催していますか？" },
+      { id: "abuse_manager", text: "虐待防止の担当者を明確に定めていますか？" }
     ]
   },
-
-  // ========= SECTION 2：第4条 =========
   {
     section: "第4条（内容及び手続の説明・同意）",
     critical: false,
     questions: [
       { id: "04_01", text: "重要事項説明書を交付し、説明を行っていますか？" },
-      { id: "04_02", text: "重要事項説明書の内容に不備・古い記載はありませんか？" },
+      { id: "04_02", text: "重要事項説明書の内容に不備や古い記載はありませんか？" },
       { id: "04_03", text: "説明後、文書による同意を得ていますか？" },
-      { id: "04_04", text: "説明・同意が分かる記録（署名等）は保存されていますか？" }
+      { id: "04_04", text: "説明・同意が分かる記録（署名等）を保存していますか？" }
     ]
   },
-
-  // ========= SECTION 3：第13条 =========
   {
     section: "第13条（指定居宅介護支援の具体的取扱方針）",
     critical: false,
@@ -45,8 +38,6 @@ export const CHECKLIST_QUESTIONS = [
       { id: "13_05", text: "計画変更時に再度サービス担当者会議を開催していますか？" }
     ]
   },
-
-  // ========= SECTION 4：第18条 =========
   {
     section: "第18条（運営規程）",
     critical: false,
@@ -61,14 +52,12 @@ export const CHECKLIST_QUESTIONS = [
 
 // --------------------------------
 // 判定ロジック
-// answers = { questionId: "yes" | "no" | "unknown" }
 // --------------------------------
-export function evaluateChecklist(answers) {
+window.evaluateChecklist = function (answers) {
   const results = [];
 
-  for (const section of CHECKLIST_QUESTIONS) {
+  for (const section of window.CHECKLIST_QUESTIONS) {
     let riskCount = 0;
-    let total = section.questions.length;
 
     section.questions.forEach(q => {
       const ans = answers[q.id];
@@ -77,49 +66,46 @@ export function evaluateChecklist(answers) {
       }
     });
 
-    // リスク判定
-    let riskLevel = "🟢 低リスク";
+    let riskLevel = "🟢 概ね良好";
 
     if (section.critical) {
-      if (riskCount >= 2) riskLevel = "🔴 高リスク";
-      else if (riskCount === 1) riskLevel = "🟡 注意";
+      if (riskCount >= 2) riskLevel = "🔴 要注意";
+      else if (riskCount === 1) riskLevel = "🟡 要確認";
     } else {
-      if (riskCount >= 3) riskLevel = "🔴 高リスク";
-      else if (riskCount >= 1) riskLevel = "🟡 注意";
+      if (riskCount >= 3) riskLevel = "🔴 要注意";
+      else if (riskCount >= 1) riskLevel = "🟡 要確認";
     }
 
     results.push({
       section: section.section,
-      total,
-      riskCount,
       riskLevel,
       comment: generateComment(section.section, riskLevel)
     });
   }
 
   return results;
-}
+};
 
 // --------------------------------
-// コメント生成（最小実装）
+// コメント生成
 // --------------------------------
 function generateComment(sectionName, riskLevel) {
   if (sectionName.includes("第27条の2")) {
     if (riskLevel.startsWith("🔴")) {
-      return "虐待防止体制は実地指導で特に厳しく確認されます。委員会・研修・指針・担当者の4点を優先的に点検してください。";
+      return "虐待防止は実地指導で最も重視される項目です。指針・委員会・研修・担当者の4点を優先的に点検してください。";
     }
     if (riskLevel.startsWith("🟡")) {
-      return "虐待防止体制に一部確認不足が見られます。記録や実施状況を事前に整理しておきましょう。";
+      return "虐待防止体制に一部確認不足が見られます。記録や実施状況を事前に整理しておくと安心です。";
     }
     return "虐待防止体制は概ね整備されています。";
   }
 
   if (riskLevel.startsWith("🔴")) {
-    return "実地指導で指摘を受ける可能性が高い状態です。記録・同意・体制の再確認をおすすめします。";
+    return "実地指導で指摘を受ける可能性があります。書類や記録を一度見直しておきましょう。";
   }
 
   if (riskLevel.startsWith("🟡")) {
-    return "一部確認不足の可能性があります。書類・記録の見直しを行いましょう。";
+    return "一部確認不足の可能性があります。事前に整理しておくと安心です。";
   }
 
   return "大きな問題は見られません。";
