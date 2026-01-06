@@ -207,15 +207,41 @@ function runChecklist() {
 
   const results = evaluateChecklist(answers);
 
-  let text = "【チェック結果】\n\n";
-  results.forEach(r => {
-    text += `■ ${r.section}\n`;
-    text += `・判定：${r.riskLevel}\n`;
-    text += `・コメント：${r.comment}\n\n`;
+const resultEl = document.getElementById("result");
+resultEl.innerHTML = "";
+
+results.forEach(r => {
+  const sectionDiv = document.createElement("div");
+
+  sectionDiv.innerHTML = `
+    <h3>${r.section}</h3>
+    <p><strong>判定：</strong>${r.riskLevel}</p>
+    <p>${r.summary}</p>
+    <hr>
+  `;
+
+  r.questions.forEach(q => {
+    const qDiv = document.createElement("div");
+    qDiv.style.marginBottom = "18px";
+
+    qDiv.innerHTML = `
+      <div><strong>Q：</strong>${q.text}</div>
+      <div><strong>回答：</strong>${q.answer}</div>
+      <div style="margin-top:6px;">${q.feedback}</div>
+      ${
+        q.documents
+          ? `<div style="font-size:14px; color:#555; margin-top:4px;">
+               📄 確認書類：${q.documents.join("、")}
+             </div>`
+          : ""
+      }
+    `;
+
+    sectionDiv.appendChild(qDiv);
   });
 
-  document.getElementById("result").textContent = text;
-
+  resultEl.appendChild(sectionDiv);
+});
   remain--;
   localStorage.setItem("checklist_remain", remain);
   updateLimit();
