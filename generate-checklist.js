@@ -14,19 +14,19 @@ window.CHECKLIST_QUESTIONS = [
     section: "第27条の2（虐待防止）",
     critical: true,
 
- judgment: {
-    red: {
-      threshold: 2,
-      summary: "虐待防止は実地指導で最も重点的に確認されます。未整備項目は必ず事前に是正してください。"
+    judgment: {
+      red: {
+        threshold: 2,
+        summary: "虐待防止は実地指導で最も重点的に確認されます。未整備項目は必ず事前に是正してください。"
+      },
+      yellow: {
+        threshold: 1,
+        summary: "虐待防止体制に一部確認不足があります。指針・研修・委員会の記録を整理しておきましょう。"
+      },
+      green: {
+        summary: "虐待防止体制は概ね整備されています。"
+      }
     },
-    yellow: {
-      threshold: 1,
-      summary: "虐待防止体制に一部確認不足があります。指針・研修・委員会の記録を整理しておきましょう。"
-    },
-    green: {
-      summary: "虐待防止体制は概ね整備されています。"
-    }
-  },
 
     questions: [
       {
@@ -86,20 +86,19 @@ window.CHECKLIST_QUESTIONS = [
     section: "第4条（内容及び手続の説明・同意）",
     critical: false,
 
-judgment: {
-  red: {
-    threshold: 2,
-    summary: "重要事項説明や同意に不備がある場合、実地指導で必ず指摘されます。署名・説明記録を重点的に確認してください。"
-  },
-  yellow: {
-    threshold: 1,
-    summary: "説明・同意の記録に一部不安があります。契約時書類の整合性を確認しておきましょう。"
-  },
-  green: {
-    summary: "重要事項説明および同意は適切に行われています。"
-  }
-},
-
+    judgment: {
+      red: {
+        threshold: 2,
+        summary: "重要事項説明や同意に不備がある場合、実地指導で必ず指摘されます。署名・説明記録を重点的に確認してください。"
+      },
+      yellow: {
+        threshold: 1,
+        summary: "説明・同意の記録に一部不安があります。契約時書類の整合性を確認しておきましょう。"
+      },
+      green: {
+        summary: "重要事項説明および同意は適切に行われています。"
+      }
+    },
 
     questions: [
       {
@@ -209,141 +208,33 @@ judgment: {
     ]
   },
 
-{
-  section: "その他の確認事項（形式・体制）",
-  level: "C",
-  bulk: true,
-  critical: false,
+  {
+    section: "その他の確認事項（形式・体制）",
+    level: "C",
+    bulk: true,
+    critical: false,
 
-  judgment: {
-    red: {
-      threshold: 3,
-      summary:
-        "複数の形式的要件に未確認事項があります。実地指導ではまとめて指摘される可能性があるため、一度全体を点検してください。"
+    judgment: {
+      red: {
+        threshold: 3,
+        summary: "複数の形式的要件に未確認事項があります。実地指導ではまとめて指摘される可能性があります。"
+      },
+      yellow: {
+        threshold: 1,
+        summary: "一部の形式的要件に確認不足があります。"
+      },
+      green: {
+        summary: "形式的な体制・書類は概ね整備されています。"
+      }
     },
-    yellow: {
-      threshold: 1,
-      summary:
-        "一部の形式的要件に確認不足があります。掲示物や書類の有無を事前に確認しておくと安心です。"
-    },
-    green: {
-      summary:
-        "形式的な体制・書類は概ね整備されています。実地指導で大きな指摘を受ける可能性は低いでしょう。"
-    }
-  },
 
-  questions: [
-    {
-      id: "c_notice",
-      text: "事業所内に必要な掲示物（運営規程、重要事項等）を掲示していますか？",
-      documents: ["掲示物（写真可）"]
-    },
-    {
-      id: "c_staffing",
-      text: "勤務体制表を作成し、職員配置が分かる状態にしていますか？",
-      documents: ["勤務体制表"]
-    },
-    {
-      id: "c_manager",
-      text: "管理者を選任し、役割・責務を明確にしていますか？",
-      documents: ["管理者選任記録"]
-    },
-    {
-      id: "c_disaster",
-      text: "非常災害時の対応マニュアルを整備していますか？",
-      documents: ["災害対応マニュアル"]
-    },
-    {
-      id: "c_hygiene",
-      text: "衛生管理に関する取り決めや記録を整備していますか？",
-      documents: ["衛生管理記録"]
-    },
-    {
-      id: "c_training",
-      text: "従業者に対する研修を実施し、記録を残していますか？",
-      documents: ["研修実施記録"]
-    }
-  ]
-];
-
-
-
-function runSectionCheck(sectionIndex) {
-  const section = CHECKLIST_QUESTIONS[sectionIndex];
-  const answers = {};
-
-  section.questions.forEach(q => {
-    const checked = document.querySelector(`input[name="${q.id}"]:checked`);
-
-    if (section.bulk) {
-      answers[q.id] = checked ? "yes" : "no";
-    } else {
-      answers[q.id] = checked ? checked.value : "unknown";
-    }
-  });
-
-  const result = evaluateSection(section, answers);
-  renderSectionResult(sectionIndex, result);
-}
-
-function evaluateSection(section, answers) {
-  let riskCount = 0;
-
-  const questions = section.questions.map(q => {
-    const ans = answers[q.id] || (section.bulk ? "no" : "unknown");
-    if (ans === "no") riskCount += 2;
-    if (ans === "unknown") riskCount += 1;
-
-    return {
-      text: q.text,
-      answer: ans,
-      feedback: q.feedback ? q.feedback[ans] : "",
-      documents: q.documents
-    };
-  });
-
-  const j = section.judgment;
-
-  let riskLevel = "🟢 概ね良好";
-  let summary = j.green.summary;
-
-  if (riskCount >= j.red.threshold) {
-    riskLevel = section.critical
-      ? "🔴 要注意（重点確認）"
-      : "🔴 要注意";
-    summary = j.red.summary;
-  } else if (riskCount >= j.yellow.threshold) {
-    riskLevel = "🟡 要確認";
-    summary = j.yellow.summary;
+    questions: [
+      { id: "c_notice", text: "必要な掲示物を掲示していますか？", documents: ["掲示物"] },
+      { id: "c_staffing", text: "勤務体制表を作成していますか？", documents: ["勤務体制表"] },
+      { id: "c_manager", text: "管理者を選任していますか？", documents: ["管理者選任記録"] },
+      { id: "c_disaster", text: "災害対応マニュアルを整備していますか？", documents: ["災害対応マニュアル"] },
+      { id: "c_hygiene", text: "衛生管理記録を整備していますか？", documents: ["衛生管理記録"] },
+      { id: "c_training", text: "研修記録を残していますか？", documents: ["研修実施記録"] }
+    ]
   }
-
-  return { riskLevel, summary, questions };
-}
-
-function renderSectionResult(sectionIndex, result) {
-  const el = document.getElementById(`result-${sectionIndex}`);
-  el.innerHTML = `
-    <strong>判定：</strong>${result.riskLevel}<br>
-    <div style="margin:6px 0;">${result.summary}</div>
-    <hr>
-  `;
-
-  result.questions.forEach(q => {
-    el.innerHTML += `
-      <div style="margin-bottom:12px;">
-        <div><strong>Q：</strong>${q.text}</div>
-        <div style="margin-left:1em;">
-          <strong>回答：</strong>${ANSWER_LABEL[q.answer]}
-        </div>
-        <div>➡ ${q.feedback}</div>
-        ${
-          q.documents.length
-            ? `<div style="font-size:14px;color:#555;">
-                📄 ${q.documents.join("、")}
-               </div>`
-            : ""
-        }
-      </div>
-    `;
-  });
-}
+];
