@@ -265,7 +265,7 @@ judgment: {
       documents: ["研修実施記録"]
     }
   ]
-};
+];
 
 
 
