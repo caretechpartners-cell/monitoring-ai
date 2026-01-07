@@ -106,6 +106,27 @@
       text-decoration: none;
       margin: 0 6px;
     }
+
+.accordion-header {
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f0f8ff;
+}
+
+.accordion-header.active {
+  background: #d8efff;
+  font-weight: 700;
+}
+
+.accordion-header:hover {
+  background: #e1f1fb;
+}
+
+.accordion-body {
+  margin-top: 10px;
+}
+
   </style>
 </head>
 
@@ -167,9 +188,36 @@ initLimit();
 const qWrap = document.getElementById("questions");
 
 CHECKLIST_QUESTIONS.forEach((section, sectionIndex) => {
-  const sec = document.createElement("div");
+const sec = document.createElement("div");
+sec.className = "section";
 
-  sec.innerHTML = `<div class="section-title">${section.section}</div>`;
+// ① 先に header / body を作る
+const header = document.createElement("div");
+header.className = "section-title accordion-header";
+header.textContent = section.section;
+
+const body = document.createElement("div");
+body.className = "accordion-body";
+body.style.display = "none"; // 最初は閉じる
+
+// ② その後で onclick を設定
+header.onclick = () => {
+  document.querySelectorAll(".accordion-header").forEach(h => {
+    h.classList.remove("active");
+  });
+  document.querySelectorAll(".accordion-body").forEach(el => {
+    if (el !== body) el.style.display = "none";
+  });
+
+  const open = body.style.display === "block";
+  body.style.display = open ? "none" : "block";
+  if (!open) header.classList.add("active");
+};
+
+// ③ DOM に組み立てる
+sec.appendChild(header);
+sec.appendChild(body);
+
 
   // 質問
   section.questions.forEach(q => {
@@ -183,7 +231,7 @@ CHECKLIST_QUESTIONS.forEach((section, sectionIndex) => {
         <label><input type="radio" name="${q.id}" value="unknown"> わからない</label>
       </div>
     `;
-    sec.appendChild(div);
+    body.appendChild(div);
   });
 
   // チェックボタン
@@ -192,14 +240,14 @@ CHECKLIST_QUESTIONS.forEach((section, sectionIndex) => {
   btn.style.marginTop = "16px";
   btn.textContent = `${section.section}をAIでチェック`;
   btn.onclick = () => runSectionCheck(sectionIndex);
-  sec.appendChild(btn);
+  body.appendChild(btn);
 
   // 結果表示
   const resultDiv = document.createElement("div");
   resultDiv.id = `result-${sectionIndex}`;
   resultDiv.className = "result-box";
   resultDiv.style.marginTop = "10px";
-  sec.appendChild(resultDiv);
+  body.appendChild(resultDiv);
 
   qWrap.appendChild(sec);
 });
