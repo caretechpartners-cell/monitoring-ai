@@ -188,6 +188,13 @@ CHECKLIST_QUESTIONS.forEach(section => {
   qWrap.appendChild(sec);
 });
 
+const ANSWER_LABEL = {
+  yes: "はい",
+  no: "いいえ",
+  unknown: "わからない"
+};
+
+
 function runChecklist() {
   let remain = Number(localStorage.getItem("checklist_remain"));
 
@@ -226,7 +233,7 @@ results.forEach(r => {
 
     qDiv.innerHTML = `
       <div><strong>Q：</strong>${q.text}</div>
-      <div><strong>回答：</strong>${q.answer}</div>
+<div><strong>回答：</strong>${ANSWER_LABEL[q.answer]}</div>
       <div style="margin-top:6px;">${q.feedback}</div>
       ${
         q.documents
