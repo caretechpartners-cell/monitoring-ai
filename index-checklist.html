@@ -129,9 +129,7 @@
   <!-- ▼ 質問エリア -->
   <div id="questions"></div>
 
-  <button class="btn" onclick="runChecklist()">AIでチェックする</button>
 
-  <div id="result" class="result-box"></div>
 
 </div>
 
@@ -155,23 +153,25 @@ function initLimit() {
 function updateLimit() {
   const remain = Number(localStorage.getItem("checklist_remain"));
   const limitText = document.getElementById("limitText");
-
-  if (remain > 0) {
-    limitText.textContent = `🌷 無料であと「${remain}回」ご利用いただけます`;
-  } else {
-    limitText.textContent = "無料チェック分は終了しました。";
-  }
+  limitText.textContent =
+    remain > 0
+      ? `🌷 無料であと「${remain}回」ご利用いただけます`
+      : "無料チェック分は終了しました。";
 }
 
 initLimit();
 
-/* 質問描画 */
+/* ================================
+   質問描画（条文ごと）
+================================ */
 const qWrap = document.getElementById("questions");
 
-CHECKLIST_QUESTIONS.forEach(section => {
+CHECKLIST_QUESTIONS.forEach((section, sectionIndex) => {
   const sec = document.createElement("div");
+
   sec.innerHTML = `<div class="section-title">${section.section}</div>`;
 
+  // 質問
   section.questions.forEach(q => {
     const div = document.createElement("div");
     div.className = "question";
@@ -186,17 +186,40 @@ CHECKLIST_QUESTIONS.forEach(section => {
     sec.appendChild(div);
   });
 
+  // チェックボタン
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.style.marginTop = "16px";
+  btn.textContent = `${section.section}をAIでチェック`;
+  btn.onclick = () => runSectionCheck(sectionIndex);
+  sec.appendChild(btn);
+
+  // 結果表示
+  const resultDiv = document.createElement("div");
+  resultDiv.id = `result-${sectionIndex}`;
+  resultDiv.className = "result-box";
+  resultDiv.style.marginTop = "10px";
+  sec.appendChild(resultDiv);
+
   qWrap.appendChild(sec);
 });
 
-const ANSWER_LABEL = {
-  yes: "はい",
-  no: "いいえ",
-  unknown: "わからない"
-};
+/* ================================
+   管理者：回数リセット
+================================ */
+document.addEventListener("keydown", function (e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    e.preventDefault();
+    const pass = prompt("管理者パスワードを入力してください");
+    if (pass === "admin123") {
+      localStorage.setItem("checklist_remain", 3);
+      alert("✅ 無料チェック回数を3回にリセットしました");
+      location.reload();
+    }
+  }
+});
 
-
-function runChecklist() {
+function runSectionCheck(sectionIndex) {
   let remain = Number(localStorage.getItem("checklist_remain"));
 
   if (remain <= 0) {
@@ -205,76 +228,44 @@ function runChecklist() {
     return;
   }
 
+  const section = CHECKLIST_QUESTIONS[sectionIndex];
   const answers = {};
-  CHECKLIST_QUESTIONS.forEach(sec => {
-    sec.questions.forEach(q => {
-      const checked = document.querySelector(`input[name="${q.id}"]:checked`);
-      answers[q.id] = checked ? checked.value : "unknown";
-    });
+
+  section.questions.forEach(q => {
+    const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+    answers[q.id] = checked ? checked.value : "unknown";
   });
 
   const results = evaluateChecklist(answers);
+  const result = results.find(r => r.section === section.section);
 
-const resultEl = document.getElementById("result");
-resultEl.innerHTML = "";
-
-results.forEach(r => {
-  const sectionDiv = document.createElement("div");
-
-  sectionDiv.innerHTML = `
-    <h3>${r.section}</h3>
-    <p><strong>判定：</strong>${r.riskLevel}</p>
-    <p>${r.summary}</p>
+  const resultDiv = document.getElementById(`result-${sectionIndex}`);
+  resultDiv.innerHTML = `
+    <p><strong>判定：</strong>${result.riskLevel}</p>
+    <p>${result.summary}</p>
+    <hr>
   `;
 
-  r.questions.forEach(q => {
-    const qDiv = document.createElement("div");
-    qDiv.style.marginBottom = "32px";
-
-    qDiv.innerHTML = `
+  result.questions.forEach(q => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "14px";
+    div.innerHTML = `
       <div><strong>Q：</strong>${q.text}</div>
-<div style="margin-left:1em;">
-  <strong>回答：</strong>${ANSWER_LABEL[q.answer]}
-</div>
-      <div style="margin-top:6px;">${q.feedback}</div>
+      <div style="margin-left:1em;"><strong>回答：</strong>${q.answer}</div>
+      <div>${q.feedback}</div>
       ${
-        q.documents
-          ? `<div style="font-size:14px; color:#555; margin-top:4px;">
-               📄 確認書類：${q.documents.join("、")}
-             </div>`
+        q.documents.length
+          ? `<div style="font-size:14px;color:#555;">📄 確認書類：${q.documents.join("、")}</div>`
           : ""
       }
     `;
-
-    sectionDiv.appendChild(qDiv);
+    resultDiv.appendChild(div);
   });
 
-  resultEl.appendChild(sectionDiv);
-});
   remain--;
   localStorage.setItem("checklist_remain", remain);
   updateLimit();
 }
-
-// ================================
-// 管理者用：無料回数リセット
-// Ctrl + Shift + R
-// ================================
-document.addEventListener("keydown", function (e) {
-  if (e.ctrlKey && e.shiftKey && e.key === "R") {
-    e.preventDefault(); // ブラウザ更新を防止
-
-    const pass = prompt("管理者パスワードを入力してください");
-
-    if (pass === "admin123") {
-      localStorage.setItem("checklist_remain", 3);
-      alert("✅ 無料チェック回数を3回にリセットしました");
-      location.reload();
-    } else if (pass !== null) {
-      alert("❌ パスワードが違います");
-    }
-  }
-});
 
 </script>
 

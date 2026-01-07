@@ -3,6 +3,12 @@
 // generate-checklist.js
 // ================================
 
+const ANSWER_LABEL = {
+  yes: "はい",
+  no: "いいえ",
+  unknown: "わからない"
+};
+
 window.CHECKLIST_QUESTIONS = [
   {
     section: "第27条の2（虐待防止）",
@@ -205,49 +211,79 @@ judgment: {
   }
 ];
 
-// --------------------------------
-// 判定ロジック（条文ごと judgment 切替）
-// --------------------------------
-window.evaluateChecklist = function (answers) {
-  const results = [];
+function runSectionCheck(sectionIndex) {
+  const section = CHECKLIST_QUESTIONS[sectionIndex];
 
-  for (const section of window.CHECKLIST_QUESTIONS) {
-    let riskCount = 0;
+  const answers = {};
+  section.questions.forEach(q => {
+    const checked = document.querySelector(
+      `input[name="${q.id}"]:checked`
+    );
+    answers[q.id] = checked ? checked.value : "unknown";
+  });
 
-    const questionResults = section.questions.map(q => {
-      const ans = answers[q.id] || "unknown";
-      if (ans === "no") riskCount += 2;
-      if (ans === "unknown") riskCount += 1;
+  const result = evaluateSection(section, answers);
+  renderSectionResult(sectionIndex, result);
+}
 
-      return {
-        text: q.text,
-        answer: ans,
-        feedback: q.feedback ? q.feedback[ans] : "",
-        documents: q.documents || []
-      };
-    });
+function evaluateSection(section, answers) {
+  let riskCount = 0;
 
-    // ▼ 条文ごとの判定設定
-    const j = section.judgment;
+  const questions = section.questions.map(q => {
+    const ans = answers[q.id] || "unknown";
+    if (ans === "no") riskCount += 2;
+    if (ans === "unknown") riskCount += 1;
 
-    let riskLevel = "🟢 概ね良好";
-    let summary = j.green.summary;
+    return {
+      text: q.text,
+      answer: ans,
+      feedback: q.feedback[ans],
+      documents: q.documents
+    };
+  });
 
-    if (riskCount >= j.red.threshold) {
-      riskLevel = section.critical ? "🔴 要注意（重点確認）" : "🔴 要注意";
-      summary = j.red.summary;
-    } else if (riskCount >= j.yellow.threshold) {
-      riskLevel = "🟡 要確認";
-      summary = j.yellow.summary;
-    }
+  const j = section.judgment;
 
-    results.push({
-      section: section.section,
-      riskLevel,
-      questions: questionResults,
-      summary
-    });
+  let riskLevel = "🟢 概ね良好";
+  let summary = j.green.summary;
+
+  if (riskCount >= j.red.threshold) {
+    riskLevel = section.critical
+      ? "🔴 要注意（重点確認）"
+      : "🔴 要注意";
+    summary = j.red.summary;
+  } else if (riskCount >= j.yellow.threshold) {
+    riskLevel = "🟡 要確認";
+    summary = j.yellow.summary;
   }
 
-  return results;
-};
+  return { riskLevel, summary, questions };
+}
+
+function renderSectionResult(sectionIndex, result) {
+  const el = document.getElementById(`result-${sectionIndex}`);
+  el.innerHTML = `
+    <strong>判定：</strong>${result.riskLevel}<br>
+    <div style="margin:6px 0;">${result.summary}</div>
+    <hr>
+  `;
+
+  result.questions.forEach(q => {
+    el.innerHTML += `
+      <div style="margin-bottom:12px;">
+        <div><strong>Q：</strong>${q.text}</div>
+        <div style="margin-left:1em;">
+          <strong>回答：</strong>${ANSWER_LABEL[q.answer]}
+        </div>
+        <div>➡ ${q.feedback}</div>
+        ${
+          q.documents.length
+            ? `<div style="font-size:14px;color:#555;">
+                📄 ${q.documents.join("、")}
+               </div>`
+            : ""
+        }
+      </div>
+    `;
+  });
+}
