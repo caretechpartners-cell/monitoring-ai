@@ -236,31 +236,9 @@ function runSectionCheck(sectionIndex) {
     answers[q.id] = checked ? checked.value : "unknown";
   });
 
-  const results = evaluateChecklist(answers);
-  const result = results.find(r => r.section === section.section);
-
-  const resultDiv = document.getElementById(`result-${sectionIndex}`);
-  resultDiv.innerHTML = `
-    <p><strong>判定：</strong>${result.riskLevel}</p>
-    <p>${result.summary}</p>
-    <hr>
-  `;
-
-  result.questions.forEach(q => {
-    const div = document.createElement("div");
-    div.style.marginBottom = "14px";
-    div.innerHTML = `
-      <div><strong>Q：</strong>${q.text}</div>
-      <div style="margin-left:1em;"><strong>回答：</strong>${q.answer}</div>
-      <div>${q.feedback}</div>
-      ${
-        q.documents.length
-          ? `<div style="font-size:14px;color:#555;">📄 確認書類：${q.documents.join("、")}</div>`
-          : ""
-      }
-    `;
-    resultDiv.appendChild(div);
-  });
+  // ★ ここが重要（evaluateChecklist は使わない）
+  const result = evaluateSection(section, answers);
+  renderSectionResult(sectionIndex, result);
 
   remain--;
   localStorage.setItem("checklist_remain", remain);
