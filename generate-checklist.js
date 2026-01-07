@@ -326,27 +326,65 @@ function renderSectionResult(sectionIndex, result) {
   const el = document.getElementById(`result-${sectionIndex}`);
   if (!el) return;
 
+  // ▼ チェック数集計
+  let checkedCount = 0;
+  let uncheckedCount = 0;
+
+  result.questions.forEach(q => {
+    if (q.answer === "yes") checkedCount++;
+    if (q.answer === "no") uncheckedCount++;
+  });
+
+  // ▼ 未チェック項目抽出
+  const uncheckedQuestions = result.questions.filter(
+    q => q.answer === "no"
+  );
+
+  // ▼ 先頭サマリー
   el.innerHTML = `
+    <div style="margin-bottom:10px;font-weight:bold;">
+      ✔ チェック済み：${checkedCount}項目　
+      ⚠ 未チェック：${uncheckedCount}項目
+    </div>
+  `;
+
+  // ▼ 未チェック項目一覧（Cまとめ専用）
+  if (uncheckedQuestions.length > 0) {
+    el.innerHTML += `
+      <div style="background:#fff3f3;border-radius:10px;padding:12px;margin-bottom:12px;">
+        <strong>【未チェック項目（要対応）】</strong>
+        <ul style="margin-top:8px;">
+          ${uncheckedQuestions
+            .map(q => `<li>${q.text}</li>`)
+            .join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  // ▼ 判定表示
+  el.innerHTML += `
     <strong>判定：</strong>${result.riskLevel}<br>
     <div style="margin:6px 0;">${result.summary}</div>
     <hr>
   `;
 
+  // ▼ 各質問の詳細（従来どおり）
   result.questions.forEach(q => {
     el.innerHTML += `
       <div style="margin-bottom:12px;">
         <div><strong>Q：</strong>${q.text}</div>
         <div style="margin-left:1em;">
-          <strong>回答：</strong>${ANSWER_LABEL[q.answer]}
+          <strong>回答：</strong>${ANSWER_LABEL[q.answer] || "未回答"}
         </div>
-        ${q.feedback ? `<div>➡ ${q.feedback}</div>` : ""}
         ${
           q.documents.length
-            ? `<div style="font-size:14px;color:#555;">📄 ${q.documents.join("、")}</div>`
+            ? `<div style="font-size:14px;color:#555;">
+                📄 ${q.documents.join("、")}
+               </div>`
             : ""
         }
       </div>
     `;
   });
 }
-
