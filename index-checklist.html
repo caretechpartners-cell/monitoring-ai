@@ -86,13 +86,14 @@
       color: white;
     }
     .result-box {
-      margin-top: 30px;
-      font-size: 18px;
-      background: #f7fbff;
-      border-radius: 12px;
-      padding: 20px;
-      white-space: pre-wrap;
-    }
+  margin-top: 20px;
+  font-size: 17px;
+  background: #f7fbff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  line-height: 1.6;
+}
+
     .footer-links {
       margin-top: 60px;
       margin-bottom: 20px;
@@ -224,16 +225,17 @@ results.forEach(r => {
     <h3>${r.section}</h3>
     <p><strong>判定：</strong>${r.riskLevel}</p>
     <p>${r.summary}</p>
-    <hr>
   `;
 
   r.questions.forEach(q => {
     const qDiv = document.createElement("div");
-    qDiv.style.marginBottom = "18px";
+    qDiv.style.marginBottom = "10px";
 
     qDiv.innerHTML = `
       <div><strong>Q：</strong>${q.text}</div>
-<div><strong>回答：</strong>${ANSWER_LABEL[q.answer]}</div>
+<div style="margin-left:1em;">
+  <strong>回答：</strong>${ANSWER_LABEL[q.answer]}
+</div>
       <div style="margin-top:6px;">${q.feedback}</div>
       ${
         q.documents
