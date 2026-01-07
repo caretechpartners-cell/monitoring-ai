@@ -229,13 +229,59 @@ window.CHECKLIST_QUESTIONS = [
     },
 
     questions: [
-      { id: "c_notice", text: "必要な掲示物を掲示していますか？", documents: ["掲示物"] },
-      { id: "c_staffing", text: "勤務体制表を作成していますか？", documents: ["勤務体制表"] },
-      { id: "c_manager", text: "管理者を選任していますか？", documents: ["管理者選任記録"] },
-      { id: "c_disaster", text: "災害対応マニュアルを整備していますか？", documents: ["災害対応マニュアル"] },
-      { id: "c_hygiene", text: "衛生管理記録を整備していますか？", documents: ["衛生管理記録"] },
-      { id: "c_training", text: "研修記録を残していますか？", documents: ["研修実施記録"] }
-    ]
+  {
+    id: "c_staffing",
+    text: "従業者の員数は基準を満たし、必要な資格を有していますか？（第2条）",
+    documents: ["勤務体制一覧表", "資格証の写し"]
+  },
+  {
+    id: "c_manager",
+    text: "管理者は常勤専従、または適切な兼務体制となっていますか？（第3条）",
+    documents: ["管理者の雇用形態資料", "勤務体制表"]
+  },
+  {
+    id: "c_qualification",
+    text: "被保険者資格・要介護認定の有無や有効期限を確認していますか？（第7条）",
+    documents: ["介護保険資格確認記録"]
+  },
+  {
+    id: "c_work_system",
+    text: "事業所の従業者によるサービス提供体制を確保していますか？（第19条）",
+    documents: ["勤務体制表", "勤務実績表"]
+  },
+  {
+    id: "c_bcp",
+    text: "感染症・災害時の業務継続計画（BCP）を策定し、研修・訓練を実施していますか？（第19条の2）",
+    documents: ["業務継続計画", "研修・訓練記録"]
+  },
+  {
+    id: "c_infection",
+    text: "感染症の予防・まん延防止のための委員会、指針、研修を実施していますか？（第21条の2）",
+    documents: ["感染症対策指針", "委員会議事録", "研修記録"]
+  },
+  {
+    id: "c_privacy",
+    text: "個人情報の利用について同意を得ており、職員の秘密保持を徹底していますか？（第23条）",
+    documents: ["個人情報同意書", "秘密保持誓約書"]
+  },
+  {
+    id: "c_advertising",
+    text: "広告内容は虚偽や誇大な表現となっていませんか？（第24条）",
+    documents: ["パンフレット", "Web広告"]
+  },
+  {
+    id: "c_complaint",
+    text: "苦情を受け付けた場合、内容や対応を記録していますか？（第26条）",
+    documents: ["苦情受付簿", "苦情対応記録"]
+  },
+  {
+    id: "c_accident",
+    text: "事故発生時の連絡・対応・記録・賠償を適切に行っていますか？（第27条）",
+    documents: ["事故対応記録", "連絡記録"]
+  }
+]
+
+
   }
 ];
 
@@ -291,7 +337,7 @@ function renderSectionResult(sectionIndex, result) {
       <div style="margin-bottom:12px;">
         <div><strong>Q：</strong>${q.text}</div>
         <div style="margin-left:1em;">
-          <strong>回答：</strong>${ANSWER_LABEL[q.answer] || "未回答"}
+          <strong>回答：</strong>${ANSWER_LABEL[q.answer]}
         </div>
         ${q.feedback ? `<div>➡ ${q.feedback}</div>` : ""}
         ${
