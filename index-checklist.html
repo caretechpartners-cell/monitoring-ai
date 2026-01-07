@@ -253,6 +253,27 @@ results.forEach(r => {
   localStorage.setItem("checklist_remain", remain);
   updateLimit();
 }
+
+// ================================
+// 管理者用：無料回数リセット
+// Ctrl + Shift + R
+// ================================
+document.addEventListener("keydown", function (e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    e.preventDefault(); // ブラウザ更新を防止
+
+    const pass = prompt("管理者パスワードを入力してください");
+
+    if (pass === "admin123") {
+      localStorage.setItem("checklist_remain", 3);
+      alert("✅ 無料チェック回数を3回にリセットしました");
+      location.reload();
+    } else if (pass !== null) {
+      alert("❌ パスワードが違います");
+    }
+  }
+});
+
 </script>
 
 </body>
