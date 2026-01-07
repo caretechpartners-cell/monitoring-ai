@@ -238,3 +238,69 @@ window.CHECKLIST_QUESTIONS = [
     ]
   }
 ];
+
+// ================================
+// 判定ロジック
+// ================================
+
+function evaluateSection(section, answers) {
+  let riskCount = 0;
+
+  const questions = section.questions.map(q => {
+    const ans = answers[q.id] || (section.bulk ? "no" : "unknown");
+
+    if (ans === "no") riskCount += 2;
+    if (ans === "unknown") riskCount += 1;
+
+    return {
+      text: q.text,
+      answer: ans,
+      feedback: q.feedback ? q.feedback[ans] : "",
+      documents: q.documents || []
+    };
+  });
+
+  const j = section.judgment;
+
+  let riskLevel = "🟢 概ね良好";
+  let summary = j.green.summary;
+
+  if (riskCount >= j.red.threshold) {
+    riskLevel = section.critical ? "🔴 要注意（重点確認）" : "🔴 要注意";
+    summary = j.red.summary;
+  } else if (riskCount >= j.yellow.threshold) {
+    riskLevel = "🟡 要確認";
+    summary = j.yellow.summary;
+  }
+
+  return { riskLevel, summary, questions };
+}
+
+function renderSectionResult(sectionIndex, result) {
+  const el = document.getElementById(`result-${sectionIndex}`);
+  if (!el) return;
+
+  el.innerHTML = `
+    <strong>判定：</strong>${result.riskLevel}<br>
+    <div style="margin:6px 0;">${result.summary}</div>
+    <hr>
+  `;
+
+  result.questions.forEach(q => {
+    el.innerHTML += `
+      <div style="margin-bottom:12px;">
+        <div><strong>Q：</strong>${q.text}</div>
+        <div style="margin-left:1em;">
+          <strong>回答：</strong>${ANSWER_LABEL[q.answer] || "未回答"}
+        </div>
+        ${q.feedback ? `<div>➡ ${q.feedback}</div>` : ""}
+        ${
+          q.documents.length
+            ? `<div style="font-size:14px;color:#555;">📄 ${q.documents.join("、")}</div>`
+            : ""
+        }
+      </div>
+    `;
+  });
+}
+
