@@ -292,10 +292,15 @@ function runSectionCheck(sectionIndex) {
   const section = CHECKLIST_QUESTIONS[sectionIndex];
   const answers = {};
 
-  section.questions.forEach(q => {
+section.questions.forEach(q => {
+  if (section.bulk) {
+    const checkbox = document.querySelector(`input[name="${q.id}"]`);
+    answers[q.id] = checkbox && checkbox.checked ? "yes" : "no";
+  } else {
     const checked = document.querySelector(`input[name="${q.id}"]:checked`);
     answers[q.id] = checked ? checked.value : "unknown";
-  });
+  }
+});
 
   // ★ ここが重要（evaluateChecklist は使わない）
   const result = evaluateSection(section, answers);
