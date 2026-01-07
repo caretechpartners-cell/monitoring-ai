@@ -208,18 +208,79 @@ judgment: {
         documents: ["運営規程（改訂履歴）"]
       }
     ]
-  }
-];
+  },
+
+{
+  section: "その他の確認事項（形式・体制）",
+  level: "C",
+  bulk: true,
+  critical: false,
+
+  judgment: {
+    red: {
+      threshold: 3,
+      summary:
+        "複数の形式的要件に未確認事項があります。実地指導ではまとめて指摘される可能性があるため、一度全体を点検してください。"
+    },
+    yellow: {
+      threshold: 1,
+      summary:
+        "一部の形式的要件に確認不足があります。掲示物や書類の有無を事前に確認しておくと安心です。"
+    },
+    green: {
+      summary:
+        "形式的な体制・書類は概ね整備されています。実地指導で大きな指摘を受ける可能性は低いでしょう。"
+    }
+  },
+
+  questions: [
+    {
+      id: "c_notice",
+      text: "事業所内に必要な掲示物（運営規程、重要事項等）を掲示していますか？",
+      documents: ["掲示物（写真可）"]
+    },
+    {
+      id: "c_staffing",
+      text: "勤務体制表を作成し、職員配置が分かる状態にしていますか？",
+      documents: ["勤務体制表"]
+    },
+    {
+      id: "c_manager",
+      text: "管理者を選任し、役割・責務を明確にしていますか？",
+      documents: ["管理者選任記録"]
+    },
+    {
+      id: "c_disaster",
+      text: "非常災害時の対応マニュアルを整備していますか？",
+      documents: ["災害対応マニュアル"]
+    },
+    {
+      id: "c_hygiene",
+      text: "衛生管理に関する取り決めや記録を整備していますか？",
+      documents: ["衛生管理記録"]
+    },
+    {
+      id: "c_training",
+      text: "従業者に対する研修を実施し、記録を残していますか？",
+      documents: ["研修実施記録"]
+    }
+  ]
+};
+
+
 
 function runSectionCheck(sectionIndex) {
   const section = CHECKLIST_QUESTIONS[sectionIndex];
-
   const answers = {};
+
   section.questions.forEach(q => {
-    const checked = document.querySelector(
-      `input[name="${q.id}"]:checked`
-    );
-    answers[q.id] = checked ? checked.value : "unknown";
+    const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+
+    if (section.bulk) {
+      answers[q.id] = checked ? "yes" : "no";
+    } else {
+      answers[q.id] = checked ? checked.value : "unknown";
+    }
   });
 
   const result = evaluateSection(section, answers);
@@ -230,14 +291,14 @@ function evaluateSection(section, answers) {
   let riskCount = 0;
 
   const questions = section.questions.map(q => {
-    const ans = answers[q.id] || "unknown";
+    const ans = answers[q.id] || (section.bulk ? "no" : "unknown");
     if (ans === "no") riskCount += 2;
     if (ans === "unknown") riskCount += 1;
 
     return {
       text: q.text,
       answer: ans,
-      feedback: q.feedback[ans],
+      feedback: q.feedback ? q.feedback[ans] : "",
       documents: q.documents
     };
   });
