@@ -195,7 +195,6 @@ const LEVEL_LABEL = {
 };
 
 ["A", "B", "C"].forEach(level => {
-  // ▼ レベル見出し
   const levelTitle = document.createElement("h2");
   levelTitle.style.marginTop = "40px";
   levelTitle.style.color = "#2a6f97";
@@ -203,8 +202,9 @@ const LEVEL_LABEL = {
   qWrap.appendChild(levelTitle);
 
   CHECKLIST_QUESTIONS
-    .filter(section => section.level === level)
-    .forEach((section, sectionIndex) => {
+    .map((section, index) => ({ section, index }))
+    .filter(obj => obj.section.level === level)
+    .forEach(({ section, index }) => {
 
       const sec = document.createElement("div");
       sec.className = "section";
@@ -218,9 +218,7 @@ const LEVEL_LABEL = {
       body.style.display = "none";
 
       header.onclick = () => {
-        document.querySelectorAll(".accordion-header").forEach(h => {
-          h.classList.remove("active");
-        });
+        document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
         document.querySelectorAll(".accordion-body").forEach(el => {
           if (el !== body) el.style.display = "none";
         });
@@ -233,7 +231,7 @@ const LEVEL_LABEL = {
       sec.appendChild(header);
       sec.appendChild(body);
 
-      // ▼ 質問描画（今までと同じ）
+      // 質問
       section.questions.forEach(q => {
         const div = document.createElement("div");
         div.className = "question";
@@ -259,18 +257,14 @@ const LEVEL_LABEL = {
         body.appendChild(div);
       });
 
-      // ▼ チェックボタン
       const btn = document.createElement("button");
       btn.className = "btn";
       btn.textContent = `${section.section}をAIでチェック`;
-      btn.onclick = () => runSectionCheck(
-        CHECKLIST_QUESTIONS.indexOf(section)
-      );
+      btn.onclick = () => runSectionCheck(index);
       body.appendChild(btn);
 
-      // ▼ 結果
       const resultDiv = document.createElement("div");
-      resultDiv.id = `result-${CHECKLIST_QUESTIONS.indexOf(section)}`;
+      resultDiv.id = `result-${index}`;
       resultDiv.className = "result-box";
       body.appendChild(resultDiv);
 
