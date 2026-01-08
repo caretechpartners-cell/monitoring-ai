@@ -12,6 +12,7 @@ const ANSWER_LABEL = {
 window.CHECKLIST_QUESTIONS = [
   {
     section: "第27条の2（虐待防止）",
+    level: "A",
     critical: true,
 
     judgment: {
@@ -84,6 +85,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第4条（内容及び手続の説明・同意）",
+    level: "B",
     critical: false,
 
     judgment: {
@@ -126,6 +128,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第13条（指定居宅介護支援の具体的取扱方針）",
+    level: "B",
     critical: false,
 
     judgment: {
@@ -168,6 +171,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第18条（運営規程）",
+    level: "B",
     critical: false,
 
     judgment: {
@@ -210,6 +214,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第19条の2（業務継続計画：BCP）",
+    level: "A",
     critical: true,
 
     judgment: {
@@ -271,6 +276,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第21条の2（感染症の予防及びまん延防止）",
+    level: "A",
     critical: true,
 
     judgment: {
@@ -331,6 +337,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第26条（苦情処理）",
+    level: "B",
     critical: true,
 
     judgment: {
@@ -392,6 +399,7 @@ window.CHECKLIST_QUESTIONS = [
 
   {
     section: "第27条（事故発生時の対応）",
+    level: "B",
     critical: true,
 
     judgment: {
