@@ -188,82 +188,94 @@ initLimit();
 ================================ */
 const qWrap = document.getElementById("questions");
 
-CHECKLIST_QUESTIONS.forEach((section, sectionIndex) => {
-const sec = document.createElement("div");
-sec.className = "section";
-
-// ① 先に header / body を作る
-const header = document.createElement("div");
-header.className = "section-title accordion-header";
-header.textContent = section.section;
-
-const body = document.createElement("div");
-body.className = "accordion-body";
-body.style.display = "none"; // 最初は閉じる
-
-// ② その後で onclick を設定
-header.onclick = () => {
-  document.querySelectorAll(".accordion-header").forEach(h => {
-    h.classList.remove("active");
-  });
-  document.querySelectorAll(".accordion-body").forEach(el => {
-    if (el !== body) el.style.display = "none";
-  });
-
-  const open = body.style.display === "block";
-  body.style.display = open ? "none" : "block";
-  if (!open) header.classList.add("active");
+const LEVEL_LABEL = {
+  A: "🅰 本当に止められる（重点確認）",
+  B: "🅱 整える・運用改善",
+  C: "🅲 棚卸・形式確認"
 };
 
-// ③ DOM に組み立てる
-sec.appendChild(header);
-sec.appendChild(body);
+["A", "B", "C"].forEach(level => {
+  // ▼ レベル見出し
+  const levelTitle = document.createElement("h2");
+  levelTitle.style.marginTop = "40px";
+  levelTitle.style.color = "#2a6f97";
+  levelTitle.textContent = LEVEL_LABEL[level];
+  qWrap.appendChild(levelTitle);
 
+  CHECKLIST_QUESTIONS
+    .filter(section => section.level === level)
+    .forEach((section, sectionIndex) => {
 
-  // 質問
-section.questions.forEach(q => {
-  const div = document.createElement("div");
-  div.className = "question";
+      const sec = document.createElement("div");
+      sec.className = "section";
 
-  if (section.bulk) {
-    // Cまとめ：チェックボックス
-    div.innerHTML = `
-      <label>
-        <input type="checkbox" name="${q.id}">
-        ${q.text}
-      </label>
-    `;
-  } else {
-    // A/B：ラジオボタン
-    div.innerHTML = `
-      ${q.text}
-      <div class="choices">
-        <label><input type="radio" name="${q.id}" value="yes"> はい</label>
-        <label><input type="radio" name="${q.id}" value="no"> いいえ</label>
-        <label><input type="radio" name="${q.id}" value="unknown"> わからない</label>
-      </div>
-    `;
-  }
+      const header = document.createElement("div");
+      header.className = "section-title accordion-header";
+      header.textContent = section.section;
 
-  body.appendChild(div);
-});
+      const body = document.createElement("div");
+      body.className = "accordion-body";
+      body.style.display = "none";
 
-  // チェックボタン
-  const btn = document.createElement("button");
-  btn.className = "btn";
-  btn.style.marginTop = "16px";
-  btn.textContent = `${section.section}をAIでチェック`;
-  btn.onclick = () => runSectionCheck(sectionIndex);
-  body.appendChild(btn);
+      header.onclick = () => {
+        document.querySelectorAll(".accordion-header").forEach(h => {
+          h.classList.remove("active");
+        });
+        document.querySelectorAll(".accordion-body").forEach(el => {
+          if (el !== body) el.style.display = "none";
+        });
 
-  // 結果表示
-  const resultDiv = document.createElement("div");
-  resultDiv.id = `result-${sectionIndex}`;
-  resultDiv.className = "result-box";
-  resultDiv.style.marginTop = "10px";
-  body.appendChild(resultDiv);
+        const open = body.style.display === "block";
+        body.style.display = open ? "none" : "block";
+        if (!open) header.classList.add("active");
+      };
 
-  qWrap.appendChild(sec);
+      sec.appendChild(header);
+      sec.appendChild(body);
+
+      // ▼ 質問描画（今までと同じ）
+      section.questions.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "question";
+
+        if (section.bulk) {
+          div.innerHTML = `
+            <label>
+              <input type="checkbox" name="${q.id}">
+              ${q.text}
+            </label>
+          `;
+        } else {
+          div.innerHTML = `
+            ${q.text}
+            <div class="choices">
+              <label><input type="radio" name="${q.id}" value="yes"> はい</label>
+              <label><input type="radio" name="${q.id}" value="no"> いいえ</label>
+              <label><input type="radio" name="${q.id}" value="unknown"> わからない</label>
+            </div>
+          `;
+        }
+
+        body.appendChild(div);
+      });
+
+      // ▼ チェックボタン
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = `${section.section}をAIでチェック`;
+      btn.onclick = () => runSectionCheck(
+        CHECKLIST_QUESTIONS.indexOf(section)
+      );
+      body.appendChild(btn);
+
+      // ▼ 結果
+      const resultDiv = document.createElement("div");
+      resultDiv.id = `result-${CHECKLIST_QUESTIONS.indexOf(section)}`;
+      resultDiv.className = "result-box";
+      body.appendChild(resultDiv);
+
+      qWrap.appendChild(sec);
+    });
 });
 
 /* ================================
