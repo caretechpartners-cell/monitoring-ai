@@ -218,15 +218,19 @@ const LEVEL_LABEL = {
       body.style.display = "none";
 
       header.onclick = () => {
-        document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
-        document.querySelectorAll(".accordion-body").forEach(el => {
-          if (el !== body) el.style.display = "none";
-        });
+  // ▼ 同じレベルブロック内だけを対象にする
+  sec.parentElement.querySelectorAll(".accordion-header").forEach(h => {
+    if (h !== header) h.classList.remove("active");
+  });
+  sec.parentElement.querySelectorAll(".accordion-body").forEach(el => {
+    if (el !== body) el.style.display = "none";
+  });
 
-        const open = body.style.display === "block";
-        body.style.display = open ? "none" : "block";
-        if (!open) header.classList.add("active");
-      };
+  const open = body.style.display === "block";
+  body.style.display = open ? "none" : "block";
+  if (!open) header.classList.add("active");
+};
+
 
       sec.appendChild(header);
       sec.appendChild(body);
