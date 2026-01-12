@@ -141,11 +141,6 @@
       text-align: center;
     }
 
-    @media (max-width: 768px) {
-      .flex-row {
-        flex-direction: column;
-      }
-
 /* ▼ 画像ボックス（PC・スマホ共通） */
 .img-box {
   background: #eef6fb;
@@ -156,19 +151,19 @@
   align-items: center;
   justify-content: center;
 
-  max-height: 300px;   /* ★ ここが効く */
-  overflow: hidden;    /* ★ はみ出し防止 */
+  max-height: 300px;
+  overflow: hidden;
 }
 
 .img-box img {
   max-width: 100%;
-  max-height: 276px;   /* ★ 実画像の上限 */
+  max-height: 276px;
   height: auto;
   object-fit: contain;
   border-radius: 8px;
 }
 
-/* ▼ スマホ対応だけをここに */
+/* ▼ スマホ対応 */
 @media (max-width: 768px) {
   .flex-row {
     flex-direction: column;
