@@ -146,6 +146,7 @@
         flex-direction: column;
       }
 
+/* ▼ 画像ボックス（PC・スマホ共通） */
 .img-box {
   background: #eef6fb;
   border: 2px dashed #9bbcd1;
@@ -154,16 +155,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  max-height: 360px;       /* ★ 高さの上限 */
-  overflow: hidden;        /* ★ はみ出し防止 */
+
+  max-height: 300px;   /* ★ ここが効く */
+  overflow: hidden;    /* ★ はみ出し防止 */
 }
 
 .img-box img {
   max-width: 100%;
-  max-height: 336px;       /* ★ 枠より少し小さく */
+  max-height: 276px;   /* ★ 実画像の上限 */
   height: auto;
-  object-fit: contain;     /* ★ 全体を収める */
+  object-fit: contain;
   border-radius: 8px;
+}
+
+/* ▼ スマホ対応だけをここに */
+@media (max-width: 768px) {
+  .flex-row {
+    flex-direction: column;
+  }
 }
 
     }
