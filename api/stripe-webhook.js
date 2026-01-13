@@ -115,6 +115,9 @@ export default async function handler(req, res) {
       const subscriptionId = session.subscription || null;
       const productCode = session.metadata?.product_code || null;
 
+      // 🔹 checklist は買い切り（subscriptionId === null）
+      // 🔹 monitoring / conference は subscriptionId が入る
+
       if (!email || !productCode) {
         console.error("missing email or product_code", {
           email,
