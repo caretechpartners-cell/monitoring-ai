@@ -166,31 +166,50 @@
   </select>
 
   <label>■ 利用者の基本情報（最小限）</label>
-  <textarea id="basicInfo"></textarea>
+  <textarea id="basicInfo"
+  placeholder="例：要介護4。脳血管性認知症あり。
+ADLは全般的に低下しており、移動・排泄は一部介助を要する。
+嚥下機能低下がみられるため、食事形態に留意している。">
+</textarea>
+
 
   <label>■ モニタリング事実（観察・把握した事実）</label>
-  <textarea id="monitoringFacts"></textarea>
+  <textarea id="monitoringFacts"
+  placeholder="例：
+・日中は居室内で過ごす時間が多いが、声かけにより食堂へ移動できる場面がみられる
+・食事摂取量は日によってばらつきがある
+・入浴時に不安を訴え、拒否的な言動がみられることがある">
+</textarea>
+
 
   <label>■ 多職種からの情報</label>
 
 <label style="font-size:16px; color:#555; margin-top:12px;">【介護職】</label>
 <textarea id="infoCare"
-  placeholder="例：夜間覚醒がみられ、声かけにより落ち着く場面がある"></textarea>
+  placeholder="例：夜間覚醒がみられ、声かけにより落ち着く場面がある。"></textarea>
 
 <label style="font-size:16px; color:#555; margin-top:18px;">【医療・看護職】</label>
 <textarea id="infoNurse"
-  placeholder="例：バイタルサインは概ね安定。服薬状況に問題は認められていない"></textarea>
+  placeholder="例：バイタルサインは概ね安定。服薬状況に問題は認められていない。"></textarea>
 
 <label style="font-size:16px; color:#555; margin-top:18px;">【リハ職】</label>
 <textarea id="infoRehab"
-  placeholder="例：立ち上がり動作は見守りで可能。移動時は転倒リスクに留意が必要"></textarea>
+  placeholder="例：立ち上がり動作は見守りで可能。移動時は転倒リスクに留意が必要。"></textarea>
 
 
   <label>■ ケアプラン上の目標</label>
-  <textarea id="planGoal"></textarea>
+  <textarea id="planGoal"
+  placeholder="例：施設内において安心して生活できる環境を整え、
+心身の状態に配慮しながら安定した生活を継続できるよう支援する。">
+</textarea>
+
 
   <label>■ 今回、特に確認したいポイント</label>
-  <textarea id="checkPoint"></textarea>
+  <textarea id="checkPoint"
+  placeholder="例：夜間の覚醒状況と安全面への影響、
+入浴時の不安や拒否的反応への対応状況">
+</textarea>
+
 
   <button class="btn" onclick="runEvaluation()">AIで評価整理を行う</button>
 
@@ -242,13 +261,13 @@ function insertSample() {
     "・入浴時に不安を訴え、拒否的な言動がみられることがある";
 
   infoCare.value =
-    "【介護職】\n夜間に覚醒し、居室内を歩こうとする様子がみられることがある。";
+    "夜間に覚醒し、居室内を歩こうとする様子がみられることがある。";
 
   infoNurse.value =
-    "【看護職】\nバイタルサインは概ね安定しており、服薬状況に問題は認められていない。";
+    "バイタルサインは概ね安定しており、服薬状況に問題は認められていない。";
 
   infoRehab.value =
-    "【リハ職】\n下肢筋力低下がみられ、立ち上がり時は見守りが必要。";
+    "下肢筋力低下がみられ、立ち上がり時は見守りが必要。";
 
   planGoal.value =
     "施設内において安心して生活できる環境を整え、\n心身の状態に配慮しながら安定した生活を継続できるよう支援する。";
