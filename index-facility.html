@@ -5,10 +5,7 @@
   <title>やさしい施設モニタリング評価整理AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     body {
@@ -16,7 +13,6 @@
       font-family: "M PLUS Rounded 1c", sans-serif;
       background: #e9f6fb;
     }
-
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -25,29 +21,31 @@
       padding: 40px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
-
     .main-title {
       font-size: 30px;
       font-weight: 700;
-      line-height: 1.4;
       text-align: center;
       color: #2a6f97;
+      line-height: 1.4;
     }
-
     .subtitle {
       display: block;
       font-size: 22px;
-      font-weight: 600;
       margin-top: 6px;
     }
-
     .powered {
       text-align: center;
       font-size: 16px;
       color: #777;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
-
+    .limit {
+      text-align: center;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
     .guide {
       background: #fff4f6;
       border: 2px dashed #f3a6b1;
@@ -57,180 +55,223 @@
       font-size: 18px;
       line-height: 1.8;
     }
-
     label {
       display: block;
       font-size: 20px;
-      margin-top: 28px;
-      margin-bottom: 8px;
-      color: #2a6f97;
-      font-weight: bold;
+      margin-top: 25px;
+      margin-bottom: 6px;
     }
-
-    select, textarea {
+    textarea {
       width: 100%;
+      height: 110px;
       font-size: 18px;
       padding: 12px;
       border-radius: 10px;
       border: 2px solid #cfdfe8;
-      box-sizing: border-box;
     }
-
-    textarea {
-      min-height: 90px;
-    }
-
     textarea::placeholder {
       color: #999;
       font-size: 16px;
     }
-
     .btn {
       width: 100%;
       height: 70px;
       font-size: 22px;
       border: none;
       border-radius: 16px;
-      margin-top: 35px;
+      margin-top: 25px;
       cursor: pointer;
-      background: #2a6f97;
-      color: white;
     }
+    .sample-btn { background: #f3a6b1; color: white; }
+    .generate-btn { background: #2a6f97; color: white; }
 
     .result-box {
-      margin-top: 35px;
+      margin-top: 30px;
       font-size: 18px;
       background: #f7fbff;
       border-radius: 12px;
-      padding: 22px;
-      line-height: 1.7;
+      padding: 20px;
       white-space: pre-wrap;
     }
 
-    .footer-links {
-      margin-top: 60px;
-      margin-bottom: 20px;
-      text-align: center;
-      font-size: 12px;
-      color: #999;
-    }
-
-    .footer-links a {
-      color: #777;
-      text-decoration: none;
-      margin: 0 6px;
+    .copy-guide {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      display: none;
     }
   </style>
 </head>
-
 <body>
-<div class="container">
 
+<div class="container">
   <h1 class="main-title">
     やさしい施設モニタリング評価整理AI
-    <span class="subtitle">～施設ケアマネの判断を、説明できる形に整理～</span>
+    <span class="subtitle">～判断を奪わず、説明できる記録へ～</span>
   </h1>
 
   <div class="powered">Powered by ケアテックパートナーズ</div>
+  <div class="limit" id="limitText"></div>
 
   <div class="guide">
-    ✅ モニタリングで把握した「事実」を入力してください<br>
-    ✅ AIは評価・判断を整理します（判断の主体は施設ケアマネです）<br>
-    ✅ 実地指導・監査で説明できる構造で出力されます
+    ✅ 観察事実・多職種情報を入力<br>
+    ✅ AIが評価構造を整理（判断は行いません）<br>
+    ✅ 第6表（施設介護支援経過）への転記を想定
   </div>
 
-  <!-- ① 前提情報 -->
+  <button class="btn sample-btn" onclick="insertSample()">サンプル利用者を入力</button>
+
   <label>■ 施設種別</label>
-  <select id="facilityType">
-    <option value="">選択してください</option>
-    <option>特別養護老人ホーム</option>
-    <option>介護老人保健施設</option>
-    <option>有料老人ホーム</option>
-    <option>認知症対応型共同生活介護</option>
-  </select>
+  <textarea id="facilityType" placeholder="例：認知症対応型共同生活介護"></textarea>
 
   <label>■ 利用者の基本情報（最小限）</label>
-  <textarea id="basicInfo"
-    placeholder="例：要介護3。脳梗塞後遺症あり。嚥下機能低下に留意。"></textarea>
+  <textarea id="basic" placeholder="例：要介護3。脳梗塞後遺症あり。嚥下機能低下に留意。"></textarea>
 
-  <!-- ② モニタリング事実 -->
   <label>■ モニタリング事実（観察・把握した事実）</label>
-  <textarea id="monitoringFacts"
-    placeholder="例：
+  <textarea id="fact" placeholder="例：
 ・日中は居室外で過ごす時間が増えている
 ・食事摂取量は概ね安定
 ・入浴時に拒否的な場面あり"></textarea>
 
-  <!-- ③ 多職種情報 -->
   <label>■ 多職種からの情報</label>
+  <textarea id="team" placeholder="【介護職】例：夜間覚醒が増えているとの報告あり
 
-  <textarea id="infoCare"
-    placeholder="【介護職】例：夜間覚醒が増えているとの報告あり"></textarea>
+【看護職】例：バイタル安定、服薬状況問題なし
 
-  <textarea id="infoNurse"
-    placeholder="【看護職】例：バイタル安定、服薬状況問題なし"></textarea>
+【リハ職】例：立ち上がり動作は見守りで可能"></textarea>
 
-  <textarea id="infoRehab"
-    placeholder="【リハ職】例：立ち上がり動作は見守りで可能"></textarea>
-
-  <!-- ④ 計画との関係 -->
   <label>■ ケアプラン上の目標</label>
-  <textarea id="planGoal"
-    placeholder="例：施設生活への適応を図り、安定した生活を継続する"></textarea>
+  <textarea id="goal" placeholder="例：施設生活への適応を図り、安定した生活を継続する"></textarea>
 
   <label>■ 今回、特に確認したいポイント</label>
-  <textarea id="checkPoint"
-    placeholder="例：集団生活への適応状況、拒否行動の有無"></textarea>
+  <textarea id="focus" placeholder="例：集団生活への適応状況、拒否行動の有無"></textarea>
 
-  <button class="btn" onclick="runEvaluation()">
-    AIで評価整理を行う
-  </button>
+  <button class="btn generate-btn" onclick="generate()">AIで評価整理を行う</button>
+
+  <div class="copy-guide" id="copyGuide">
+    このままコピーして、施設介護支援経過（第6表）にご活用ください。
+  </div>
 
   <div id="result" class="result-box"></div>
-
-</div>
-
-<div class="footer-links">
-  <a href="privacy.html">プライバシーポリシー</a>｜
-  <a href="terms.html">利用規約</a>｜
-  <a href="tokusho.html">特定商取引法に基づく表記</a>
 </div>
 
 <script>
-async function runEvaluation() {
-  const payload = {
-    facilityType: facilityType.value,
-    basicInfo: basicInfo.value,
-    monitoringFacts: monitoringFacts.value,
-    multiDisciplinaryInfo: {
-      care: infoCare.value,
-      nurse: infoNurse.value,
-      rehab: infoRehab.value
-    },
-    planGoal: planGoal.value,
-    checkPoint: checkPoint.value
-  };
+let progressTimer = null;
+let progressValue = 0;
+const LIMIT = 3;
 
-  result.textContent = "評価整理中…";
-
-  try {
-    const res = await fetch("/api/generate-facility-eval", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    if (data.result) {
-      result.textContent = data.result;
-    } else {
-      result.textContent = "出力に失敗しました。";
+function startProgress() {
+  progressValue = 0;
+  result.textContent = "生成中… 0%";
+  progressTimer = setInterval(() => {
+    if (progressValue < 98) {
+      progressValue += progressValue < 70 ? 4 : progressValue < 90 ? 2 : 1;
+      if (progressValue >= 90) {
+        result.textContent = "文章を整えています…";
+      } else {
+        result.textContent = `生成中… ${progressValue}%`;
+      }
     }
-  } catch (e) {
-    result.textContent = "通信エラーが発生しました。";
-  }
+  }, 300);
 }
+
+function finishProgress() {
+  clearInterval(progressTimer);
+  result.textContent = "生成完了（100%）";
+}
+
+function initLimit() {
+  if (!localStorage.getItem("facility_remain")) {
+    localStorage.setItem("facility_remain", LIMIT);
+  }
+  updateLimit();
+}
+
+function updateLimit() {
+  const remain = Number(localStorage.getItem("facility_remain"));
+  limitText.textContent =
+    remain > 0 ? `🌷 無料であと「${remain}回」ご利用いただけます` : "無料体験は終了しました";
+}
+
+initLimit();
+
+function insertSample() {
+  facilityType.value = "介護老人福祉施設（特別養護老人ホーム）";
+
+  basic.value =
+    "要介護4。脳血管性認知症あり。\n" +
+    "ADLは全般的に低下しており、移動・排泄は一部介助を要する。\n" +
+    "嚥下機能の低下がみられるため、食事形態に留意している。";
+
+  fact.value =
+    "・日中は居室内で過ごす時間が多いが、声かけにより食堂へ移動できる場面がみられる\n" +
+    "・食事摂取量は日によってばらつきがあるが、全量摂取できる日もある\n" +
+    "・入浴時に不安を訴える場面があり、拒否的な言動がみられることがある";
+
+  team.value =
+    "【介護職】\n" +
+    "夜間帯に覚醒し、居室内を歩こうとする様子がみられることがある。\n" +
+    "声かけにより落ち着く場面もある。\n\n" +
+    "【看護職】\n" +
+    "バイタルサインは概ね安定している。\n" +
+    "服薬状況に大きな問題は認められていない。\n\n" +
+    "【リハ職】\n" +
+    "下肢筋力の低下がみられ、立ち上がり時は見守りが必要。\n" +
+    "移動時は転倒リスクに留意が必要と考えられる。";
+
+  goal.value =
+    "施設内において安心して生活できる環境を整え、\n" +
+    "心身の状態に配慮しながら安定した生活を継続できるよう支援する。";
+
+  focus.value =
+    "夜間の覚醒状況と安全面への影響、\n" +
+    "入浴時の不安や拒否的反応への対応方法";
+}
+
+async function generate() {
+  let remain = Number(localStorage.getItem("facility_remain"));
+  if (remain <= 0) {
+    alert("無料体験は終了しました。");
+    return;
+  }
+
+  const text = `
+【施設種別】${facilityType.value}
+【基本情報】${basic.value}
+【モニタリング事実】${fact.value}
+【多職種情報】${team.value}
+【ケアプラン目標】${goal.value}
+【確認ポイント】${focus.value}
+  `;
+
+  startProgress();
+
+  const res = await fetch("/api/generate-facility-eval", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  const data = await res.json();
+  finishProgress();
+  result.textContent = data.result;
+  copyGuide.style.display = "block";
+
+  localStorage.setItem("facility_remain", --remain);
+  updateLimit();
+}
+
+/* 管理者隠しコマンド */
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    if (prompt("管理者パスワード") === "admin123") {
+      localStorage.setItem("facility_remain", 3);
+      alert("回数をリセットしました");
+      location.reload();
+    }
+  }
+});
 </script>
 
 </body>
