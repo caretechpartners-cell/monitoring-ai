@@ -113,6 +113,37 @@
       font-size: 12px;
       color: #999;
     }
+
+.question {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+.choices {
+  margin-top: 8px;
+}
+.choices label {
+  margin-right: 18px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.accordion-header {
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f0f8ff;
+}
+.accordion-header.active {
+  background: #d8efff;
+  font-weight: 700;
+}
+.accordion-header:hover {
+  background: #e1f1fb;
+}
+.accordion-body {
+  margin-top: 10px;
+}
+
   </style>
 </head>
 
@@ -266,6 +297,29 @@ const LEVEL_LABEL = {
       qWrap.appendChild(sec);
     });
 });
+
+/* ================================
+   有料版：回数制限なし
+================================ */
+function runSectionCheck(sectionIndex) {
+
+  const section = CHECKLIST_QUESTIONS[sectionIndex];
+  const answers = {};
+
+  section.questions.forEach(q => {
+    if (section.bulk) {
+      const checkbox = document.querySelector(`input[name="${q.id}"]`);
+      answers[q.id] = checkbox && checkbox.checked ? "yes" : "no";
+    } else {
+      const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+      answers[q.id] = checked ? checked.value : "unknown";
+    }
+  });
+
+  const result = evaluateSection(section, answers);
+  renderSectionResult(sectionIndex, result);
+}
+
 
 </script>
 
