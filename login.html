@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ログイン｜やさしいモニタリングAI</title>
+  <title>ログイン｜やさしいAIシリーズ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
@@ -85,6 +85,12 @@ input {
       margin-top: 15px;
       min-height: 1em;
     }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
   </style>
 </head>
 <body>
@@ -107,6 +113,31 @@ input {
   <button class="btn" onclick="login()">ログイン</button>
 
   <div id="error" class="error"></div>
+</div>
+
+<!-- ログイン中オーバーレイ -->
+<div id="loadingOverlay" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(233,246,251,0.9);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  font-size:20px;
+  color:#2a6f97;
+  font-weight:600;
+">
+  <div style="margin-bottom:12px;">会員情報を確認しています…</div>
+  <div style="
+    width:36px;
+    height:36px;
+    border:4px solid #cfdfe8;
+    border-top:4px solid #2a6f97;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+  "></div>
 </div>
 
 <script>
@@ -134,8 +165,14 @@ async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const errorDiv = document.getElementById("error");
+  const btn = document.querySelector(".btn");
+  const overlay = document.getElementById("loadingOverlay");
 
   errorDiv.textContent = "";
+
+  // ★ ログイン中表示ON
+  btn.disabled = true;
+  overlay.style.display = "flex";
 
   try {
     const res = await fetch("/api/login", {
@@ -153,10 +190,9 @@ async function login() {
       localStorage.setItem("login_email", email);
 
       if (data.user.password_initialized === false) {
-  location.href = "change-password.html";
-  return;
-}
-
+        location.href = "change-password.html";
+        return;
+      }
 
       location.href = "app.html";
     } else {
@@ -166,6 +202,10 @@ async function login() {
   } catch (e) {
     console.error(e);
     errorDiv.textContent = "通信エラーが発生しました";
+  } finally {
+    // ★ 失敗時のみ元に戻す（成功時は遷移するので見えない）
+    btn.disabled = false;
+    overlay.style.display = "none";
   }
 }
 </script>
