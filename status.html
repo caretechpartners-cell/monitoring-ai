@@ -150,7 +150,13 @@
        onclick="switchProduct('conference')">
     議事録AI
   </div>
+
+<div class="tab" data-product="checklist"
+     onclick="switchProduct('checklist')">
+  実地指導チェックリストAI
 </div>
+</div>
+
 
     <div class="info-box">
       <div class="item-title">■ ご利用状況</div>
@@ -182,7 +188,7 @@
 
   <script>
     // 🔒 現在販売しているプロダクト
-    const ENABLED_PRODUCTS = ["monitoring"];
+    const ENABLED_PRODUCTS = ["monitoring", "conference", "checklist"];
 
     let userData = null;
     let currentProduct = "monitoring";
