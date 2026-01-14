@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>やさしい実地指導チェックリストAI（会員版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- app.html 経由チェック -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") !== "app") {
+      location.href = "login.html";
+    }
+  </script>
+
+  <!-- auth-guard -->
+  <script>
+    (async () => {
+      try {
+        const user_id = localStorage.getItem("auth_user_id");
+        const token = localStorage.getItem("login_session_token");
+
+        if (!user_id || !token) {
+          return location.href = "login.html";
+        }
+
+        const res = await fetch("/api/auth-guard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, token }),
+        });
+
+        const data = await res.json();
+        if (!data.valid) {
+          localStorage.clear();
+          location.href = "login.html";
+        }
+      } catch {
+        location.href = "login.html";
+      }
+    })();
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .main-title {
+      font-size: 30px;
+      font-weight: 700;
+      text-align: center;
+      color: #2a6f97;
+    }
+    .subtitle {
+      display: block;
+      font-size: 22px;
+      margin-top: 6px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 20px;
+    }
+    .guide {
+      background: #fff4f6;
+      border: 2px dashed #f3a6b1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    .section-title {
+      font-size: 22px;
+      color: #2a6f97;
+      margin-top: 35px;
+      margin-bottom: 15px;
+    }
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 30px;
+      cursor: pointer;
+      background: #2a6f97;
+      color: white;
+    }
+    .result-box {
+      margin-top: 20px;
+      font-size: 17px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .footer-links {
+      margin-top: 60px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1 class="main-title">
+    やさしい実地指導チェックリストAI
+    <span class="subtitle">～指摘されやすいポイントを、事前にやさしく確認～</span>
+  </h1>
+
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+
+  <div class="guide">
+    ✅ 気になる項目に、直感でお答えください<br>
+    ✅ 「わからない」も正直な大切な回答です<br>
+    ✅ 実地指導前の“セルフ点検”としてお使いください<br>
+    ✅ 厚生省令第三十八号に基づくチェックリストで、実地指導に完全対応<br>
+  </div>
+
+  <div id="questions"></div>
+
+</div>
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
+</div>
+
+<script src="/generate-checklist.js"></script>
+
+<script>
+(async () => {
+  const email = localStorage.getItem("login_email");
+  if (!email) {
+    location.href = "login.html";
+    return;
+  }
+
+  const res = await fetch("/api/product-guard", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      product_code: "checklist",
+    }),
+  });
+
+  const guard = await res.json();
+
+  if (!guard.ok) {
+    alert("この機能は有料版のご購入が必要です。");
+    location.href = "lp-checklist.html";
+    return;
+  }
+})();
+</script>
+
+<!-- ▼ 質問描画ロジック（index-checklist.html と同一） -->
+<script>
+/* ================================
+   質問描画（条文ごと）
+================================ */
+const qWrap = document.getElementById("questions");
+
+const LEVEL_LABEL = {
+  A: "🅰 本当に止められる（重点確認）",
+  B: "🅱 整える・運用改善",
+  C: "🅲 棚卸・形式確認"
+};
+
+["A", "B", "C"].forEach(level => {
+  const levelTitle = document.createElement("h2");
+  levelTitle.style.marginTop = "40px";
+  levelTitle.style.color = "#2a6f97";
+  levelTitle.textContent = LEVEL_LABEL[level];
+  qWrap.appendChild(levelTitle);
+
+  CHECKLIST_QUESTIONS
+    .map((section, index) => ({ section, index }))
+    .filter(obj => obj.section.level === level)
+    .forEach(({ section, index }) => {
+
+      const sec = document.createElement("div");
+      sec.className = "section";
+
+      const header = document.createElement("div");
+      header.className = "section-title accordion-header";
+      header.textContent = section.section;
+
+      const body = document.createElement("div");
+      body.className = "accordion-body";
+      body.style.display = "none";
+
+      header.onclick = () => {
+  // ▼ 同じレベルブロック内だけを対象にする
+  sec.parentElement.querySelectorAll(".accordion-header").forEach(h => {
+    if (h !== header) h.classList.remove("active");
+  });
+  sec.parentElement.querySelectorAll(".accordion-body").forEach(el => {
+    if (el !== body) el.style.display = "none";
+  });
+
+  const open = body.style.display === "block";
+  body.style.display = open ? "none" : "block";
+  if (!open) header.classList.add("active");
+};
+
+
+      sec.appendChild(header);
+      sec.appendChild(body);
+
+      // 質問
+      section.questions.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "question";
+
+        if (section.bulk) {
+          div.innerHTML = `
+            <label>
+              <input type="checkbox" name="${q.id}">
+              ${q.text}
+            </label>
+          `;
+        } else {
+          div.innerHTML = `
+            ${q.text}
+            <div class="choices">
+              <label><input type="radio" name="${q.id}" value="yes"> はい</label>
+              <label><input type="radio" name="${q.id}" value="no"> いいえ</label>
+              <label><input type="radio" name="${q.id}" value="unknown"> わからない</label>
+            </div>
+          `;
+        }
+
+        body.appendChild(div);
+      });
+
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = `${section.section}をAIでチェック`;
+      btn.onclick = () => runSectionCheck(index);
+      body.appendChild(btn);
+
+      const resultDiv = document.createElement("div");
+      resultDiv.id = `result-${index}`;
+      resultDiv.className = "result-box";
+      body.appendChild(resultDiv);
+
+      qWrap.appendChild(sec);
+    });
+});
+
+</script>
+
+</body>
+</html>
