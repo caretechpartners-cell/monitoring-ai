@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>やさしい施設モニタリング評価整理AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .main-title {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      color: #2a6f97;
+    }
+
+    .subtitle {
+      display: block;
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 15px;
+    }
+
+    .guide {
+      background: #fff4f6;
+      border: 2px dashed #f3a6b1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    label {
+      display: block;
+      font-size: 20px;
+      margin-top: 28px;
+      margin-bottom: 8px;
+      color: #2a6f97;
+      font-weight: bold;
+    }
+
+    select, textarea {
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #cfdfe8;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 90px;
+    }
+
+    textarea::placeholder {
+      color: #999;
+      font-size: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 35px;
+      cursor: pointer;
+      background: #2a6f97;
+      color: white;
+    }
+
+    .result-box {
+      margin-top: 35px;
+      font-size: 18px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 22px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1 class="main-title">
+    やさしい施設モニタリング評価整理AI
+    <span class="subtitle">～施設ケアマネの判断を、説明できる形に整理～</span>
+  </h1>
+
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+
+  <div class="guide">
+    ✅ モニタリングで把握した「事実」を入力してください<br>
+    ✅ AIは評価・判断を整理します（判断の主体は施設ケアマネです）<br>
+    ✅ 実地指導・監査で説明できる構造で出力されます
+  </div>
+
+  <!-- ① 前提情報 -->
+  <label>■ 施設種別</label>
+  <select id="facilityType">
+    <option value="">選択してください</option>
+    <option>特別養護老人ホーム</option>
+    <option>介護老人保健施設</option>
+    <option>有料老人ホーム</option>
+    <option>認知症対応型共同生活介護</option>
+  </select>
+
+  <label>■ 利用者の基本情報（最小限）</label>
+  <textarea id="basicInfo"
+    placeholder="例：要介護3。脳梗塞後遺症あり。嚥下機能低下に留意。"></textarea>
+
+  <!-- ② モニタリング事実 -->
+  <label>■ モニタリング事実（観察・把握した事実）</label>
+  <textarea id="monitoringFacts"
+    placeholder="例：
+・日中は居室外で過ごす時間が増えている
+・食事摂取量は概ね安定
+・入浴時に拒否的な場面あり"></textarea>
+
+  <!-- ③ 多職種情報 -->
+  <label>■ 多職種からの情報</label>
+
+  <textarea id="infoCare"
+    placeholder="【介護職】例：夜間覚醒が増えているとの報告あり"></textarea>
+
+  <textarea id="infoNurse"
+    placeholder="【看護職】例：バイタル安定、服薬状況問題なし"></textarea>
+
+  <textarea id="infoRehab"
+    placeholder="【リハ職】例：立ち上がり動作は見守りで可能"></textarea>
+
+  <!-- ④ 計画との関係 -->
+  <label>■ ケアプラン上の目標</label>
+  <textarea id="planGoal"
+    placeholder="例：施設生活への適応を図り、安定した生活を継続する"></textarea>
+
+  <label>■ 今回、特に確認したいポイント</label>
+  <textarea id="checkPoint"
+    placeholder="例：集団生活への適応状況、拒否行動の有無"></textarea>
+
+  <button class="btn" onclick="runEvaluation()">
+    AIで評価整理を行う
+  </button>
+
+  <div id="result" class="result-box"></div>
+
+</div>
+
+<div class="footer-links">
+  <a href="privacy.html">プライバシーポリシー</a>｜
+  <a href="terms.html">利用規約</a>｜
+  <a href="tokusho.html">特定商取引法に基づく表記</a>
+</div>
+
+<script>
+async function runEvaluation() {
+  const payload = {
+    facilityType: facilityType.value,
+    basicInfo: basicInfo.value,
+    monitoringFacts: monitoringFacts.value,
+    multiDisciplinaryInfo: {
+      care: infoCare.value,
+      nurse: infoNurse.value,
+      rehab: infoRehab.value
+    },
+    planGoal: planGoal.value,
+    checkPoint: checkPoint.value
+  };
+
+  result.textContent = "評価整理中…";
+
+  try {
+    const res = await fetch("/api/generate-facility-eval", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.result) {
+      result.textContent = data.result;
+    } else {
+      result.textContent = "出力に失敗しました。";
+    }
+  } catch (e) {
+    result.textContent = "通信エラーが発生しました。";
+  }
+}
+</script>
+
+</body>
+</html>
