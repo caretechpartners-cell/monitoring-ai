@@ -357,25 +357,29 @@ async function runEvaluation() {
 
   startProgress();
 
-  try {
-    const res = await fetch("/api/generate-facility-eval", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+try {
+  const res = await fetch("/api/generate-facility-eval", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-    const data = await res.json();
-    finishProgress();
+  const data = await res.json();
+  finishProgress();
 
-    result.textContent = data.result || "出力に失敗しました。";
+  result.textContent = data.result || "出力に失敗しました。";
 
-    localStorage.setItem("facility_remain", --remain);
-    updateLimit();
+  // LP誘導を表示
+  document.getElementById("memberGuide").style.display = "block";
 
-  } catch (e) {
-    if (progressTimer) clearInterval(progressTimer);
-    result.textContent = "通信エラーが発生しました。";
-  }
+  // 回数を1回だけ減らす
+  localStorage.setItem("facility_remain", --remain);
+  updateLimit();
+
+} catch (e) {
+  if (progressTimer) clearInterval(progressTimer);
+  result.textContent = "通信エラーが発生しました。";
+}
 }
 
 /* ===== 管理者隠しコマンド ===== */
