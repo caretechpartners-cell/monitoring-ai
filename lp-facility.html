@@ -47,7 +47,7 @@
       font-size: 24px;
       color: #2a6f97;
       margin-bottom: 15px;
-      white-space: nowrap; /* ★ 見出しを1行に固定 */
+      white-space: nowrap;
     }
     .text {
       font-size: 18px;
@@ -85,6 +85,18 @@
       padding: 18px;
       border: 1px solid #dfeef7;
     }
+
+    /* ★ Before専用 */
+    .plan.before {
+      background: #fff4f6;
+    }
+
+    /* ★ AI工程 強調 */
+    .plan-ai {
+      border: 14px solid #000;
+      background: #ffffff;
+    }
+
     .plan h3 {
       margin: 0 0 8px 0;
       color: #2a6f97;
@@ -107,6 +119,12 @@
       text-decoration:none;
       font-size:16px;
     }
+    .note {
+      font-size:13px;
+      color:#666;
+      margin-top:6px;
+      text-align:left;
+    }
     .legal-links {
       text-align: center;
       margin-top: 40px;
@@ -124,7 +142,7 @@
       flex-wrap:wrap;
     }
     @media (max-width: 768px) {
-      .section-title { white-space: normal; } /* スマホでは改行OK */
+      .section-title { white-space: normal; }
       .flex-row { flex-direction: column; }
     }
   </style>
@@ -150,12 +168,7 @@
         施設ケアマネには、<br>
         利用者の状態変化だけでなく、<br>
         <strong>多職種の情報をどう踏まえて、どう評価したか</strong>まで<br>
-        説明することが求められます。<br><br>
-
-        実地指導や監査の場で、<br>
-        「その評価の根拠はどこですか？」<br>
-        「なぜこのように判断したのですか？」<br>
-        と聞かれ、言葉に詰まった経験はありませんか？
+        説明することが求められます。
       </div>
     </div>
     <div style="flex:1; text-align:center;">
@@ -163,24 +176,9 @@
     </div>
   </div>
 
-  <!-- 解決 -->
-  <div class="section">
-    <div class="section-title">
-      判断はそのままに、「説明できる形」に整理します
-    </div>
-    <div class="text">
-      やさしい施設モニタリング評価整理AIは、<br>
-      施設ケアマネの判断を代行するAIではありません。<br><br>
-
-      すでに行った判断・評価を、<br>
-      <strong>実地指導で説明できる構造に整理</strong>することで、<br>
-      記録作成と説明対応の負担を軽減します。
-    </div>
-  </div>
-
   <!-- Before / After -->
   <div class="section flex-row">
-    <div class="plan">
+    <div class="plan before">
       <strong>Before</strong><br>
       ・評価をどう書けばいいか迷う<br>
       ・多職種情報がうまく整理できない<br>
@@ -197,10 +195,9 @@
     </div>
   </div>
 
-  <!-- ★ 余白追加 -->
+  <!-- 工程 -->
   <div class="section"></div>
 
-  <!-- 工程図 -->
   <div class="plan">
     <strong>① 施設ケアマネが行う業務</strong><br>
     利用者の状況や多職種の情報を踏まえ、評価・判断を行います。
@@ -216,11 +213,7 @@
     整理された文章を確認・修正し、施設ケアマネの責任で記録を完成させます。
   </div>
 
-  <div style="font-size:14px; color:#555; margin-top:10px;">
-    ※ 判断・評価の最終責任は、AI導入前と同様に施設ケアマネにあります。
-  </div>
-
-  <!-- ベネフィット -->
+  <!-- メリット -->
   <div class="section-title" style="margin-top:40px;">
     本製品導入のメリット
   </div>
@@ -235,15 +228,19 @@
   <div class="section">
     <div class="section-title">料金プラン</div>
     <div class="price-box">
+
       <div class="plan">
-        <h3>個人プラン（施設ケアマネ）</h3>
+        <h3>個人プラン</h3>
         <div class="price">月額 3,980円（税込）</div>
+
+        <div class="note">施設ケアマネさん1名向け</div>
+
         <a class="small-cta" href="index-facility.html">決済ページへ</a>
 
-        <div style="font-size:15px; text-align:center; margin-top:6px;">
+        <div style="font-size:15px; margin-top:6px;">
           🎁 7日間まで無料でお試しいただけます
         </div>
-        <div style="font-size:13px; text-align:center; margin-top:4px; color:#666;">
+        <div class="note">
           ※ 無料トライアルは、初回利用の方を対象としています。
         </div>
       </div>
@@ -252,42 +249,19 @@
         <h3>法人プラン（最大5名）</h3>
         <div class="price">月額 15,000円（税込）</div>
 
-        <div style="font-size:13px; color:#666; text-align:center; margin-top:6px;">
-          見積書・請求書発行ご対応可
-        </div>
+        <div class="note">見積書・請求書発行ご対応可</div>
 
         <a class="small-cta" href="form-corp.html">見積依頼を行う</a>
       </div>
+
     </div>
   </div>
 
   <!-- PDF -->
   <div class="section">
     <a href="#" class="small-cta">📄 ご紹介資料（PDF）</a>
-  </div>
-
-  <!-- 対象 -->
-  <div class="section flex-row">
-    <div style="flex:1;">
-      <div class="section-title">こんな方に使われています</div>
-      <div class="text">
-        ・特養・老健などの施設ケアマネの方<br>
-        ・実地指導を控えている方<br>
-        ・評価記録の説明に不安がある方
-      </div>
-    </div>
-    <div style="flex:1; text-align:center;">
-      <img src="images/careimage2.png" style="max-width:85%; border-radius:12px;">
-    </div>
-  </div>
-
-  <!-- 安心訴求 -->
-  <div class="section">
-    <div class="section-title">ご安心ください</div>
-    <div class="text">
-      ・医療行為や診断、および判断は行いません<br>
-      ・モニタリング対象者の個人情報は不要です<br>
-      ・入力内容は外部利用されません
+    <div class="note" style="margin-top:8px;">
+      ※ 導入検討の事業所様向けに、料金・効果・導入手順をまとめています。
     </div>
   </div>
 
