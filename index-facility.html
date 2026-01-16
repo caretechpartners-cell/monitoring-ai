@@ -9,6 +9,7 @@
     href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
     rel="stylesheet"
   >
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
   <style>
     body {
@@ -215,6 +216,11 @@ ADLは全般的に低下しており、移動・排泄は一部介助を要す�
 
   <div id="result" class="result-box"></div>
 
+<button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
+  📄 Word（docx）でダウンロード
+</button>
+
+
 <div
   id="memberGuide"
   style="
@@ -334,6 +340,38 @@ function finishProgress() {
   result.textContent = "生成完了（100%）";
 }
 
+function downloadDocx() {
+  const text = result.textContent;
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+  const lines = text.split("\n").filter(line => line.trim() !== "");
+
+  const paragraphs = lines.map(line =>
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: line,
+          size: 24   // 12pt相当
+        })
+      ],
+      spacing: { after: 200 }
+    })
+  );
+
+  const doc = new Document({
+    sections: [{ children: paragraphs }],
+  });
+
+  Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "facility_monitoring_eval.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
 /* ===== 評価整理実行 ===== */
 async function runEvaluation() {
   let remain = Number(localStorage.getItem("facility_remain"));
@@ -368,6 +406,9 @@ try {
   finishProgress();
 
   result.textContent = data.result || "出力に失敗しました。";
+
+  // Wordダウンロード表示
+  document.getElementById("downloadBtn").style.display = "block";
 
   // LP誘導を表示
   document.getElementById("memberGuide").style.display = "block";
