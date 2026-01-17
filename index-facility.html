@@ -227,6 +227,17 @@ ADLは全般的に低下しており、移動・排泄は一部介助を要す�
   📄 Word（docx）でダウンロード
 </button>
 
+<div
+  id="limitTextBottom"
+  style="
+    text-align:center;
+    margin-top:12px;
+    font-size:16px;
+    color:#2a6f97;
+    font-weight:bold;
+  "
+></div>
+
 
 <div
   id="memberGuide"
@@ -287,10 +298,18 @@ function initLimit() {
 
 function updateLimit() {
   const remain = Number(localStorage.getItem("facility_remain"));
-  limitText.textContent =
-    remain > 0
-      ? `🌷 無料であと「${remain}回」ご利用いただけます`
-      : "無料体験は終了しました。";
+  const topText = document.getElementById("limitText");
+  const bottomText = document.getElementById("limitTextBottom");
+
+  if (remain > 0) {
+    const msg = `🌷 無料であと「${remain}回」ご利用いただけます`;
+    topText.textContent = msg;
+    if (bottomText) bottomText.textContent = msg;
+  } else {
+    const endMsg = "無料体験は終了しました。";
+    topText.textContent = endMsg;
+    if (bottomText) bottomText.textContent = endMsg;
+  }
 }
 
 initLimit();
