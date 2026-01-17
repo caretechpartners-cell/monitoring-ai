@@ -389,15 +389,57 @@ try {
 
 }
 
+function buildInputMemoText() {
+  return `
+【モニタリング作成時の入力メモ】
+
+■ 生活状況
+${life.value}
+
+■ 身体状況
+${body.value}
+
+■ 服薬状況
+${medicine.value}
+
+■ サービス利用状況
+${service.value}
+
+■ 本人・家族の希望
+${wish.value}
+
+■ 自由記載
+${free.value}
+`;
+}
+
+
 function downloadDocx() {
-  const text = result.textContent;
   const { Document, Packer, Paragraph, TextRun } = window.docx;
 
-  const lines = text.split("\n").filter(line => line.trim() !== "");
+  const resultText = result.textContent;
+  const memoText = buildInputMemoText();
+
+  const allText = `
+【モニタリング総括（AI生成）】
+
+${resultText}
+
+
+――――――――――――――
+${memoText}
+`;
+
+  const lines = allText.split("\n");
 
   const paragraphs = lines.map(line =>
     new Paragraph({
-      children: [ new TextRun({ text: line, size: 24 }) ],
+      children: [
+        new TextRun({
+          text: line,
+          size: 24   // Wordで読みやすいサイズ
+        })
+      ],
       spacing: { after: 200 }
     })
   );
@@ -410,7 +452,7 @@ function downloadDocx() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "monitoring.docx";
+    a.download = "monitoring_with_memo.docx";
     a.click();
     URL.revokeObjectURL(url);
   });
