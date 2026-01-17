@@ -347,18 +347,62 @@ function finishProgress() {
   result.textContent = "生成完了（100%）";
 }
 
+function buildInputMemoText() {
+  return `
+【評価整理の根拠（入力メモ）】
+
+■ 施設種別
+${facilityType.value}
+
+■ 利用者の基本情報
+${basicInfo.value}
+
+■ モニタリング事実
+${monitoringFacts.value}
+
+■ 多職種からの情報
+【介護職】
+${infoCare.value}
+
+【医療・看護職】
+${infoNurse.value}
+
+【リハ職】
+${infoRehab.value}
+
+■ ケアプラン上の目標
+${planGoal.value}
+
+■ 今回、特に確認したいポイント
+${checkPoint.value}
+`;
+}
+
+
 function downloadDocx() {
-  const text = result.textContent;
   const { Document, Packer, Paragraph, TextRun } = window.docx;
 
-  const lines = text.split("\n").filter(line => line.trim() !== "");
+  const resultText = result.textContent;
+  const memoText = buildInputMemoText();
+
+  const allText = `
+【施設介護支援経過（第6表）記入等の参考】
+
+${resultText}
+
+
+――――――――――――――
+${memoText}
+`;
+
+  const lines = allText.split("\n");
 
   const paragraphs = lines.map(line =>
     new Paragraph({
       children: [
         new TextRun({
           text: line,
-          size: 24   // 12pt相当
+          size: 24   // Wordで読みやすいサイズ
         })
       ],
       spacing: { after: 200 }
@@ -366,14 +410,14 @@ function downloadDocx() {
   );
 
   const doc = new Document({
-    sections: [{ children: paragraphs }],
+    sections: [{ children: paragraphs }]
   });
 
   Packer.toBlob(doc).then(blob => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "facility_monitoring_eval.docx";
+    a.download = "facility_monitoring_evaluation.docx";
     a.click();
     URL.revokeObjectURL(url);
   });
