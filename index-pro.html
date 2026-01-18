@@ -11,7 +11,7 @@
     const from = params.get("from");
 
     if (from !== "app") {
-      window.location.href = "login.html";
+      console.warn("direct access");
     }
   </script>
 
@@ -232,17 +232,22 @@
     このままコピーして、モニタリング総括の参考としてください。
   </div>
 
+<div style="font-size:14px;color:#666;margin-top:6px;">
+※ 出力結果は参考文例です。最終確認・判断はケアマネジャーご自身で行ってください。
+</div>
+
+
   <div id="result" class="result-box"></div>
 
 <!-- ▼▼ ここから追加 ▼▼ -->
 <div id="trialEndedBox" style="display:none; margin-top:30px;">
   <h2 style="color:#c0392b; font-size:22px; margin-bottom:15px;">
-    トライアル期間が終了しました
+    トライアル体験はここまでとなりました
   </h2>
 
   <p style="font-size:18px; line-height:1.7;">
     これまでトライアルをご利用いただき、ありがとうございます。<br>
-    現在はトライアル期間終了のため、AIによるモニタリング文章生成はご利用いただけません。
+    実際のモニタリング業務で使える文章を、ご体感いただけたかと思います。
   </p>
 
   <p style="font-size:18px; line-height:1.7; margin-top:10px;">
