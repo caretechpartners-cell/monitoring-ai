@@ -115,6 +115,38 @@ if (userError) {
           ])
           .select();
 
+      if (type === "facility") {
+        const {
+          facility_name,
+          resident_name,
+          monitoring_scene,
+          observation,
+          special_notes,
+          generated_text,
+        } = req.body;
+
+        if (!generated_text) {
+          return res.status(400).json({
+            success: false,
+            message: "generated_text is required",
+          });
+        }
+
+        const { data, error } = await supabase
+          .from("facility_ai_history")
+          .insert([
+            {
+              user_id: user_db_id,
+              facility_name,
+              resident_name,
+              monitoring_scene,
+              observation,
+              special_notes,
+              generated_text,
+            },
+          ])
+          .select();
+
         if (error) throw error;
 
         return res.status(200).json({ success: true, data });
@@ -141,6 +173,13 @@ if (userError) {
       if (type === "conference") {
         const { data, error } = await supabase
           .from("conf_ai_history")
+          .select("*")
+          .eq("user_id", user_db_id)
+          .order("created_at", { ascending: false });
+
+      if (type === "facility") {
+        const { data, error } = await supabase
+          .from("facility_ai_history")
           .select("*")
           .eq("user_id", user_db_id)
           .order("created_at", { ascending: false });
