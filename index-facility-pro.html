@@ -179,19 +179,118 @@
 
   <button class="btn sample-btn" onclick="insertSample()">サンプル利用者を入力</button>
 
-  <!-- 入力UI（完全同一） -->
-  <!-- ここから下は index-facility.html と完全同一 -->
-  <!-- ※ 省略せずそのまま移植済み -->
+  <!-- 入力UI -->
+  <label>■ 施設種別</label>
+  <select id="facilityType">
+    <option value="">選択してください</option>
+    <option>特別養護老人ホーム</option>
+    <option>介護老人保健施設</option>
+    <option>有料老人ホーム</option>
+    <option>認知症対応型共同生活介護</option>
+  </select>
 
-  <!--（中略：入力UIはそのまま）-->
+  <label>■ 利用者の基本情報（最小限）</label>
+  <textarea id="basicInfo"
+  placeholder="例：要介護4。脳血管性認知症あり。
+ADLは全般的に低下しており、移動・排泄は一部介助を要する。
+嚥下機能低下がみられるため、食事形態に留意している。">
+</textarea>
+
+
+  <label>■ モニタリング事実（観察・把握した事実）</label>
+  <textarea id="monitoringFacts"
+  placeholder="例：
+・日中は居室内で過ごす時間が多いが、声かけにより食堂へ移動できる場面がみられる
+・食事摂取量は日によってばらつきがある
+・入浴時に不安を訴え、拒否的な言動がみられることがある">
+</textarea>
+
+
+  <label>■ 多職種からの情報</label>
+
+<label style="font-size:16px; color:#555; margin-top:12px;">【介護職】</label>
+<textarea id="infoCare"
+  placeholder="例：夜間覚醒がみられ、声かけにより落ち着く場面がある。"></textarea>
+
+<label style="font-size:16px; color:#555; margin-top:18px;">【医療・看護職】</label>
+<textarea id="infoNurse"
+  placeholder="例：バイタルサインは概ね安定。服薬状況に問題は認められていない。"></textarea>
+
+<label style="font-size:16px; color:#555; margin-top:18px;">【リハ職】</label>
+<textarea id="infoRehab"
+  placeholder="例：立ち上がり動作は見守りで可能。移動時は転倒リスクに留意が必要。"></textarea>
+
+
+  <label>■ ケアプラン上の目標</label>
+  <textarea id="planGoal"
+  placeholder="例：施設内において安心して生活できる環境を整え、
+心身の状態に配慮しながら安定した生活を継続できるよう支援する。">
+</textarea>
+
+
+  <label>■ 今回、特に確認したいポイント</label>
+  <textarea id="checkPoint"
+  placeholder="例：夜間の覚醒状況と安全面への影響、
+入浴時の不安や拒否的反応への対応状況">
+</textarea>
+
 
   <button class="btn" onclick="runEvaluation()">AIで評価整理を行う</button>
 
   <div id="result" class="result-box"></div>
 
-  <button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
-    📄 Word（docx）でダウンロード
-  </button>
+<button class="btn download-btn" id="downloadBtn" onclick="downloadDocx()">
+  📄 Word（docx）でダウンロード
+</button>
+
+<div
+  id="limitTextBottom"
+  style="
+    display:none;
+    text-align:center;
+    margin-top:12px;
+    font-size:16px;
+    color:#2a6f97;
+    font-weight:bold;
+  "
+></div>
+
+
+<div
+  id="memberGuide"
+  style="
+    display:none;
+    margin-top:22px;
+    padding:20px;
+    border-radius:14px;
+    background:#f0f8ff;
+    font-size:17px;
+    line-height:1.8;
+  "
+>
+  ・会員版では、回数制限なく施設モニタリング評価整理をご利用いただけます。<br>
+  ・実地指導・監査を想定した表現で、説明しやすい記録を整理します。<br>
+  ・判断は行わず、施設ケアマネの判断を支える文章構成です。<br><br>
+
+  <a
+    href="lp-facility.html"
+    style="
+      display:block;
+      text-align:center;
+      font-weight:bold;
+      font-size:18px;
+      color:#2a6f97;
+      text-decoration:none;
+      padding:12px;
+      border-radius:10px;
+      background:#ffffff;
+      border:2px solid #2a6f97;
+    "
+  >
+    ▶ 会員版の利用内容を確認する
+  </a>
+</div>
+
 
 </div>
 
