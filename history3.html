@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>生成履歴｜施設モニタリング評価整理AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: "M PLUS Rounded 1c", sans-serif;
+  background: #e9f6fb;
+}
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+h1 {
+  text-align: center;
+  color: #2a6f97;
+  font-size: 28px;
+  margin-bottom: 30px;
+}
+.history-card {
+  background: #f7fbff;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  cursor: pointer;
+  position: relative;
+  padding-left: 26px;
+}
+.history-card::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 14px;
+  bottom: 14px;
+  width: 12px;
+  border-left: 4px solid #2a6f97;
+  border-top: 4px solid #2a6f97;
+  border-bottom: 4px solid #2a6f97;
+  border-radius: 12px;
+}
+.history-header {
+  padding: 20px;
+}
+.date {
+  color: #2a6f97;
+  font-weight: bold;
+}
+.history-body {
+  padding: 0 20px 20px;
+  display: none;
+}
+.item-label {
+  font-weight: bold;
+  margin-top: 12px;
+}
+.back-fixed {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #ccc;
+  border: none;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<button class="back-fixed" onclick="location.href='app.html'">← 会員ページ</button>
+
+<div class="container">
+<h1>生成履歴一覧</h1>
+<div id="historyArea">読み込み中…</div>
+</div>
+
+<script>
+async function loadHistory() {
+
+  const area = document.getElementById("historyArea");
+  const authUserId = localStorage.getItem("auth_user_id");
+  if (!authUserId) {
+    location.href = "login.html";
+    return;
+  }
+
+  const res = await fetch("/api/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "get",
+      type: "facility",
+      auth_user_id: authUserId
+    })
+  });
+
+  const result = await res.json();
+  if (!result.success || result.data.length === 0) {
+    area.innerHTML = "まだ履歴がありません。";
+    return;
+  }
+
+  let html = "";
+  result.data.forEach((row, index) => {
+
+    const formatted = (row.generated_text || "").replace(/\n/g, "<br>");
+
+    html += `
+    <div class="history-card" onclick="toggleCard(${index})">
+      <div class="history-header">
+        <div class="date">📅 ${new Date(row.created_at).toLocaleString("ja-JP")}</div>
+      </div>
+
+      <div class="history-body" id="body-${index}">
+        <div class="item"><div class="item-label">■ 施設名</div>${row.facility_name || ""}</div>
+        <div class="item"><div class="item-label">■ 利用者名</div>${row.resident_name || ""}</div>
+        <div class="item"><div class="item-label">■ モニタリング場面</div>${row.monitoring_scene || ""}</div>
+        <div class="item"><div class="item-label">■ 観察内容</div>${row.observation || ""}</div>
+        <div class="item"><div class="item-label">■ 特記事項</div>${row.special_notes || ""}</div>
+
+        <div class="item">
+          <div class="item-label">■ 生成結果</div>
+          <div id="generated-${index}">${formatted}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  area.innerHTML = html;
+}
+
+function toggleCard(i) {
+  const el = document.getElementById(`body-${i}`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>

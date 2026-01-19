@@ -384,6 +384,32 @@ async function runEvaluation() {
     result.textContent = "通信エラーが発生しました。";
   }
 }
+
+async function saveFacilityHistory(data) {
+
+  const authUserId = localStorage.getItem("auth_user_id");
+  if (!authUserId) return;
+
+  await fetch("/api/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "insert",
+      type: "facility",
+      auth_user_id: authUserId,
+
+      facility_name: data.facility_name,
+      resident_name: data.resident_name,
+      monitoring_scene: data.monitoring_scene,
+      observation: data.observation,
+      special_notes: data.special_notes,
+
+      generated_text: data.generated_text
+    })
+  });
+}
+
+
 </script>
 
 </body>
