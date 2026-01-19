@@ -54,7 +54,7 @@
     }
 
     .portal-btn {
-      background: #b0b0b0; /* グレー */
+      background: #b0b0b0;
       color: #333;
     }
 
@@ -80,15 +80,17 @@
 </head>
 
 <body>
+
+  <!-- 戻るボタン（施設用） -->
   <button
     class="back-fixed"
-    onclick="location.href='app.html'"
+    onclick="location.href='app-facility.html'"
   >
     ← 会員専用ページへ戻る
   </button>
 
   <div class="container">
-    <h1>マイページ</h1>
+    <h1>マイページ（施設ケアマネ向け）</h1>
 
     <button class="btn status-btn" onclick="goStatus()">
       利用状況の確認
@@ -98,21 +100,15 @@
       利用プランの変更（フォーム入力へ）
     </button>
 
-   <button class="btn portal-btn" onclick="openPortal('monitoring')">
-  モニタリングAIの解約
-</button>
-
-<button class="btn portal-btn" onclick="openPortal('conference')"style="display:none;">
-  サービス担当者会議録AIの解約
-</button>
-
-
+    <button class="btn portal-btn" onclick="openPortal('facility')">
+      施設モニタリング評価整理AIの解約
+    </button>
 
     <div id="portalErr" style="color:red; margin-top:12px;"></div>
   </div>
 
   <script>
-    // 🔒 app.html からの遷移チェック
+    // 🔒 app-facility.html からの遷移チェック
     if (!sessionStorage.getItem("fromApp")) {
       location.href = "login.html";
     }
@@ -124,7 +120,6 @@
     function goPlan() {
       location.href = "form-corp.html";
     }
-
 
     // ================================
     // 💳 Stripe Customer Portal を開く
@@ -158,33 +153,32 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-  user_id,
-  action: "portal",
-  product_code, // ← これを追加
-}),
-
+            user_id,
+            action: "portal",
+            product_code, // facility
+          }),
         });
 
         const data = await res.json();
 
-if (!data.success || !data.url) {
-  if (data.reason === "stripe_customer_not_found") {
-    errEl.textContent =
-      "Stripeの顧客情報が見つかりませんでした。管理者にご連絡ください。";
-    return;
-  }
+        if (!data.success || !data.url) {
+          if (data.reason === "stripe_customer_not_found") {
+            errEl.textContent =
+              "Stripeの顧客情報が見つかりませんでした。管理者にご連絡ください。";
+            return;
+          }
 
-errEl.innerHTML = `
-  既に解約済みか、未登録です。<br>
-  <a href="https://monitoring-ai-sepia.vercel.app/form-corp.html"
-     style="color:#2a6f97; font-weight:bold;">
-    ▶ トライアル終了後の購入のご相談はこちら
-  </a>
-`;
-return;
-}
+          errEl.innerHTML = `
+            既に解約済みか、未登録です。<br>
+            <a href="form-corp.html"
+               style="color:#2a6f97; font-weight:bold;">
+              ▶ トライアル終了後の購入のご相談はこちら
+            </a>
+          `;
+          return;
+        }
 
-        // ③ Stripe Customer Portal を開く（別タブ）
+        // ③ Stripe Customer Portal を開く
         window.open(data.url, "_blank");
       } catch (e) {
         console.error(e);
@@ -192,5 +186,6 @@ return;
       }
     }
   </script>
+
 </body>
 </html>
