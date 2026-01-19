@@ -115,6 +115,22 @@ h1 {
   color: white;
 }
 
+/* ★ 生成の履歴ボタン（app.htmlと同一） */
+.history-btn {
+  width: 100%;
+  height: 55px;
+  font-size: 18px;
+  border: none;
+  border-radius: 14px;
+  margin-top: 12px;
+  cursor: pointer;
+  background: #88b7d5;
+  color: white;
+}
+.history-btn:hover {
+  opacity: 0.9;
+}
+
 .disabled-btn {
   background: #b0c7d6;
   cursor: default;
@@ -179,6 +195,11 @@ h1 {
         onclick="location.href='index-facility-pro.html?from=app'">
         評価整理AIを使う
       </button>
+
+<button class="history-btn" onclick="goFacilityHistory()">
+  生成の履歴を見る
+</button>
+
     </div>
   </div>
 
@@ -260,6 +281,11 @@ h1 {
 function goMyPage() {
   sessionStorage.setItem("fromApp", "1");
   location.href = "mypage.html";
+}
+
+// ⭐ 施設向け：生成履歴ページへ
+function goFacilityHistory() {
+  location.href = "history3.html";
 }
 
 /* 🔓 ログアウト */
