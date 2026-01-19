@@ -470,13 +470,38 @@ async function runEvaluation() {
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-    finishProgress();
+const data = await res.json();
+finishProgress();
 
-    result.textContent = data.result || "出力に失敗しました。";
+result.textContent = data.result || "出力に失敗しました。";
 
-    // Wordダウンロードを表示
-    document.getElementById("downloadBtn").style.display = "block";
+// ====== ここから追加 ======
+const authUserId = localStorage.getItem("auth_user_id");
+if (authUserId && data.result) {
+  await fetch("/api/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "insert",
+      type: "facility",
+      auth_user_id: authUserId,
+      facility_name: facilityType.value,
+      resident_name: basicInfo.value,
+      monitoring_scene: monitoringFacts.value,
+      observation: [
+        infoCare.value,
+        infoNurse.value,
+        infoRehab.value
+      ].filter(Boolean).join("\n"),
+      special_notes: checkPoint.value,
+      generated_text: data.result
+    })
+  });
+}
+// ====== ここまで ======
+
+// Wordダウンロードを表示
+document.getElementById("downloadBtn").style.display = "block";
 
   } catch (e) {
     if (progressTimer) clearInterval(progressTimer);
