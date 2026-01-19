@@ -194,6 +194,24 @@ async function login() {
         return;
       }
 
+ // ★ ここから振り分け判定
+  const res2 = await fetch("/api/resolve-app", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const route = await res2.json();
+
+  if (route.app === "facility") {
+    location.href = "app-facility.html";
+  } else {
+    location.href = "app.html";
+  }
+
+  return;
+}
+
       location.href = "app.html";
     } else {
       errorDiv.textContent = "IDまたはパスワードが異なります";
