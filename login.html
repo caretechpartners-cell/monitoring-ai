@@ -170,7 +170,6 @@ async function login() {
 
   errorDiv.textContent = "";
 
-  // ★ ログイン中表示ON
   btn.disabled = true;
   overlay.style.display = "flex";
 
@@ -183,45 +182,40 @@ async function login() {
 
     const data = await res.json();
 
-    if (data.success) {
-      localStorage.setItem("auth_user_id", data.user.id);
-      localStorage.setItem("user_db_id", data.user.db_id);
-      localStorage.setItem("login_session_token", data.user.login_session_token);
-      localStorage.setItem("login_email", email);
+    if (!data.success) {
+      throw new Error("login failed");
+    }
 
-      if (data.user.password_initialized === false) {
-        location.href = "change-password.html";
-        return;
-      }
+    // 共通保存
+    localStorage.setItem("auth_user_id", data.user.id);
+    localStorage.setItem("user_db_id", data.user.db_id);
+    localStorage.setItem("login_session_token", data.user.login_session_token);
+    localStorage.setItem("login_email", email);
 
- // ★ ここから振り分け判定
-  const res2 = await fetch("/api/resolve-app", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
+    // 初回ログインは必ずPW変更（居宅・施設共通）
+    if (data.user.password_initialized === false) {
+      location.href = "change-password.html";
+      return;
+    }
 
-  const route = await res2.json();
+    // ★ 振り分け判定
+    const res2 = await fetch("/api/resolve-app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
 
-  if (route.app === "facility") {
-    location.href = "app-facility.html";
-  } else {
-    location.href = "app.html";
-  }
+    const route = await res2.json();
 
-  return;
-}
-
-      location.href = "app.html";
+    if (route.app === "facility") {
+      location.href = "app-facility.html";
     } else {
-      errorDiv.textContent = "IDまたはパスワードが異なります";
+      location.href = "app.html";
     }
 
   } catch (e) {
     console.error(e);
-    errorDiv.textContent = "通信エラーが発生しました";
-  } finally {
-    // ★ 失敗時のみ元に戻す（成功時は遷移するので見えない）
+    errorDiv.textContent = "IDまたはパスワードが異なります";
     btn.disabled = false;
     overlay.style.display = "none";
   }
