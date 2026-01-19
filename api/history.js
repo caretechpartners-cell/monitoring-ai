@@ -113,17 +113,16 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, data });
       }
 
-      if (type === "monitoring") {
-        const { data, error } = await supabase
-          .from("monitoring_ai_history")
-          .select("*")
-          .eq("user_id", user_db_id)
-          .order("created_at", { ascending: false });
+       if (type === "monitoring") {
+    const { data, error } = await supabase
+      .from("monitoring_ai_history")
+      .select("*")
+      .eq("user_id", user_db_id)   // ★ここが重要
+      .order("created_at", { ascending: false });
 
-        if (error) throw error;
-
-        return res.status(200).json({ success: true, data });
-      }
+    if (error) throw error;
+    return res.status(200).json({ success: true, data });
+  }
 
       if (type === "facility") {
         const { data, error } = await supabase
