@@ -20,79 +20,103 @@ export default async function handler(req, res) {
       });
     }
 
+    /* ============================
+       共通：ユーザー特定
+    ============================ */
     const auth_user_id = req.body.user_id || req.body.auth_user_id;
 
     if (!auth_user_id) {
       return res.status(400).json({
         success: false,
-        message: "auth_user_id が見つかりません",
+        message: "user_id が見つかりません",
       });
     }
 
-    /* ============================
-       users lookup（facility以外）
-    ============================ */
-    let user_db_id = null;
+   const { data: user, error: userError } = await supabase
+  .from("users")
+  .select("id")
+  .eq("auth_user_id", auth_user_id)
+  .single();
 
-    if (type !== "facility") {
-      const { data: user, error } = await supabase
-        .from("users")
-        .select("id")
-        .eq("auth_user_id", auth_user_id)
-        .single();
+if (userError) {
+  console.error("user lookup error:", userError);
+  return res.status(500).json({
+    success: false,
+    message: "user lookup failed",
+    detail: userError.message,
+  });
+}
 
-      if (error) {
-        console.error("user lookup error:", error);
-        return res.status(500).json({
-          success: false,
-          message: "user lookup failed",
-        });
-      }
 
-      user_db_id = user.id;
-    }
+    const user_db_id = user.id;
 
     /* ============================
        INSERT
     ============================ */
     if (action === "insert") {
 
-      if (type === "conference") {
-        const { memo, generated_text } = req.body;
-
-        const { data, error } = await supabase
-          .from("conf_ai_history")
-          .insert([{ user_id: user_db_id, memo, generated_text }])
-          .select();
-
-        if (error) throw error;
-        return res.status(200).json({ success: true, data });
-      }
-
-      if (type === "facility") {
+      if (type === "monitoring") {
         const {
-          facility_name,
-          resident_name,
-          monitoring_scene,
-          observation,
-          special_notes,
+          seikatsu,
+          shintai,
+          fukuyaku,
+          service,
+          kibou,
+          free_text,
           generated_text,
         } = req.body;
 
+        if (!generated_text) {
+          return res.status(400).json({
+            success: false,
+            message: "generated_text is required",
+          });
+        }
+
         const { data, error } = await supabase
-          .from("facility_ai_history")
-          .insert([{
-            auth_user_id,
-            facility_name,
-            resident_name,
-            monitoring_scene,
-            observation,
-            special_notes,
-            generated_text,
-          }])
+          .from("ai_history")
+          .insert([
+            {
+              user_id: user_db_id,
+              seikatsu,
+              shintai,
+              fukuyaku,
+              service,
+              kibou,
+              free_text,
+              generated_text,
+            },
+          ])
           .select();
 
         if (error) throw error;
+
+        return res.status(200).json({ success: true, data });
+      }
+
+      if (type === "conference") {
+        const { memo, generated_text } = req.body;
+
+        if (!generated_text) {
+          return res.status(400).json({
+            success: false,
+            message: "generated_text is required",
+          });
+        }
+
+        const { data, error } = await supabase
+          .from("conf_ai_history")
+          .insert([
+            {
+              user_id: user_db_id,
+              memo,
+              generated_text,
+            },
+          ])
+          .select();
+
+        if (error) throw error;
+
         return res.status(200).json({ success: true, data });
       }
     }
@@ -102,6 +126,18 @@ export default async function handler(req, res) {
     ============================ */
     if (action === "get") {
 
+      if (type === "monitoring") {
+        const { data, error } = await supabase
+          .from("ai_history")
+          .select("*")
+          .eq("user_id", user_db_id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        return res.status(200).json({ success: true, data });
+      }
+
       if (type === "conference") {
         const { data, error } = await supabase
           .from("conf_ai_history")
@@ -110,28 +146,7 @@ export default async function handler(req, res) {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        return res.status(200).json({ success: true, data });
-      }
 
-       if (type === "monitoring") {
-    const { data, error } = await supabase
-      .from("monitoring_ai_history")
-      .select("*")
-      .eq("user_id", user_db_id)   // ★ここが重要
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return res.status(200).json({ success: true, data });
-  }
-
-      if (type === "facility") {
-        const { data, error } = await supabase
-          .from("facility_ai_history")
-          .select("*")
-          .eq("auth_user_id", auth_user_id)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
         return res.status(200).json({ success: true, data });
       }
     }
