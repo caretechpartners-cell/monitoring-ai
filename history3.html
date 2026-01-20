@@ -100,7 +100,7 @@ async function loadHistory() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       action: "get",
-      auth_user_id: user.id,
+      auth_user_id: authUserId,
     })
   });
 
