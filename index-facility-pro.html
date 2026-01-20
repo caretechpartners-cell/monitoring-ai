@@ -11,6 +11,40 @@
   >
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
+<script>
+(async () => {
+  try {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
+
+    if (!user_id || !token) {
+      location.href = "login.html";
+      return;
+    }
+
+    const res = await fetch("/api/auth-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, token }),
+    });
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      localStorage.setItem(
+        "forced_logout_reason",
+        "他の端末でログインされたためログアウトしました"
+      );
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
+    }
+  } catch {
+    location.href = "login.html";
+  }
+})();
+</script>
+
   <style>
     body {
       margin: 0;
@@ -448,6 +482,36 @@ ${memoText}
    評価整理 実行（回数制限なし）
 ========================= */
 async function runEvaluation() {
+
+// ===== ① ログイン最低限チェック =====
+const email = localStorage.getItem("login_email");
+if (!email) {
+  alert("ログイン情報が失われました。再ログインしてください。");
+  location.href = "login.html";
+  return;
+}
+
+// ===== ② product-guard（facility_monitoring）=====
+const guardRes = await fetch("/api/product-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email,
+    product_code: "facility_monitoring",
+  }),
+});
+
+const guard = await guardRes.json();
+
+if (!guard.ok) {
+  document.getElementById("memberGuide").style.display = "block";
+  result.textContent = "";
+  return; // ★ ここで完全停止
+}
+
+document.getElementById("memberGuide").style.display = "none";
+
+
   const payload = {
     facilityType: facilityType.value,
     basicInfo: basicInfo.value,
