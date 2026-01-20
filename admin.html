@@ -114,21 +114,27 @@
 
 <hr style="margin:30px 0" />
 
-<h2>購入済みプロダクト付与（Admin）</h2>
+<h2>購入済みプロダクト付与 / 解約（Admin）</h2>
 
 <label>メールアドレス</label>
 <input id="grant_email" type="email" placeholder="user@example.com" />
 
-<label>付与するプロダクト</label>
+<label>プロダクト</label>
 <select id="product_code">
-  <option value="monitoring">モニタリングAI</option>
+  <option value="monitoring">モニタリングAI（居宅）</option>
   <option value="conference">議事録AI</option>
+  <option value="facility_monitoring">施設モニタリング評価整理AI</option>
 </select>
 
-<button onclick="grantProduct()">プロダクトを付与</button>
+<label>ステータス</label>
+<select id="subscription_status">
+  <option value="active">active（有効）</option>
+  <option value="canceled">canceled（解約）</option>
+</select>
+
+<button onclick="grantProduct()">状態を反映する</button>
 
 <div id="grantResult" style="margin-top:15px;color:green;"></div>
-
 
 </div>
 
@@ -220,9 +226,11 @@ function copyPassword() {
 async function grantProduct() {
   const email = document.getElementById("grant_email").value;
   const product_code = document.getElementById("product_code").value;
+  const stripe_subscription_status =
+    document.getElementById("subscription_status").value;
 
-  if (!email || !product_code) {
-    alert("email と product_code は必須です");
+  if (!email || !product_code || !stripe_subscription_status) {
+    alert("email / product / status は必須です");
     return;
   }
 
@@ -235,7 +243,8 @@ async function grantProduct() {
     body: JSON.stringify({
       action: "grant-product",
       email,
-      product_code
+      product_code,
+      stripe_subscription_status
     })
   });
 
@@ -247,7 +256,7 @@ async function grantProduct() {
   }
 
   document.getElementById("grantResult").textContent =
-    `✅ ${product_code} を ${email} に付与しました`;
+    `✅ ${email} の ${product_code} を ${stripe_subscription_status} にしました`;
 }
 
 </script>
