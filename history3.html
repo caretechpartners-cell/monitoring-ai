@@ -95,12 +95,13 @@ async function loadHistory() {
     return;
   }
 
-  const res = await fetch("/api2/history-facility", {
+  const res = await fetch("/api/history", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       action: "get",
-      auth_user_id: authUserId,
+      type: "facility",
+      auth_user_id: localStorage.getItem("auth_user_id")
     })
   });
 
