@@ -184,16 +184,24 @@ if (action === "portal") {
     req.headers.origin ||
     "https://YOUR_DOMAIN_HERE";
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: `${origin}/app.html`,
-    flow_data: {
-      type: "subscription_cancel",
-      subscription_cancel: {
-        subscription: link.stripe_subscription_id,
-      },
+// ★ product_code ごとの戻り先を決定
+let returnPath = "/app.html";
+
+// 施設向けプロダクト
+if (product_code === "facility_monitoring") {
+  returnPath = "/app-facility.html";
+}
+
+const session = await stripe.billingPortal.sessions.create({
+  customer: customerId,
+  return_url: `${origin}${returnPath}`,
+  flow_data: {
+    type: "subscription_cancel",
+    subscription_cancel: {
+      subscription: link.stripe_subscription_id,
     },
-  });
+  },
+});
 
   return res.json({
     success: true,
@@ -332,26 +340,64 @@ if (action === "portal") {
         return res.status(401).json({ error: "unauthorized_admin" });
       }
 
-      const { email, product_code } = req.body;
+     if (action === "grant-product") {
+  if (!isAdmin(req)) {
+    return res.status(401).json({ error: "unauthorized_admin" });
+  }
 
-      const now = new Date();
-      const trialEnd =
-        product_code === "conference"
-          ? new Date(now.getTime() + 14 * 86400000)
-          : null;
+  const { email, product_code, stripe_subscription_status } = req.body;
 
-      await supabase
-        .from("stripe_links")
-        .upsert(
-          {
-            email,
-            product_code,
-            stripe_subscription_status: trialEnd ? "trialing" : "active",
-            trial_end_at: trialEnd ? trialEnd.toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "email,product_code" }
-        );
+  if (!email || !product_code || !stripe_subscription_status) {
+    return res.status(400).json({
+      error: "email_product_status_required",
+    });
+  }
+
+  // 許可するステータス
+  if (!["active", "canceled", "trialing"].includes(stripe_subscription_status)) {
+    return res.status(400).json({
+      error: "invalid_subscription_status",
+    });
+  }
+
+  let trial_end_at = null;
+
+  // trialing のときだけ trial_end を入れる
+  if (stripe_subscription_status === "trialing") {
+    trial_end_at = new Date(
+      Date.now() + 14 * 24 * 60 * 60 * 1000
+    ).toISOString();
+  }
+
+  const { error } = await supabase
+    .from("stripe_links")
+    .upsert(
+      {
+        email,
+        product_code,
+        stripe_subscription_status,
+        trial_end_at,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "email,product_code" }
+    );
+
+  if (error) {
+    return res.status(500).json({
+      error: "stripe_links_update_failed",
+      detail: error.message,
+    });
+  }
+
+  return res.json({
+    success: true,
+    email,
+    product_code,
+    stripe_subscription_status,
+    trial_end_at,
+  });
+}
+
 
       return res.json({
         success: true,
