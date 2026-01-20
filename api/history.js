@@ -32,23 +32,27 @@ export default async function handler(req, res) {
       });
     }
 
-   const { data: user, error: userError } = await supabase
-  .from("users")
-  .select("id")
-  .eq("auth_user_id", auth_user_id)
-  .single();
+   let user_db_id = null;
 
-if (userError) {
-  console.error("user lookup error:", userError);
-  return res.status(500).json({
-    success: false,
-    message: "user lookup failed",
-    detail: userError.message,
-  });
+if (type !== "facility") {
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("auth_user_id", auth_user_id)
+    .single();
+
+  if (userError) {
+    console.error("user lookup error:", userError);
+    return res.status(500).json({
+      success: false,
+      message: "user lookup failed",
+      detail: userError.message,
+    });
+  }
+
+  user_db_id = user.id;
 }
 
-
-    const user_db_id = user.id;
 
     /* ============================
        INSERT
@@ -119,6 +123,45 @@ if (userError) {
 
         return res.status(200).json({ success: true, data });
       }
+
+if (type === "facility") {
+  const {
+    facility_name,
+    resident_name,
+    monitoring_scene,
+    observation,
+    special_notes,
+    generated_text,
+  } = req.body;
+
+  if (!generated_text) {
+    return res.status(400).json({
+      success: false,
+      message: "generated_text is required",
+    });
+  }
+
+  const { data, error } = await supabase
+    .from("facility_ai_history")
+    .insert([
+      {
+        auth_user_id,
+        facility_name,
+        resident_name,
+        monitoring_scene,
+        observation,
+        special_notes,
+        generated_text,
+      },
+    ])
+    .select();
+
+  if (error) throw error;
+
+  return res.status(200).json({ success: true, data });
+}
+
+
     }
 
     /* ============================
@@ -149,6 +192,20 @@ if (userError) {
 
         return res.status(200).json({ success: true, data });
       }
+
+if (type === "facility") {
+  const { data, error } = await supabase
+    .from("facility_ai_history")
+    .select("*")
+    .eq("auth_user_id", auth_user_id)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return res.status(200).json({ success: true, data });
+}
+
+
     }
 
     return res.status(400).json({
