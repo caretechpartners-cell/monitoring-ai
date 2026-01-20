@@ -95,7 +95,7 @@ async function loadHistory() {
     return;
   }
 
-  const res = await fetch("/api/history-facility", {
+  const res = await fetch("/api2/history-facility", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
