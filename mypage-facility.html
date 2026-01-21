@@ -137,7 +137,12 @@
         const guardRes = await fetch("/api/access-guard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id, token }),
+          body: JSON.stringify({
+  action: "auth-guard",   // ★ 必須
+  user_id,
+  token
+}),
+
         });
 
         const guardData = await guardRes.json();
