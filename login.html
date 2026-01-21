@@ -198,20 +198,24 @@ async function login() {
       return;
     }
 
-    // ★ 振り分け判定
-    const res2 = await fetch("/api/resolve-app", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    });
+    // ★ 振り分け判定（resolve-app 廃止 → access-guard に統合）
+const res2 = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    mode: "resolve",   // ← これが重要
+    email
+  })
+});
 
-    const route = await res2.json();
+const route = await res2.json();
 
-    if (route.app === "facility") {
-      location.href = "app-facility.html";
-    } else {
-      location.href = "app.html";
-    }
+if (route.app === "facility") {
+  location.href = "app-facility.html";
+} else {
+  location.href = "app.html";
+}
+
 
   } catch (e) {
     console.error(e);
