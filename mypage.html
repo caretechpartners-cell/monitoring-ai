@@ -129,68 +129,72 @@
     // ================================
     // 💳 Stripe Customer Portal を開く
     // ================================
-    async function openPortal(product_code) {
-      const user_id = localStorage.getItem("auth_user_id");
-      const token = localStorage.getItem("login_session_token");
-      const errEl = document.getElementById("portalErr");
+async function openPortal(product_code) {
+  const user_id = localStorage.getItem("auth_user_id");
+  const token = localStorage.getItem("login_session_token");
+  const errEl = document.getElementById("portalErr");
 
-      errEl.textContent = "";
+  errEl.textContent = "";
 
-      try {
-        // ① セッション有効チェック
-        const guardRes = await fetch("/api/auth-guard", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id, token }),
-        });
+  try {
+    // ① セッション有効チェック（統合版）
+    const guardRes = await fetch("/api/access-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "auth-guard",
+        user_id,
+        token
+      }),
+    });
 
-        const guardData = await guardRes.json();
+    const guardData = await guardRes.json();
 
-        if (!guardData.valid) {
-          localStorage.removeItem("auth_user_id");
-          localStorage.removeItem("login_session_token");
-          location.href = "login.html";
-          return;
-        }
-
-        // ② Portal URL 発行
-        const res = await fetch("/api/user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-  user_id,
-  action: "portal",
-  product_code, // ← これを追加
-}),
-
-        });
-
-        const data = await res.json();
-
-if (!data.success || !data.url) {
-  if (data.reason === "stripe_customer_not_found") {
-    errEl.textContent =
-      "Stripeの顧客情報が見つかりませんでした。管理者にご連絡ください。";
-    return;
-  }
-
-errEl.innerHTML = `
-  既に解約済みか、未登録です。<br>
-  <a href="https://monitoring-ai-sepia.vercel.app/form-corp.html"
-     style="color:#2a6f97; font-weight:bold;">
-    ▶ トライアル終了後の購入のご相談はこちら
-  </a>
-`;
-return;
-}
-
-        // ③ Stripe Customer Portal を開く（別タブ）
-        window.open(data.url, "_blank");
-      } catch (e) {
-        console.error(e);
-        errEl.textContent = "通信エラーが発生しました。";
-      }
+    if (!guardData.valid || !guardData.allowed) {
+      localStorage.removeItem("auth_user_id");
+      localStorage.removeItem("login_session_token");
+      location.href = "login.html";
+      return;
     }
+
+    // ② Portal URL 発行
+    const res = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id,
+        action: "portal",
+        product_code,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.success || !data.url) {
+      if (data.reason === "stripe_customer_not_found") {
+        errEl.textContent =
+          "Stripeの顧客情報が見つかりませんでした。管理者にご連絡ください。";
+        return;
+      }
+
+      errEl.innerHTML = `
+        既に解約済みか、未登録です。<br>
+        <a href="form-corp.html"
+           style="color:#2a6f97; font-weight:bold;">
+          ▶ トライアル終了後の購入のご相談はこちら
+        </a>
+      `;
+      return;
+    }
+
+    // ③ Stripe Customer Portal を開く
+    window.open(data.url, "_blank");
+
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = "通信エラーが発生しました。";
+  }
+}
   </script>
 </body>
 </html>
