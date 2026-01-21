@@ -13,7 +13,7 @@
     }
   </script>
 
-  <!-- ⭐ auth-guard（モニタリングAI製品版と同思想） -->
+  <!-- ⭐ access-guard（モニタリングAI製品版と同思想） -->
   <script>
   (async () => {
     try {
@@ -24,11 +24,16 @@
         return location.href = "login.html";
       }
 
-      const res = await fetch("/api/auth-guard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id, token }),
-      });
+      const res = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "auth-guard",   // ★ 必須
+    user_id,               // ★ user_id
+    token,                 // ★ token
+  }),
+});
+
 
       const data = await res.json();
       if (!data.valid) {
@@ -287,14 +292,16 @@ async function generate() {
       return;
     }
 
-    const guardRes = await fetch("/api/product-guard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        product_code: "conference",
-      }),
-    });
+    const guardRes = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "product-guard",      // ★ 必須
+    email,
+    product_code: "conference",
+  }),
+});
+
 
     const guard = await guardRes.json();
 
