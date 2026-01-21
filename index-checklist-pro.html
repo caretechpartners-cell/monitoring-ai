@@ -13,33 +13,36 @@
     }
   </script>
 
-  <!-- auth-guard -->
-  <script>
-    (async () => {
-      try {
-        const user_id = localStorage.getItem("auth_user_id");
-        const token = localStorage.getItem("login_session_token");
+<script>
+(async () => {
+  try {
+    const user_id = localStorage.getItem("auth_user_id");
+    const token = localStorage.getItem("login_session_token");
 
-        if (!user_id || !token) {
-          return location.href = "login.html";
-        }
+    if (!user_id || !token) {
+      location.href = "login.html";
+      return;
+    }
 
-        const res = await fetch("/api/auth-guard", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id, token }),
-        });
+    const res = await fetch("/api/auth-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id, token }),
+    });
 
-        const data = await res.json();
-        if (!data.valid) {
-          localStorage.clear();
-          location.href = "login.html";
-        }
-      } catch {
-        location.href = "login.html";
-      }
-    })();
-  </script>
+    const data = await res.json();
+
+    if (!data.valid) {
+      location.href = "login.html";
+      return;
+    }
+
+  } catch (e) {
+    console.error("auth-guard error:", e);
+    location.href = "login.html";
+  }
+})();
+</script>
 
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
@@ -176,29 +179,36 @@
 
 <script src="/generate-checklist.js"></script>
 
+  <!-- auth-guard -->
 <script>
 (async () => {
-  const email = localStorage.getItem("login_email");
-  if (!email) {
+  try {
+    const email = localStorage.getItem("login_email");
+    if (!email) {
+      location.href = "login.html";
+      return;
+    }
+
+    const res = await fetch("/api/product-guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        product_code: "checklist",
+      }),
+    });
+
+    const guard = await res.json();
+
+    if (!guard.ok) {
+      alert("この機能は有料版のご購入が必要です。");
+      location.href = "lp-checklist.html";
+      return;
+    }
+  } catch (e) {
+    console.error("product-guard error:", e);
+    alert("認証確認に失敗しました。再度ログインしてください。");
     location.href = "login.html";
-    return;
-  }
-
-  const res = await fetch("/api/product-guard", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email,
-      product_code: "checklist",
-    }),
-  });
-
-  const guard = await res.json();
-
-  if (!guard.ok) {
-    alert("この機能は有料版のご購入が必要です。");
-    location.href = "lp-checklist.html";
-    return;
   }
 })();
 </script>
