@@ -467,7 +467,7 @@ const guardRes = await fetch("/api/access-guard", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    mode: "product",
+    action: "product",
     email,
     product_code: "facility_monitoring"
   }),
