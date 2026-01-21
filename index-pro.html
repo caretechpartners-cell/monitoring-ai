@@ -395,14 +395,16 @@ async function generate() {
   }
 
   // ===== ② product-guard（monitoring）=====
-  const guardRes = await fetch("/api/product-guard", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email,
-      product_code: "monitoring",
-    }),
-  });
+// product-guard（monitoring）
+const guardRes = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "product-guard",
+    email,
+    product_code: "monitoring"
+  }),
+});
 
   const guard = await guardRes.json();
 
