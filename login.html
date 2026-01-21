@@ -203,7 +203,7 @@ const res2 = await fetch("/api/access-guard", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    mode: "resolve",   // ← これが重要
+    mode: "resolve-app",   // ← これが重要
     email
   })
 });
