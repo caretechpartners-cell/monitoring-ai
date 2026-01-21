@@ -11,45 +11,6 @@
   >
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 
-<script>
-(async () => {
-  try {
-    const user_id = localStorage.getItem("auth_user_id");
-    const token = localStorage.getItem("login_session_token");
-
-    if (!user_id || !token) {
-      location.href = "login.html";
-      return;
-    }
-
-    const res = await fetch("/api/access-guard", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    mode: "auth",
-    user_id,
-    token
-  }),
-});
-
-
-    const data = await res.json();
-
-    if (!data.valid) {
-      localStorage.setItem(
-        "forced_logout_reason",
-        "他の端末でログインされたためログアウトしました"
-      );
-      localStorage.removeItem("auth_user_id");
-      localStorage.removeItem("login_session_token");
-      location.href = "login.html";
-    }
-  } catch {
-    location.href = "login.html";
-  }
-})();
-</script>
-
   <style>
     body {
       margin: 0;
