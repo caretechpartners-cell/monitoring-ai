@@ -255,11 +255,16 @@ h1 {
       return (window.location.href = "login.html");
     }
 
-    const res = await fetch("/api/auth-guard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, token }),
-    });
+    const res = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    mode: "auth",
+    user_id,
+    token
+  }),
+});
+
 
     const data = await res.json();
 

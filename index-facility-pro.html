@@ -22,11 +22,16 @@
       return;
     }
 
-    const res = await fetch("/api/auth-guard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, token }),
-    });
+    const res = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    mode: "auth",
+    user_id,
+    token
+  }),
+});
+
 
     const data = await res.json();
 
@@ -497,12 +502,13 @@ if (!email) {
 }
 
 // ===== ② product-guard（facility_monitoring）=====
-const guardRes = await fetch("/api/product-guard", {
+const guardRes = await fetch("/api/access-guard", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
+    mode: "product",
     email,
-    product_code: "facility_monitoring",
+    product_code: "facility_monitoring"
   }),
 });
 
@@ -513,6 +519,7 @@ if (!guard.ok) {
   result.textContent = "";
   return; // ★ ここで完全停止
 }
+
 
 document.getElementById("memberGuide").style.display = "none";
 

@@ -134,7 +134,7 @@
 
       try {
         // ① セッション有効チェック
-        const guardRes = await fetch("/api/auth-guard", {
+        const guardRes = await fetch("/api/access-guard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_id, token }),
