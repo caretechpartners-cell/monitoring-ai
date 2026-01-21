@@ -7,6 +7,15 @@
 
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet"> 
 
+<script>
+  const userId = localStorage.getItem("auth_user_id");
+  const token  = localStorage.getItem("login_session_token");
+
+  if (!userId || !token) {
+    location.href = "login.html";
+  }
+</script>
+
 <style> 
 body { margin: 0; font-family: "M PLUS Rounded 1c", sans-serif; background: #e9f6fb; } 
 
@@ -229,9 +238,5 @@ function logout() {
   window.location.href = "login.html"; 
 }
 </script> 
-
-<!-- 🔐 共通アクセスガード -->
-<script src="access-guard.js"></script>
-
 </body> 
 </html>
