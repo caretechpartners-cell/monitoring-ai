@@ -243,45 +243,6 @@ h1 {
 </div>
 
 <script>
-/* =============================
-   🔐 ログインチェック
-============================= */
-(async () => {
-  try {
-    const user_id = localStorage.getItem("auth_user_id");
-    const token = localStorage.getItem("login_session_token");
-
-    if (!user_id || !token) {
-      return (window.location.href = "login.html");
-    }
-
-    const res = await fetch("/api/access-guard", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    mode: "auth",
-    user_id,
-    token
-  }),
-});
-
-
-    const data = await res.json();
-
-    if (!data.valid) {
-      localStorage.setItem(
-        "forced_logout_reason",
-        "他の端末でログインされたためログアウトしました"
-      );
-      localStorage.removeItem("auth_user_id");
-      localStorage.removeItem("login_session_token");
-      return (window.location.href = "login.html");
-    }
-  } catch (e) {
-    window.location.href = "login.html";
-  }
-})();
-
 /* ⭐ マイページ遷移 */
 function goMyPage() {
   sessionStorage.setItem("fromApp", "1");
