@@ -24,18 +24,24 @@
       return;
     }
 
-    const res = await fetch("/api/auth-guard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, token }),
-    });
+    const res = await fetch("/api/access-guard", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "auth-guard",
+    user_id,
+    token,
+  }),
+});
+
 
     const data = await res.json();
 
-    if (!data.valid) {
-      location.href = "login.html";
-      return;
-    }
+if (!data.valid || !data.allowed) {
+  location.href = "login.html";
+  return;
+}
+
 
   } catch (e) {
     console.error("auth-guard error:", e);
@@ -189,10 +195,11 @@
       return;
     }
 
-    const res = await fetch("/api/product-guard", {
+    const res = await fetch("/api/access-guard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        action: "product-guard",
         email,
         product_code: "checklist",
       }),
@@ -205,6 +212,7 @@
       location.href = "lp-checklist.html";
       return;
     }
+
   } catch (e) {
     console.error("product-guard error:", e);
     alert("認証確認に失敗しました。再度ログインしてください。");
