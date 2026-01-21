@@ -18,31 +18,38 @@
 <script>
 (async () => {
   try {
-    const user_id = localStorage.getItem("auth_user_id");
+    const email = localStorage.getItem("login_email");
     const token = localStorage.getItem("login_session_token");
 
-    if (!user_id || !token) {
-      return location.href = "login.html";
+    if (!email || !token) {
+      location.href = "login.html";
+      return;
     }
 
-    const res = await fetch("/api/auth-guard", {
+    const res = await fetch("/api/access-guard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, token }),
+      body: JSON.stringify({
+        action: "check_login",
+        email,
+        token,
+      }),
     });
 
     const data = await res.json();
 
-    if (!data.valid) {
+    if (!data.ok) {
       localStorage.setItem(
         "forced_logout_reason",
         "他の端末でログインされたためログアウトしました"
       );
       localStorage.removeItem("auth_user_id");
       localStorage.removeItem("login_session_token");
+      localStorage.removeItem("login_email");
       location.href = "login.html";
     }
-  } catch {
+
+  } catch (e) {
     location.href = "login.html";
   }
 })();
