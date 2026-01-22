@@ -174,11 +174,15 @@ async function login() {
   overlay.style.display = "flex";
 
   try {
-    const res = await fetch("/api/login", {
+    const res = await fetch("/api/auth-client", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "login",
+    email,
+    password
+  })
+});
 
     const data = await res.json();
 
@@ -210,12 +214,14 @@ const res2 = await fetch("/api/access-guard", {
 
 const route = await res2.json();
 
+// app 経由フラグを立てる（重要）
+sessionStorage.setItem("fromApp", "1");
+
 if (route.app === "facility") {
   location.href = "app-facility.html";
 } else {
   location.href = "app.html";
 }
-
 
   } catch (e) {
     console.error(e);
