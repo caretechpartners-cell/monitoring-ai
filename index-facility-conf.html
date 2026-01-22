@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>やさしいサービス担当者会議要点整理AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "M PLUS Rounded 1c", sans-serif;
+      background: #e9f6fb;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6f97;
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+    .powered {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-size: 20px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      color: #2a6f97;
+    }
+    textarea, input {
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #cfdfe8;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 140px;
+    }
+    .btn {
+      width: 100%;
+      height: 70px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      margin-top: 25px;
+      cursor: pointer;
+    }
+    .generate-btn { background: #2a6f97; color: white; }
+    .download-btn {
+      background: #4caf50;
+      color: white;
+      margin-top: 15px;
+      display: none;
+    }
+    .sample-btn {
+      width: 100%;
+      height: 55px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      margin-top: 15px;
+      cursor: pointer;
+      background: #f3a6b1;
+      color: white;
+    }
+
+    .result-box {
+      margin-top: 30px;
+      font-size: 18px;
+      background: #f7fbff;
+      border-radius: 12px;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+    .copy-guide {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+      display: none;
+    }
+    .memo-guide {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+    }
+    .limit {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 18px;
+      color: #2a6f97;
+      font-weight: bold;
+    }
+
+    .footer-links {
+      margin-top: 60px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+    .footer-links a {
+      color: #777;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>やさしいサービス担当者会議要点整理AI</h1>
+  <div class="powered">Powered by ケアテックパートナーズ</div>
+  <div class="limit" id="limitText"></div>
+
+  <button class="sample-btn" onclick="fillSample()">サンプル入力を入れる</button>
+
+  <div class="memo-guide">↓ 施設向けの項目ごとに入力してください ↓</div>
+
+  <!-- ① 利用者基本情報 -->
+  <label>■ 利用者基本情報</label>
+  <textarea id="basicInfo" placeholder="氏名／年齢／性別／要介護度／入所形態 など"></textarea>
+
+  <!-- ② 会議基本情報 -->
+  <label>■ 会議基本情報（会議種別・参加職種など）</label>
+  <textarea id="meetingInfo" placeholder="会議日／会議種別／参加職種（介護・看護・リハ・相談員・家族 等）"></textarea>
+
+  <!-- ③ 生活状況・ADL -->
+  <label>■ 現在の生活状況・ADL（施設内での様子）</label>
+  <textarea id="adlInfo" placeholder="食事、排泄、移動、日中・夜間の様子 など"></textarea>
+
+  <!-- ④ 課題・リスク -->
+  <label>■ 現在の主な課題・リスク</label>
+  <textarea id="riskInfo" placeholder="転倒、医療管理、集団生活上の課題 など"></textarea>
+
+  <!-- ⑤ 各職種の意見 -->
+  <label>■ 各職種からの主な意見</label>
+  <textarea id="staffOpinions" placeholder="介護職／看護職／リハ職／相談員 等の意見"></textarea>
+
+  <!-- ⑥ 今後の支援方針 -->
+  <label>■ 今後の支援方針・ケアの方向性</label>
+  <textarea id="futurePlan" placeholder="施設内での生活安定・自立支援の方針"></textarea>
+
+  <!-- ⑦ 本人・家族意向 -->
+  <label>■ 本人・家族の意向／特記事項</label>
+  <textarea id="specialNotes" placeholder="本人・家族の希望、特記事項など"></textarea>
+
+  <!-- 裏側用：最終的にここに統合される -->
+  <textarea id="memoElem" style="display:none;"></textarea>
+
+  <button class="btn generate-btn" onclick="buildFacilityMemoAndGenerate()">AIで議事録を生成する</button>
+
+  <div class="copy-guide" id="copyGuide">このままコピーして議事録に貼り付けできます。</div>
+
+  <div id="result" class="result-box"></div>
+
+  <button class="btn download-btn" id="xlsxBtn" onclick="exportXLSX()">
+    📊 Excel（議事録様式）で出力
+  </button>
+
+  <!-- 会員案内（そのまま残す） -->
+  <div
+    id="memberGuide"
+    style="
+      display:none;
+      margin-top:20px;
+      padding:18px;
+      border-radius:12px;
+      background:#f0f8ff;
+      font-size:17px;
+      line-height:1.8;
+    "
+  >
+    ・会員版では、回数制限なく議事録を作成できます。<br>
+    ・Excel様式（サービス担当者会議録）でそのまま出力可能です。<br>
+    ・実地指導・監査を想定した構成です。<br><br>
+
+    <a href="lp-conf.html" style="
+      display:block;
+      text-align:center;
+      font-weight:bold;
+      color:#2a6f97;
+      text-decoration:none;
+    ">
+      会員版の詳細を見る
+    </a>
+  </div>
+
+  <div class="footer-links">
+    <a href="privacy.html">プライバシーポリシー</a>｜
+    <a href="terms.html">利用規約</a>｜
+    <a href="tokusho.html">特定商取引法に基づく表記</a>
+  </div>
+</div>
+
+<script>
+/* ==========================
+   無料トライアル回数管理（完全共通）
+========================== */
+const LIMIT = 3;
+
+function initLimit() {
+  if (!localStorage.getItem("conf_remain")) {
+    localStorage.setItem("conf_remain", LIMIT);
+  }
+  updateLimit();
+}
+
+function updateLimit() {
+  const remain = Number(localStorage.getItem("conf_remain"));
+  const limitText = document.getElementById("limitText");
+
+  if (remain > 0) {
+    limitText.textContent = `🌷 無料であと「${remain}回」ご利用いただけます`;
+  } else {
+    limitText.textContent = "無料作成分は終了しました。";
+  }
+}
+
+initLimit();
+
+function fillSample() {
+  document.getElementById("basicInfo").value =
+    "山田花子　85歳　女性　要介護4\n" +
+    "特別養護老人ホーム入所中（入所3年目）";
+
+  document.getElementById("meetingInfo").value =
+    "2026/1/15 10:00-11:00\n" +
+    "定期サービス担当者会議（施設内）\n" +
+    "参加：介護職、看護師、機能訓練指導員、生活相談員、施設ケアマネ、家族（長女）";
+
+  document.getElementById("adlInfo").value =
+    "食事：全介助、むせ込み時々あり\n" +
+    "移動：車椅子自走一部可能、立ち上がり不安定\n" +
+    "排泄：オムツ使用、トイレ誘導一部実施\n" +
+    "日中：居室内で過ごすこと多い\n" +
+    "夜間：覚醒あり、ナースコール頻回";
+
+  document.getElementById("riskInfo").value =
+    "夜間ベッドからの立ち上がりによる転倒リスク高い\n" +
+    "嚥下機能低下による誤嚥リスクあり\n" +
+    "認知症症状により不安強く、行動不安定な場面あり";
+
+  document.getElementById("staffOpinions").value =
+    "介護職：夜間の離床が多く、見守り強化が必要\n" +
+    "看護師：嚥下状態に注意し、食形態の再評価を提案\n" +
+    "機能訓練：下肢筋力低下あり、簡易訓練継続が望ましい\n" +
+    "相談員：家族との情報共有を密にする必要あり";
+
+  document.getElementById("futurePlan").value =
+    "夜間センサーマットの導入を検討\n" +
+    "食形態の見直しを多職種で検討\n" +
+    "日中の離床時間を増やし生活リズムを整える";
+
+  document.getElementById("specialNotes").value =
+    "本人：『迷惑をかけたくない』と不安を訴える\n" +
+    "家族：転倒と誤嚥を特に心配している\n" +
+    "次回会議まで事故状況を重点的に共有する";
+}
+
+/* ==========================
+   施設版：項目統合ロジック（ここが唯一の差分核心）
+========================== */
+function buildFacilityMemo() {
+  const memo =
+    "【利用者基本情報】\n" + basicInfo.value + "\n\n" +
+    "【会議基本情報】\n" + meetingInfo.value + "\n\n" +
+    "【生活状況・ADL】\n" + adlInfo.value + "\n\n" +
+    "【課題・リスク】\n" + riskInfo.value + "\n\n" +
+    "【各職種の意見】\n" + staffOpinions.value + "\n\n" +
+    "【今後の支援方針】\n" + futurePlan.value + "\n\n" +
+    "【本人・家族意向・特記事項】\n" + specialNotes.value;
+
+  memoElem.value = memo;
+}
+
+function buildFacilityMemoAndGenerate() {
+  buildFacilityMemo();
+  generate(); // 既存ロジックをそのまま呼ぶ
+}
+
+/* ==========================
+   進捗表示・生成ロジック（居宅版と完全共通）
+========================== */
+let progressTimer = null;
+let progressValue = 0;
+
+function startProgress() {
+  progressValue = 0;
+  result.textContent = "生成中… 0%";
+
+  progressTimer = setInterval(() => {
+    if (progressValue < 98) {
+      const add =
+        progressValue < 70 ? 4 :
+        progressValue < 90 ? 2 : 1;
+
+      progressValue += add;
+      if (progressValue > 98) progressValue = 98;
+
+      if (progressValue >= 90) {
+        result.textContent = "文章を整えています…";
+      } else {
+        result.textContent = `生成中… ${progressValue}%`;
+      }
+    }
+  }, 300);
+}
+
+function finishProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  result.textContent = "生成完了（100%）";
+}
+
+async function generate() {
+  let remain = Number(localStorage.getItem("conf_remain"));
+
+  if (remain <= 0) {
+    alert(
+      "ここまでお試しいただき、ありがとうございます 😊\n\n" +
+      "このあとも議事録AIをご利用いただけますので、\n" +
+      "よろしければ会員版のご案内をご覧ください。"
+    );
+
+    setTimeout(() => {
+      location.href = "lp-conf.html";
+    }, 1200);
+    return;
+  }
+
+  try {
+    const memo = memoElem.value;
+
+    copyGuide.style.display = "none";
+    xlsxBtn.style.display = "none";
+
+    startProgress();
+
+    const res = await fetch("/api/generate-conf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memo })
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`APIエラー: ${res.status} ${text}`);
+    }
+
+    const data = await res.json();
+
+    if (data.result) {
+      finishProgress();
+
+      setTimeout(() => {
+        result.textContent = data.result;
+      }, 300);
+
+      document.getElementById("memberGuide").style.display = "block";
+
+      remain--;
+      localStorage.setItem("conf_remain", remain);
+      updateLimit();
+
+      copyGuide.style.display = "block";
+      xlsxBtn.style.display = "block";
+    } else {
+      result.textContent = data.error || "生成に失敗しました";
+    }
+
+  } catch (err) {
+    console.error(err);
+    if (progressTimer) clearInterval(progressTimer);
+    progressValue = 0;
+    result.textContent = "議事録の生成に失敗しました。しばらくしてから再度お試しください。";
+  }
+}
+
+/* ==========================
+   Excel出力（完全共通）
+========================== */
+function exportXLSX() {
+  fetch("/api/export-excel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      memo: memoElem.value,
+      aiResult: result.textContent
+    })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Excel生成エラー");
+    return res.blob();
+  })
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    let userName = "利用者";
+
+    const explicitMatch = memoElem.value.match(/利用者[:：]\s*([^\n　]+)/);
+    if (explicitMatch) {
+      userName = explicitMatch[1].trim();
+    }
+
+    const dateMatch = memoElem.value.match(/(\d{1,2})\/(\d{1,2})/);
+    const date = dateMatch
+      ? new Date().getFullYear() + "-" +
+        dateMatch[1].padStart(2, "0") + "-" +
+        dateMatch[2].padStart(2, "0")
+      : new Date().toISOString().split("T")[0];
+
+    a.download = userName + "_" + date + ".xlsx";
+    a.href = url;
+    a.click();
+    URL.revokeObjectURL(url);
+  })
+  .catch(err => {
+    alert("Excelの生成に失敗しました");
+    console.error(err);
+  });
+}
+
+/* ==========================
+   管理者隠しコマンド（完全共通）
+========================== */
+document.addEventListener("keydown", function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    const pass = prompt("管理者パスワードを入力してください");
+
+    if (pass === "admin123") {
+      localStorage.setItem("conf_remain", 3);
+      alert("議事録AIの無料回数を3回にリセットしました");
+      location.reload();
+    } else {
+      alert("パスワードが違います");
+    }
+  }
+});
+</script>
+
+</body>
+</html>
