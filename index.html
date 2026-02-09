@@ -149,6 +149,16 @@
       text-decoration: underline;
     }
   </style>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-XXXXXXX');
+</script>
+
 </head>
 <body>
 
@@ -229,7 +239,7 @@
   ・実地指導・監査を想定した表現で、記録業務を文章化します。<br>
   ・内容はご自身の入力内容をもとに構成されます。<br><br>
 
-  <a href="lp.html" style="
+  <a href="lp.html" onclick="trackLpClick()" style="
     display:block;
     text-align:center;
     font-weight:bold;
@@ -326,14 +336,36 @@ function insertSample() {
 }
 
 async function generate() {
+
+const copyGuide = document.getElementById("copyGuide");
+const downloadBtn = document.getElementById("downloadBtn");
+
+  // ★ GAイベント追加
+  if (typeof gtag === "function") {
+    gtag("event", "click_generate_monitoring", {
+      event_category: "monitoring_ai",
+      event_label: "generate_button"
+    });
+  }
+
   let remain = Number(localStorage.getItem("remain"));
 
   if (remain <= 0) {
     alert("ここまでお試しいただき、ありがとうございます 😊\n\n本形式で、実地指導や監査でも説明しやすい記録としてご利用いただけます。\nよろしければ続きのご案内をご覧ください。");
 
-    setTimeout(() => {
-      location.href = "lp.html";
-    }, 1200);
+ if (typeof gtag === "function") {
+    gtag("event", "trial_limit_reached", {
+  event_category: "monitoring_ai",
+  event_label: "free_trial_limit",
+  event_callback: function() {
+    location.href = "lp.html";
+  }
+});
+｝
+
+setTimeout(() => {
+  location.href = "lp.html";
+}, 1500);
     return;
   }
 
@@ -361,6 +393,13 @@ try {
   const data = await res.json();
 
   if (data.result) {
+if (typeof gtag === "function") {
+  gtag("event", "generate_success", {
+    event_category: "monitoring_ai"
+  });
+}
+
+
   finishProgress();
 
   setTimeout(() => {
@@ -415,6 +454,15 @@ ${free.value}
 
 
 function downloadDocx() {
+
+  // ★ GAイベント追加
+  if (typeof gtag === "function") {
+    gtag("event", "click_download_docx", {
+      event_category: "monitoring_ai",
+      event_label: "docx_download"
+    });
+   }
+
   const { Document, Packer, Paragraph, TextRun } = window.docx;
 
   const resultText = result.textContent;
@@ -458,6 +506,16 @@ ${memoText}
   });
 }
 
+function trackLpClick() {
+  if (typeof gtag === "function") {
+    gtag("event", "click_lp_link", {
+      event_category: "monitoring_ai",
+      event_label: "lp_transition"
+    });
+  }
+}
+
+
 /* 管理者隠しコマンド（Ctrl + Shift + R） */
 document.addEventListener("keydown", function(e) {
   if (e.ctrlKey && e.shiftKey && e.key === "R") {
@@ -472,7 +530,16 @@ document.addEventListener("keydown", function(e) {
     }
   }
 });
-</script>
 
+window.addEventListener("load", function() {
+  if (typeof gtag === "function") {
+    gtag("event", "view_generate_button", {
+      event_category: "monitoring_ai",
+      event_label: "generate_visible"
+    });
+  }
+});
+
+</script>
 </body>
 </html>
