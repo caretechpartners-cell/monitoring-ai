@@ -89,7 +89,33 @@
       cursor: pointer;
     }
     .sample-btn { background: #f3a6b1; color: white; }
-    .generate-btn { background: #2a6f97; color: white; }
+    .generate-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  letter-spacing: 0.5px;
+  font-size: 18px;
+  font-weight: 600;
+
+  padding: 16px 24px;
+  border-radius: 12px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+
+  transition: all 0.2s ease;
+}
+
+    .generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+
+.generate-btn:active {
+  transform: translateY(0px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
 
     .download-btn {
       background: #4caf50;
