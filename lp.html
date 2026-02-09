@@ -160,6 +160,24 @@
 }
 
   </style>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9HEWRTRQF"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', 'G-Q9HEWRTRQF');
+
+/* LP表示イベント */
+gtag("event", "view_lp_monitoring", {
+  event_category: "monitoring_ai",
+  event_label: "lp_view"
+});
+</script>
+
+
 </head>
 
 <body>
@@ -287,7 +305,13 @@
   <div class="price">月額 1,980円（税込）</div>
   <div class="muted">居宅ケアマネさん1名向け</div>
 
-  <a class="small-cta" href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00">
+  <a class="small-cta"
+   href="https://buy.stripe.com/3cIeV65wve8X4ly40XeME00"
+   onclick="gtag('event','click_stripe_personal',{
+     event_category:'monitoring_ai',
+     event_label:'lp_personal_plan'
+   });">
+
     決済ページへ
   </a>
 
@@ -317,7 +341,13 @@
 
   <!-- PDF -->
   <div class="section">
-    <a href="ご紹介資料_やさしいモニタリングAI.pdf" target="_blank"
+    <a href="ご紹介資料_やさしいモニタリングAI.pdf"
+   target="_blank"
+   onclick="gtag('event','click_lp_pdf',{
+     event_category:'monitoring_ai',
+     event_label:'lp_pdf_download'
+   });"
+
   style="display:block; padding:16px; background:#2a6f97; color:#fff;
          text-align:center; border-radius:14px; text-decoration:none;
          font-size:18px; font-weight:bold;">
@@ -368,7 +398,15 @@
 
 
   <!-- CTA -->
-  <button class="cta-btn" onclick="location.href='https://buy.stripe.com/3cIeV65wve8X4ly40XeME00'">
+  <button class="cta-btn"
+onclick="
+gtag('event','click_lp_bottom_cta',{
+  event_category:'monitoring_ai',
+  event_label:'lp_bottom_cta'
+});
+location.href='https://buy.stripe.com/3cIeV65wve8X4ly40XeME00';
+">
+
     個人プランを始める
   </button>
 
